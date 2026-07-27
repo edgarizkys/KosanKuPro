@@ -1,0 +1,194 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  TENANT
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  BOOKED
+  MAINTENANCE
+}
+
+enum PaymentStatus {
+  PENDING
+  SETTLED
+  EXPIRED
+  CANCELLED
+  FAILED
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum Channel {
+  WHATSAPP
+  EMAIL
+  IN_APP
+}
+
+model Property {
+  id         String     @id @default(uuid())
+  name       String
+  address    String
+  city       String
+  mapsUrl    String?
+  photos     String[]
+  totalRooms Int
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  rooms      Room[]
+  faqEntries FaqEntry[]
+}
+
+model FaqEntry {
+  id         String   @id @default(uuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id])
+  question   String
+  answer     String
+  category   String // jam_operasional, check_in, parkir, pembayaran
+  createdAt  DateTime @default(now())
+}
+
+model User {
+  id           String            @id @default(uuid())
+  name         String
+  email        String            @unique
+  phone        String
+  passwordHash String
+  role         Role              @default(TENANT)
+  avatar       String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  rooms        Room[]            @relation("RoomTenant")
+  invoices     Invoice[]
+  complaints   Complaint[]
+  notifications NotificationLog[]
+}
+
+model Room {
+  id         String     @id @default(uuid())
+  number     String     @unique
+  type       String // Standard, Deluxe, VIP
+  price      Float
+  status     RoomStatus @default(AVAILABLE)
+  floor      Int        @default(1)
+  capacity   Int        @default(1)
+  facilities String[] // AC, WiFi, KM Dalam, TV
+  imageUrl   String? // Foto kamar (base64 atau URL)
+  propertyId String?
+  property   Property?  @relation(fields: [propertyId], references: [id])
+  tenantId   String?
+  tenant     User?      @relation("RoomTenant", fields: [tenantId], references: [id])
+  invoices   Invoice[]
+  complaints Complaint[]
+  bookings   Booking[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  invoiceNumber String        @unique
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  roomId        String
+  room          Room          @relation(fields: [roomId], references: [id])
+  amount        Float
+  penaltyAmount Float         @default(0)
+  totalAmount   Float
+  dueDate       DateTime
+  paymentStatus PaymentStatus @default(PENDING)
+  orderId       String?       @unique
+  snapToken     String?
+  paymentType   String?
+  vaNumber      String?
+  settledAt     DateTime?
+  paymentLogs   PaymentLog[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model PaymentLog {
+  id                String   @id @default(uuid())
+  invoiceId         String
+  invoice           Invoice  @relation(fields: [invoiceId], references: [id])
+  rawPayload        Json
+  transactionStatus String
+  statusCode        String
+  createdAt         DateTime @default(now())
+}
+
+model Complaint {
+  id          String          @id @default(uuid())
+  userId      String?
+  user        User?           @relation(fields: [userId], references: [id])
+  roomId      String?
+  room        Room?           @relation(fields: [roomId], references: [id])
+  title       String
+  description String
+  category    String          @default("lain_lain") // Plumbing, Electrical, Furniture, Internet
+  imageUrl    String?
+  status      ComplaintStatus @default(OPEN)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model NotificationLog {
+  id      String   @id @default(uuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id])
+  title   String
+  message String
+  channel Channel  @default(IN_APP)
+  sentAt  DateTime @default(now())
+  isRead  Boolean  @default(false)
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  category    String // listrik, air, perbaikan, internet, lain_lain
+  amount      Float
+  description String
+  receiptUrl  String?
+  ocrRaw      Json?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model Booking {
+  id          String   @id @default(uuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id])
+  tenantName  String
+  tenantPhone String
+  checkInDate DateTime
+  dpAmount    Float
+  dpOrderId   String?
+  status      String   @default("PENDING_DP") // PENDING_DP, CONFIRMED, CANCELLED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  phone     String
+  messages  Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([phone])
+}
