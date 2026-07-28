@@ -34,3 +34,6 @@ prisma/migrations/
 
 # reference files (old static site)
 _reference/
+
+# graphify output
+graphify-out/
