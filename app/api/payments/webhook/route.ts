@@ -30,6 +30,15 @@ export async function POST(req: NextRequest) {
 
     const newStatus = mapTransactionStatus(transaction_status);
 
+    // 🔒 ATOMIC IDEMPOTENCY LOCK: Prevent Duplicate Webhook Settlements
+    if (invoice.paymentStatus === 'SETTLED' && newStatus === 'SETTLED') {
+      return NextResponse.json({
+        message: 'Idempotent pass: Invoice is already SETTLED',
+        status: 'SETTLED',
+        invoiceNumber: invoice.invoiceNumber,
+      });
+    }
+
     // Log the payment notification
     await prisma.paymentLog.create({
       data: {

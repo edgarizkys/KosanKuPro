@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import BookingModal from './BookingModal';
 
 export interface RoomItem {
   id: string;
@@ -200,6 +201,7 @@ function formatPrice(price: number) {
 function statusColor(status: string) {
   if (status === 'AVAILABLE') return 'bg-emerald-500 text-white';
   if (status === 'OCCUPIED') return 'bg-rose-500 text-white';
+  if (status === 'BOOKING') return 'bg-amber-400 text-slate-900';
   return 'bg-amber-500 text-slate-900';
 }
 
@@ -214,6 +216,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
   const [activeFacilityCategory, setActiveFacilityCategory] = useState<'all' | 'kamar' | 'kamarMandi' | 'smart' | 'bersama'>('all');
   const [bookingSent, setBookingSent] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [bookingRoom, setBookingRoom] = useState<RoomItem | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -287,6 +290,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
+    <>
     <section id="rooms-section" className="space-y-6 sm:space-y-10">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 reveal">
@@ -785,34 +789,23 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
             <div className="p-4 sm:p-5 border-t border-black/5 dark:border-white/10 bg-slate-50/80 dark:bg-[#110d1c]/80 backdrop-blur-md flex-shrink-0">
               {detailRoom.status === 'AVAILABLE' ? (
                 bookingSent ? (
-                  <div className="text-center py-2 space-y-1">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg mx-auto">
-                      <i className="fa-solid fa-check" />
-                    </div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">Permintaan Booking Terkirim!</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Admin KosanKu Pro akan segera menghubungi kamu via WhatsApp untuk konfirmasi ketersediaan &amp; jadwal check-in.</p>
+                  <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-4 text-center space-y-1">
+                    <i className="fa-solid fa-circle-check text-emerald-500 text-xl" />
+                    <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Booking berhasil dikirim!</p>
+                    <p className="text-[10px] text-slate-500">Admin akan menghubungi Anda dalam 1×24 jam.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row items-center gap-3">
                     <button
                       type="button"
-                      onClick={async () => {
-                        try {
-                          await fetch('/api/whatsapp/send', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              message: `Halo Admin KosanKu Pro, saya tertarik booking Kamar No. ${detailRoom.number} (${detailRoom.type}) - ${formatPrice(detailRoom.price)}/bulan. Mohon info ketersediaan dan jadwal surveinya. Terima kasih!`,
-                              target: '',
-                            }),
-                          });
-                        } catch {}
-                        setBookingSent(true);
+                      onClick={() => {
+                        setDetailRoom(null);
+                        setBookingRoom(detailRoom);
                       }}
-                      className="w-full sm:flex-1 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs sm:text-sm rounded-xl shadow-xl hover:scale-[1.01] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full sm:flex-1 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-xl hover:scale-[1.01] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <i className="fa-brands fa-whatsapp text-emerald-500 text-base" />
-                      <span>Booking Sekarang via WhatsApp</span>
+                      <i className="fa-solid fa-calendar-check" />
+                      <span>Pesan Sekarang</span>
                     </button>
                     <button
                       type="button"
@@ -850,5 +843,21 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
         document.body
       )}
     </section>
+
+    {/* BookingModal */}
+    {bookingRoom && mounted && createPortal(
+      <BookingModal
+        room={bookingRoom}
+        onClose={() => setBookingRoom(null)}
+        onBookingSuccess={(roomId) => {
+          setRooms((prev) =>
+            prev.map((r) => r.id === roomId ? { ...r, status: 'BOOKING' } : r)
+          );
+          setBookingRoom(null);
+        }}
+      />,
+      document.body
+    )}
+    </>
   );
 }

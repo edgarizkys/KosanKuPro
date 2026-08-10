@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import FinancialDashboard from './FinancialDashboard';
+import MasterDataSettings from './MasterDataSettings';
 
 interface RoomData {
   id: string;
@@ -12,6 +13,7 @@ interface RoomData {
   floor: number;
   facilities?: string[];
   imageUrl?: string | null;
+  videoUrl?: string | null;
   tenant: { name: string } | null;
 }
 
@@ -30,6 +32,17 @@ interface TenantOption {
   name: string;
 }
 
+interface ComplaintTicket {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  user?: { name: string; email: string };
+  room?: { number: string };
+  adminNote?: string;
+}
+
 const FALLBACK_ROOMS: RoomData[] = [
   { id: '1', number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000, status: 'OCCUPIED', floor: 1, tenant: { name: 'Budi Santoso' } },
   { id: '2', number: 'A-102', type: 'Deluxe Studio Smart', price: 1500000, status: 'AVAILABLE', floor: 1, tenant: null },
@@ -45,27 +58,71 @@ const FALLBACK_INVOICES: InvoiceData[] = [
   { id: '3', invoiceNumber: 'INV-2026-0602', totalAmount: 1200000, paymentStatus: 'SETTLED', user: { name: 'Rian Pratama' } },
 ];
 
+const FALLBACK_COMPLAINTS: ComplaintTicket[] = [
+  {
+    id: 'c1',
+    title: 'AC Kamar A-101 Kurang Dingin',
+    description: 'Freon tampaknya perlu ditambah karena udara hanya keluar angin saja sejak kemarin sore.',
+    status: 'OPEN',
+    createdAt: '2026-07-06 14:20',
+    user: { name: 'Budi Santoso', email: 'budi@example.com' },
+    room: { number: 'A-101' },
+    adminNote: '',
+  },
+  {
+    id: 'c2',
+    title: 'Kran Air Kamar Mandi Bocor Halus',
+    description: 'Ada tetesan air dari kran wasteland bawah.',
+    status: 'IN_PROGRESS',
+    createdAt: '2026-07-05 09:15',
+    user: { name: 'Siti Rahma', email: 'siti@example.com' },
+    room: { number: 'B-201' },
+    adminNote: 'Teknisi dijadwalkan datang besok jam 10:00.',
+  },
+];
+
 function formatIDR(n: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 }
 
+import SaaSLayout from './SaaSLayout';
+
 function statusBadge(status: string) {
   const map: Record<string, string> = {
-    AVAILABLE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    OCCUPIED: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    MAINTENANCE: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    SETTLED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    PENDING: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    AVAILABLE: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30',
+    OCCUPIED: 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30',
+    BOOKING: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-400/15 dark:text-amber-400 dark:border-amber-400/30',
+    MAINTENANCE: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30',
+    SETTLED: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30',
+    PENDING: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30',
+    OPEN: 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30',
+    IN_PROGRESS: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30',
+    RESOLVED: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30',
   };
   return map[status] || '';
 }
 
-export default function AdminDashboard() {
+import SequenceSaaSLayout from './SequenceSaaSLayout';
+import type { RoleType } from '@/app/page';
+
+export default function AdminDashboard({
+  onSwitchRole = () => {},
+  onLogout = () => {},
+}: {
+  onSwitchRole?: (r: RoleType) => void;
+  onLogout?: () => void;
+}) {
+  const [activeBranch, setActiveBranch] = useState('all');
   const [rooms, setRooms] = useState<RoomData[]>(FALLBACK_ROOMS);
   const [invoices, setInvoices] = useState<InvoiceData[]>(FALLBACK_INVOICES);
   const [tenants, setTenants] = useState<TenantOption[]>([]);
-  const [tab, setTab] = useState<'overview' | 'financial' | 'tenants'>('overview');
+  const [complaints, setComplaints] = useState<ComplaintTicket[]>(FALLBACK_COMPLAINTS);
+  const [tab, setTab] = useState<'overview' | 'financial' | 'tenants' | 'complaints' | 'master_data'>('overview');
   const [loading, setLoading] = useState(true);
+
+  // Search & Filter state (Fitur 1)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE'>('ALL');
 
   // Modal states
   const [showAddRoom, setShowAddRoom] = useState(false);
@@ -74,8 +131,9 @@ export default function AdminDashboard() {
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
   // Add Room form
-  const [roomForm, setRoomForm] = useState({ number: '', type: '', price: '', floor: '1', facilities: [] as string[], imageUrl: '' });
+  const [roomForm, setRoomForm] = useState({ number: '', type: '', price: '', floor: '1', facilities: [] as string[], imageUrl: '', videoUrl: '' });
   const roomFileRef = useRef<HTMLInputElement>(null);
+  const roomVideoRef = useRef<HTMLInputElement>(null);
   // Add Invoice form
   const [invForm, setInvForm] = useState({ userId: '', roomId: '', amount: '', dueDate: '' });
   // Add Tenant form
@@ -85,17 +143,26 @@ export default function AdminDashboard() {
   const [pricingData, setPricingData] = useState<any>(null);
   const [pricingLoading, setPricingLoading] = useState(false);
 
+  // Recent Activity Stream (Fitur 5)
+  const [activities, setActivities] = useState([
+    { id: 1, icon: 'fa-credit-card', color: 'text-emerald-500 bg-emerald-100 dark:bg-emerald-500/15', text: 'Pembayaran INV-2026-0601 diselesaikan via Mobile App QRIS oleh Siti Rahma', time: '5 menit lalu' },
+    { id: 2, icon: 'fa-bell', color: 'text-amber-500 bg-amber-100 dark:bg-amber-500/15', text: 'Mobile App Push Notification pengingat tagihan dikirim otomatis ke HP Budi Santoso', time: '12 menit lalu' },
+    { id: 3, icon: 'fa-camera-retro', color: 'text-purple-500 bg-purple-100 dark:bg-purple-500/15', text: 'Struk utilitas Listrik PLN Rp 4.200.000 berhasil di-OCR AI', time: '1 jam lalu' },
+    { id: 4, icon: 'fa-wrench', color: 'text-rose-500 bg-rose-100 dark:bg-rose-500/15', text: 'Laporan keluhan baru: AC Kamar A-101 kurang dingin', time: '2 jam lalu' },
+  ]);
+
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
   const fetchData = useCallback(async () => {
     try {
-      const [roomsRes, invRes, tenantsRes] = await Promise.all([
+      const [roomsRes, invRes, tenantsRes, complaintsRes] = await Promise.all([
         fetch('/api/rooms'),
         fetch('/api/invoices'),
         fetch('/api/tenants'),
+        fetch('/api/complaints'),
       ]);
       if (roomsRes.ok) {
         const roomsJson = await roomsRes.json();
@@ -109,6 +176,10 @@ export default function AdminDashboard() {
         const tJson = await tenantsRes.json();
         if (tJson.data?.length) setTenants(tJson.data);
       }
+      if (complaintsRes.ok) {
+        const cJson = await complaintsRes.json();
+        if (cJson.data?.length) setComplaints(cJson.data);
+      }
     } catch {
       // API not available, use fallback data
     } finally {
@@ -117,6 +188,38 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Fitur 2: Push Notification to Mobile App
+  const triggerMobilePush = (invoice: InvoiceData) => {
+    showToast(`📱 Push Notif terkirim otomatis ke Mobile App tenant [${invoice.user?.name || 'Penyewa'}] untuk ${invoice.invoiceNumber}`);
+    setActivities((prev) => [
+      {
+        id: Date.now(),
+        icon: 'fa-bell',
+        color: 'text-amber-500 bg-amber-100 dark:bg-amber-500/15',
+        text: `Push Notif pengingat tagihan ${invoice.invoiceNumber} dikirim ke Mobile App ${invoice.user?.name || ''}`,
+        time: 'Baru saja',
+      },
+      ...prev,
+    ]);
+  };
+
+  // Fitur 3: Update Complaint Status
+  const updateComplaintStatus = async (id: string, newStatus: string, note?: string) => {
+    setComplaints((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: newStatus, adminNote: note !== undefined ? note : c.adminNote } : c))
+    );
+    try {
+      await fetch('/api/complaints', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus, adminNote: note }),
+      });
+      showToast(`Status tiket keluhan diperbarui menjadi ${newStatus}`);
+    } catch {
+      showToast('Gagal memperbarui status keluhan', 'error');
+    }
+  };
 
   const toggleStatus = async (id: string) => {
     const room = rooms.find((r) => r.id === id);
@@ -159,6 +262,19 @@ export default function AdminDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleRoomVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Validate: max 50MB, video format
+    if (file.size > 50 * 1024 * 1024) {
+      showToast('Video terlalu besar! Maksimal 50MB', 'error');
+      if (roomVideoRef.current) roomVideoRef.current.value = '';
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setRoomForm((prev) => ({ ...prev, videoUrl: url }));
+  };
+
   const toggleFacility = (f: string) => {
     setRoomForm((prev) => ({
       ...prev,
@@ -179,8 +295,9 @@ export default function AdminDashboard() {
       if (res.ok) {
         setRooms((prev) => [...prev, { ...json.data, tenant: null }]);
         setShowAddRoom(false);
-        setRoomForm({ number: '', type: '', price: '', floor: '1', facilities: [], imageUrl: '' });
+        setRoomForm({ number: '', type: '', price: '', floor: '1', facilities: [], imageUrl: '', videoUrl: '' });
         if (roomFileRef.current) roomFileRef.current.value = '';
+        if (roomVideoRef.current) roomVideoRef.current.value = '';
         showToast(`Kamar ${json.data.number} ditambahkan`);
       } else {
         showToast(json.error || 'Gagal menambah kamar', 'error');
@@ -207,7 +324,7 @@ export default function AdminDashboard() {
         setShowAddTenant(false);
         setTenantForm({ name: '', email: '', phone: '', password: '', roomId: '' });
         showToast(`Penyewa ${json.data.name} ditambahkan`);
-        fetchData(); // refresh rooms (status may change)
+        fetchData();
       } else {
         showToast(json.error || 'Gagal menambah penyewa', 'error');
       }
@@ -257,62 +374,162 @@ export default function AdminDashboard() {
     }
   };
 
+  // Filtered rooms for Fitur 1
+  const filteredRooms = rooms.filter((r) => {
+    const query = searchQuery.toLowerCase().trim();
+    const matchesQuery =
+      !query ||
+      r.number.toLowerCase().includes(query) ||
+      r.type.toLowerCase().includes(query) ||
+      (r.tenant?.name || '').toLowerCase().includes(query);
+    const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
+    return matchesQuery && matchesStatus;
+  });
+
   const occupiedCount = rooms.filter((r) => r.status === 'OCCUPIED').length;
   const occupancyPct = rooms.length > 0 ? Math.round((occupiedCount / rooms.length) * 100) : 0;
   const pendingInvoices = invoices.filter((i) => i.paymentStatus === 'PENDING');
   const totalRevenue = invoices.filter((i) => i.paymentStatus === 'SETTLED').reduce((s: number, i: InvoiceData) => s + i.totalAmount, 0);
 
   return (
-    <div className="space-y-8">
-      {/* Tab switcher */}
-      <div className="flex gap-1.5 sm:gap-2 p-1 sm:p-1.5 bg-white/5 rounded-xl border border-white/10 w-full sm:w-fit overflow-x-auto scrollbar-none">
-        <button
-          onClick={() => setTab('overview')}
-          className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${tab === 'overview' ? 'active-tab' : 'text-slate-400 hover:text-white'}`}
-        >
-          <i className="fa-solid fa-gauge-high mr-1 sm:mr-1.5" /> Overview
-        </button>
-        <button
-          onClick={() => setTab('financial')}
-          className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${tab === 'financial' ? 'active-tab' : 'text-slate-400 hover:text-white'}`}
-        >
-          <i className="fa-solid fa-chart-line mr-1 sm:mr-1.5" /> Keuangan
-        </button>
-        <button
-          onClick={() => setTab('tenants')}
-          className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${tab === 'tenants' ? 'active-tab' : 'text-slate-400 hover:text-white'}`}
-        >
-          <i className="fa-solid fa-users mr-1.5" /> Penyewa
-        </button>
+    <SequenceSaaSLayout
+      role="superadmin"
+      activeBranch={activeBranch}
+      onBranchChange={setActiveBranch}
+      onSwitchRole={onSwitchRole}
+      onLogout={onLogout}
+      activeTab={tab === 'financial' ? 'financial' : tab === 'master_data' ? 'master_data' : tab === 'complaints' ? 'complaints' : 'overview'}
+      onTabChange={(t) => {
+        if (t === 'financial') setTab('financial');
+        else if (t === 'master_data') setTab('master_data');
+        else if (t === 'complaints') setTab('complaints');
+        else setTab('overview');
+      }}
+    >
+      <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors">
+      {/* SuperAdmin Header Banner */}
+      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 text-[10px] font-black border border-amber-300 dark:border-amber-500/30 flex items-center gap-1.5">
+              <i className="fa-solid fa-bolt text-amber-500 text-[9px]" />
+              Super Admin System Control Hub
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold hidden sm:inline">Akses Seluruh Menu &amp; Setting Master Data Multi-Kosan</span>
+          </div>
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1">SuperAdmin Platform Master Console</h2>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <div className="px-3 py-1.5 bg-slate-100 dark:bg-white/10 rounded-xl border border-slate-200 dark:border-white/10 font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+            <i className="fa-solid fa-sliders text-amber-500" />
+            <span>Master Data Config: Active</span>
+          </div>
+        </div>
       </div>
 
-      {tab === 'tenants' ? (
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
+      {/* Tab: Master Data Settings (SuperAdmin Access) */}
+      {tab === 'master_data' ? (
+        <MasterDataSettings />
+      ) : tab === 'complaints' ? (
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
             <div>
-              <h2 className="text-lg font-black text-white">Manajemen Penyewa</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Kelola data penyewa aktif</p>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <i className="fa-solid fa-headset text-purple-600 dark:text-purple-400" />
+                Pusat Keluhan &amp; Tiket Layanan Tenant
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola laporan kendala fasilitas dari penyewa secara real-time</p>
             </div>
-            <button onClick={() => setShowAddTenant(true)} className="px-4 py-2.5 bg-white text-orchid-dark font-bold rounded-xl text-xs hover:shadow-lg hover:shadow-white/20 transition-all">+ Tambah Penyewa</button>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="px-3 py-1 bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-400 rounded-full font-bold">
+                {complaints.filter((c) => c.status === 'OPEN').length} Perlu Penanganan
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {complaints.length === 0 && (
+              <p className="text-center text-xs text-slate-500 dark:text-slate-400 py-8">Belum ada tiket keluhan penyewa.</p>
+            )}
+            {complaints.map((c) => (
+              <div key={c.id} className="bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 space-y-3 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 text-[10px] font-bold">
+                      Kamar {c.room?.number || 'A-101'}
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">{c.title}</h3>
+                  </div>
+                  <span className={`px-2.5 py-1 border rounded-full text-[9px] font-bold uppercase w-fit ${statusBadge(c.status)}`}>
+                    {c.status}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-white dark:bg-white/5 p-3 rounded-xl border border-slate-200/50 dark:border-white/5">
+                  &quot;{c.description}&quot;
+                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] pt-2 border-t border-slate-200/60 dark:border-white/10">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Pelapor: <strong className="text-slate-900 dark:text-white">{c.user?.name || 'Budi Santoso'}</strong> • {c.createdAt}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Ubah Status:</span>
+                    <button
+                      onClick={() => updateComplaintStatus(c.id, 'IN_PROGRESS', 'Sedang ditangani oleh teknisi')}
+                      className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 rounded-lg font-bold transition-all cursor-pointer"
+                    >
+                      Diproses
+                    </button>
+                    <button
+                      onClick={() => updateComplaintStatus(c.id, 'RESOLVED', 'Selesai diperbaiki')}
+                      className="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-lg font-bold transition-all cursor-pointer"
+                    >
+                      Selesai
+                    </button>
+                  </div>
+                </div>
+                {c.adminNote && (
+                  <div className="p-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-[10px] text-amber-800 dark:text-amber-300">
+                    📌 <strong>Catatan Admin:</strong> {c.adminNote}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : tab === 'tenants' ? (
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">Manajemen Penyewa</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola data penyewa kosan aktif (Mobile App Connected)</p>
+            </div>
+            <button
+              onClick={() => setShowAddTenant(true)}
+              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer"
+            >
+              + Tambah Penyewa
+            </button>
           </div>
           <div className="space-y-3">
-            {tenants.length === 0 && <p className="text-center text-xs text-slate-500 py-8">Belum ada data penyewa.</p>}
+            {tenants.length === 0 && <p className="text-center text-xs text-slate-500 dark:text-slate-400 py-8">Belum ada data penyewa.</p>}
             {tenants.map((t: any) => (
-              <div key={t.id} className="flex items-center justify-between p-4 bg-white/3 rounded-xl border border-white/5 hover:border-white/10 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orchid-tint/10 text-orchid-tint flex items-center justify-center text-sm font-black">
+              <div key={t.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 hover:border-purple-500/30 transition-all">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 flex items-center justify-center text-sm font-black shadow-xs">
                     {t.name?.charAt(0)?.toUpperCase() || '?'}
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-white block">{t.name}</span>
-                    <span className="text-[10px] text-slate-500">{t.email} • {t.phone || '-'}</span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white block">{t.name}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">{t.email} • {t.phone || '-'}</span>
                   </div>
                 </div>
                 <div className="text-right">
                   {t.rooms?.length > 0 ? (
-                    <span className="text-[10px] font-bold text-emerald-400">{t.rooms[0].number}</span>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-500/30">
+                      Kamar {t.rooms[0].number}
+                    </span>
                   ) : (
-                    <span className="text-[10px] text-slate-500">Belum ada kamar</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Belum ada kamar</span>
                   )}
                 </div>
               </div>
@@ -324,116 +541,273 @@ export default function AdminDashboard() {
       ) : (
       <>
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 stagger-children">
-        <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl space-y-2 sm:space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        {/* Stat 1: Revenue */}
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">Revenue</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-orchid-tint/10 text-orchid-tint flex items-center justify-center text-xs sm:text-sm"><i className="fa-solid fa-wallet" /></div>
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Revenue</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 flex items-center justify-center text-xs sm:text-sm">
+              <i className="fa-solid fa-wallet" />
+            </div>
           </div>
-          <div className="text-lg sm:text-2xl font-black text-white">{formatIDR(totalRevenue)}</div>
-          <div className="text-[9px] sm:text-[11px] text-emerald-400 font-semibold flex items-center gap-1"><i className="fa-solid fa-arrow-trend-up text-[8px] sm:text-[9px]" /> Terkumpul</div>
+          <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-white">{formatIDR(totalRevenue)}</div>
+          <div className="text-[9px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+            <i className="fa-solid fa-arrow-trend-up text-[8px] sm:text-[9px]" /> Terkumpul
+          </div>
         </div>
-        <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl space-y-2 sm:space-y-3">
+
+        {/* Stat 2: Okupansi */}
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">Okupansi</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs sm:text-sm"><i className="fa-solid fa-bed" /></div>
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Okupansi</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 flex items-center justify-center text-xs sm:text-sm">
+              <i className="fa-solid fa-bed" />
+            </div>
           </div>
-          <div className="text-lg sm:text-2xl font-black text-white">{occupancyPct}%</div>
-          <div className="w-full bg-white/5 rounded-full h-1 sm:h-1.5"><div className="bg-gradient-to-r from-orchid-tint to-orchid-violet h-1 sm:h-1.5 rounded-full transition-all duration-700" style={{ width: `${occupancyPct}%` }} /></div>
+          <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-white">{occupancyPct}%</div>
+          <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-500 to-purple-600 h-1.5 rounded-full transition-all duration-700" style={{ width: `${occupancyPct}%` }} />
+          </div>
         </div>
-        <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl space-y-2 sm:space-y-3">
+
+        {/* Stat 3: Pending */}
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">Pending</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xs sm:text-sm"><i className="fa-solid fa-clock" /></div>
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pending</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 flex items-center justify-center text-xs sm:text-sm">
+              <i className="fa-solid fa-clock" />
+            </div>
           </div>
-          <div className="text-lg sm:text-2xl font-black text-white">{pendingInvoices.length} <span className="text-xs sm:text-sm font-bold text-slate-400">Invoice</span></div>
-          <div className="text-[9px] sm:text-[11px] text-amber-400 font-semibold">{formatIDR(pendingInvoices.reduce((s: number, i: InvoiceData) => s + i.totalAmount, 0))} tunggakan</div>
+          <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-white">
+            {pendingInvoices.length} <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400">Invoice</span>
+          </div>
+          <div className="text-[9px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-semibold truncate">
+            {formatIDR(pendingInvoices.reduce((s: number, i: InvoiceData) => s + i.totalAmount, 0))} tunggakan
+          </div>
         </div>
-        <div className="glass-card p-4 sm:p-6 rounded-xl sm:rounded-2xl space-y-2 sm:space-y-3">
+
+        {/* Stat 4: Total Unit */}
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">Kamar</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xs sm:text-sm"><i className="fa-solid fa-door-open" /></div>
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Unit</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300 flex items-center justify-center text-xs sm:text-sm">
+              <i className="fa-solid fa-door-open" />
+            </div>
           </div>
-          <div className="text-lg sm:text-2xl font-black text-white">{rooms.length} <span className="text-xs sm:text-sm font-bold text-slate-400">Unit</span></div>
-          <div className="text-[9px] sm:text-[11px] text-rose-400 font-semibold">{rooms.filter((r) => r.status === 'AVAILABLE').length} tersedia</div>
+          <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-white">
+            {rooms.length} <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400">Unit</span>
+          </div>
+          <div className="text-[9px] sm:text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
+            {rooms.filter((r) => r.status === 'AVAILABLE').length} unit tersedia
+          </div>
         </div>
       </div>
 
-      {/* Room management */}
-      <div className="glass-panel p-5 sm:p-8 rounded-2xl space-y-5 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-white/5 pb-4 sm:pb-5">
+      {/* Room Management with Fitur 1 (Search & Filter System) */}
+      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-5 sm:p-8 rounded-3xl space-y-5 sm:space-y-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-black/5 dark:border-white/10 pb-4 sm:pb-5">
           <div>
-            <h2 className="text-base sm:text-lg font-black text-white">Manajemen Kamar</h2>
-            <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">Kelola status &amp; penghuni real-time</p>
+            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Manajemen Kamar</h2>
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola status unit &amp; penghuni real-time</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowAddInvoice(true)} className="px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 text-white font-bold rounded-xl text-[10px] sm:text-xs border border-white/10 hover:bg-white/15 transition-all">+ Invoice</button>
-            <button onClick={() => setShowAddRoom(true)} className="px-3 sm:px-4 py-2 sm:py-2.5 bg-white text-orchid-dark font-bold rounded-xl text-[10px] sm:text-xs hover:shadow-lg hover:shadow-white/20 transition-all">+ Tambah</button>
+            <button
+              onClick={() => setShowAddInvoice(true)}
+              className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold rounded-xl text-[10px] sm:text-xs border border-black/5 dark:border-white/10 transition-all cursor-pointer"
+            >
+              + Invoice
+            </button>
+            <button
+              onClick={() => setShowAddRoom(true)}
+              className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-xl text-[10px] sm:text-xs shadow-md transition-all cursor-pointer"
+            >
+              + Tambah Kamar
+            </button>
           </div>
         </div>
+
+        {/* Fitur 1: Interactive Search & Status Filter Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-black/20 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10">
+          {/* Search Box */}
+          <div className="relative flex-1">
+            <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari no. kamar, tipe, atau penyewa..."
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors placeholder-slate-400"
+            />
+          </div>
+
+          {/* Status Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            {(['ALL', 'AVAILABLE', 'OCCUPIED', 'MAINTENANCE'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === status
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+                    : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                }`}
+              >
+                {status === 'ALL' ? 'Semua Status' : status}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Room Result Counter */}
+        <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
+          <span>Menampilkan {filteredRooms.length} dari {rooms.length} unit</span>
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="text-purple-600 dark:text-purple-400 hover:underline">
+              Reset Pencarian
+            </button>
+          )}
+        </div>
+
+        {/* Room Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {rooms.map((room) => (
-            <div key={room.id} className="glass-card p-5 rounded-2xl space-y-3 overflow-hidden">
+          {filteredRooms.map((room) => (
+            <div key={room.id} className="bg-slate-50 dark:bg-black/25 border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl space-y-3 overflow-hidden shadow-xs hover:border-amber-500/40 transition-all">
               {room.imageUrl && (
-                <div className="-mx-5 -mt-5 mb-3 h-32 overflow-hidden">
+                <div className="-mx-5 -mt-5 mb-3 h-36 overflow-hidden bg-slate-200 dark:bg-slate-800">
                   <img src={room.imageUrl} alt={`Kamar ${room.number}`} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-lg font-black text-white">{room.number}</span>
-                <span className={`px-2.5 py-1 border rounded-full text-[9px] font-bold uppercase ${statusBadge(room.status)}`}>{room.status}</span>
+                <span className="text-lg font-black text-slate-900 dark:text-white">{room.number}</span>
+                <span className={`px-2.5 py-0.5 border rounded-full text-[9px] font-bold uppercase shadow-2xs ${statusBadge(room.status)}`}>{room.status}</span>
               </div>
-              <div className="text-[11px] text-slate-400">{room.type} • Lt {room.floor}</div>
-              <div className="text-xs font-bold text-orchid-gold">{formatIDR(room.price)}/bln</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{room.type} • Lt {room.floor}</div>
+              <div className="text-sm font-black text-amber-600 dark:text-amber-400">{formatIDR(room.price)}<span className="text-[10px] font-normal text-slate-500 dark:text-slate-400">/bln</span></div>
               {room.facilities && room.facilities.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {room.facilities.map((f) => (
-                    <span key={f} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[9px] text-slate-300 font-medium">{f}</span>
+                    <span key={f} className="px-2 py-0.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md text-[9px] text-slate-700 dark:text-slate-300 font-medium">{f}</span>
                   ))}
                 </div>
               )}
-              <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
-                <span className="text-slate-500">{room.tenant ? `👤 ${room.tenant.name}` : 'Kosong'}</span>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => toggleStatus(room.id)} className="text-orchid-tint font-bold hover:underline">Ubah</button>
-                  <button onClick={() => deleteRoom(room.id)} className="text-rose-400 font-bold hover:underline">Hapus</button>
+              <div className="pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">{room.tenant ? `👤 ${room.tenant.name}` : 'Kosong'}</span>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => toggleStatus(room.id)} className="text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer">Status</button>
+                    <button onClick={() => deleteRoom(room.id)} className="text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer">Hapus</button>
+                  </div>
                 </div>
+                {room.status === 'BOOKING' && (
+                  <div className="bg-amber-50 dark:bg-amber-400/10 border border-amber-200 dark:border-amber-400/20 rounded-xl p-2.5 space-y-2">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                      <i className="fa-solid fa-clock-rotate-left" /> Menunggu Konfirmasi Admin
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setRooms((prev) => prev.map((r) => r.id === room.id ? { ...r, status: 'OCCUPIED' } : r));
+                          showToast(`✅ Kamar ${room.number} dikonfirmasi → OCCUPIED`);
+                        }}
+                        className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1"
+                      >
+                        <i className="fa-solid fa-check" /> Konfirmasi
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRooms((prev) => prev.map((r) => r.id === room.id ? { ...r, status: 'AVAILABLE' } : r));
+                          showToast(`❌ Booking kamar ${room.number} ditolak → AVAILABLE`, 'error');
+                        }}
+                        className="flex-1 py-1.5 bg-rose-100 dark:bg-rose-500/20 hover:bg-rose-200 text-rose-700 dark:text-rose-400 text-[10px] font-extrabold rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1"
+                      >
+                        <i className="fa-solid fa-xmark" /> Tolak
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Utilities & Payment tracker */}
+      {/* Utilities + Payment Tracker with Mobile Push Notification (Fitur 2) + Recent Activity Stream (Fitur 5) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="glass-panel p-4 sm:p-6 rounded-xl sm:rounded-2xl space-y-3 sm:space-y-4">
-          <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2"><i className="fa-solid fa-bolt text-orchid-gold text-[10px] sm:text-xs" /> Rekap Utilitas</h3>
-          <div className="space-y-2 sm:space-y-2.5 text-[10px] sm:text-xs">
-            <div className="p-2.5 sm:p-3 bg-white/3 rounded-xl border border-white/5 flex justify-between items-center"><span className="text-slate-300">Listrik PLN</span><span className="font-bold text-rose-400">Rp 4.2jt</span></div>
-            <div className="p-2.5 sm:p-3 bg-white/3 rounded-xl border border-white/5 flex justify-between items-center"><span className="text-slate-300">Air PDAM</span><span className="font-bold text-rose-400">Rp 850rb</span></div>
-            <div className="p-2.5 sm:p-3 bg-white/3 rounded-xl border border-white/5 flex justify-between items-center"><span className="text-slate-300">Internet</span><span className="font-bold text-rose-400">Rp 1.2jt</span></div>
+        {/* Fitur 5: Recent Activity Stream */}
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 shadow-xs">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i className="fa-solid fa-clock-rotate-left text-purple-600 dark:text-purple-400 text-[10px] sm:text-xs" />
+              Aktivitas Terkini
+            </h3>
+            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">Live Feed</span>
+          </div>
+          <div className="space-y-3 text-xs max-h-80 overflow-y-auto">
+            {activities.map((act) => (
+              <div key={act.id} className="p-3 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${act.color}`}>
+                  <i className={`fa-solid ${act.icon}`} />
+                </div>
+                <div>
+                  <p className="text-[11px] text-slate-800 dark:text-slate-200 font-medium leading-snug">{act.text}</p>
+                  <span className="text-[9px] text-slate-400 mt-1 block">{act.time}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="glass-panel p-4 sm:p-6 rounded-xl sm:rounded-2xl space-y-3 sm:space-y-4 lg:col-span-2">
-          <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2"><i className="fa-solid fa-receipt text-orchid-gold text-[10px] sm:text-xs" /> Payment Tracker</h3>
+
+        {/* Payment Tracker with Mobile App Push Notification Button (Fitur 2) */}
+        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 lg:col-span-2 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-3">
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i className="fa-solid fa-receipt text-amber-500 text-[10px] sm:text-xs" /> Payment Tracker &amp; Push Reminder
+              </h3>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Push Notif terkirim otomatis ke Mobile App tenant H-3 &amp; H-1</p>
+            </div>
+            <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 rounded-full text-[9px] font-bold w-fit">
+              📱 Mobile Push Ready
+            </span>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-white/5 text-slate-400 font-semibold uppercase text-[10px]">
+                <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
                   <th className="py-3 px-3">Invoice</th>
                   <th className="py-3 px-3">Penyewa</th>
                   <th className="py-3 px-3">Nominal</th>
                   <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3 text-right">Mobile Push</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-slate-200">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-200">
                 {invoices.map((t) => (
-                  <tr key={t.id} className="hover:bg-white/3 transition-colors">
-                    <td className="py-3.5 px-3 font-mono text-[11px] font-bold text-orchid-tint">{t.invoiceNumber}</td>
-                    <td className="py-3.5 px-3 font-semibold text-white text-[11px]">{t.user?.name || '-'}</td>
-                    <td className="py-3.5 px-3 font-bold text-[11px]">{formatIDR(t.totalAmount)}</td>
+                  <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                    <td className="py-3.5 px-3 font-mono text-[11px] font-bold text-purple-700 dark:text-purple-400">{t.invoiceNumber}</td>
+                    <td className="py-3.5 px-3 font-semibold text-slate-900 dark:text-white text-[11px]">{t.user?.name || '-'}</td>
+                    <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white text-[11px]">{formatIDR(t.totalAmount)}</td>
                     <td className="py-3.5 px-3">
-                      <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase border ${statusBadge(t.paymentStatus)}`}>{t.paymentStatus}</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase border shadow-2xs ${statusBadge(t.paymentStatus)}`}>
+                        {t.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-3 text-right">
+                      {t.paymentStatus === 'PENDING' ? (
+                        <button
+                          onClick={() => triggerMobilePush(t)}
+                          className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg text-[10px] shadow-2xs transition-all flex items-center gap-1 ml-auto cursor-pointer"
+                          title="Kirim Notifikasi Push ke Mobile App Penyewa"
+                        >
+                          <i className="fa-solid fa-bell text-[9px]" />
+                          <span>Push Notif</span>
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 justify-end">
+                          <i className="fa-solid fa-circle-check text-[9px]" /> Lunas
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -444,45 +818,60 @@ export default function AdminDashboard() {
       </div>
 
       {/* AI Dynamic Pricing */}
-      <div className="glass-panel p-4 sm:p-6 rounded-xl sm:rounded-2xl space-y-3 sm:space-y-4">
+      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 shadow-xs">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2"><i className="fa-solid fa-robot text-orchid-tint text-[10px] sm:text-xs" /> AI Dynamic Pricing</h3>
-          <button onClick={fetchAIPricing} disabled={pricingLoading} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-orchid-tint to-orchid-violet text-white font-bold rounded-xl text-[9px] sm:text-[10px] hover:shadow-lg hover:shadow-orchid-violet/20 transition-all disabled:opacity-50 flex-shrink-0">
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i className="fa-solid fa-robot text-purple-600 dark:text-purple-400 text-[10px] sm:text-xs" /> AI Dynamic Pricing
+          </h3>
+          <button
+            onClick={fetchAIPricing}
+            disabled={pricingLoading}
+            className="px-3.5 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold rounded-xl text-[9px] sm:text-[10px] hover:shadow-md transition-all disabled:opacity-50 flex-shrink-0 cursor-pointer"
+          >
             {pricingLoading ? <><i className="fa-solid fa-spinner fa-spin mr-1.5" />Menganalisis...</> : <><i className="fa-solid fa-wand-magic-sparkles mr-1.5" />Analisis Harga</>}
           </button>
         </div>
         {pricingData && (
           <div className="space-y-4 animate-scale-in">
             {pricingData.insights && (
-              <div className="p-4 bg-white/3 rounded-xl border border-white/5">
-                <p className="text-xs text-slate-300 leading-relaxed"><i className="fa-solid fa-lightbulb text-orchid-gold mr-2" />{pricingData.insights}</p>
+              <div className="p-4 bg-amber-50 dark:bg-white/5 rounded-2xl border border-amber-200 dark:border-white/10">
+                <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                  <i className="fa-solid fa-lightbulb text-amber-600 dark:text-amber-400 mr-2" />
+                  {pricingData.insights}
+                </p>
               </div>
             )}
             {pricingData.recommendations?.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {pricingData.recommendations.map((rec: any, i: number) => (
-                  <div key={i} className="p-4 bg-white/3 rounded-xl border border-white/5 space-y-2">
+                  <div key={i} className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-white">{rec.roomType}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${rec.confidence === 'high' ? 'bg-emerald-500/10 text-emerald-400' : rec.confidence === 'medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-500/10 text-slate-400'}`}>{rec.confidence}</span>
+                      <span className="text-[11px] font-bold text-slate-900 dark:text-white">{rec.roomType}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${
+                        rec.confidence === 'high' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400'
+                      }`}>
+                        {rec.confidence}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-500 line-through">{formatIDR(rec.currentPrice)}</span>
-                      <i className="fa-solid fa-arrow-right text-[8px] text-orchid-tint" />
-                      <span className="font-black text-orchid-tint">{formatIDR(rec.suggestedPrice)}</span>
+                      <span className="text-slate-400 line-through">{formatIDR(rec.currentPrice)}</span>
+                      <i className="fa-solid fa-arrow-right text-[8px] text-purple-600 dark:text-purple-400" />
+                      <span className="font-black text-purple-700 dark:text-purple-300">{formatIDR(rec.suggestedPrice)}</span>
                     </div>
-                    <p className="text-[10px] text-slate-500">{rec.reason}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{rec.reason}</p>
                   </div>
                 ))}
               </div>
             )}
             {pricingData.occupancyTrend && (
-              <p className="text-[10px] text-slate-500"><i className="fa-solid fa-chart-line mr-1" />Tren okupansi: <span className={`font-bold ${pricingData.occupancyTrend === 'naik' ? 'text-emerald-400' : pricingData.occupancyTrend === 'turun' ? 'text-rose-400' : 'text-amber-400'}`}>{pricingData.occupancyTrend}</span></p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                <i className="fa-solid fa-chart-line mr-1" /> Tren okupansi: <span className={`font-bold ${pricingData.occupancyTrend === 'naik' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>{pricingData.occupancyTrend}</span>
+              </p>
             )}
           </div>
         )}
         {!pricingData && !pricingLoading && (
-          <p className="text-[11px] text-slate-500">Klik "Analisis Harga" untuk mendapat rekomendasi harga optimal dari AI berdasarkan okupansi & tren.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Klik &quot;Analisis Harga&quot; untuk mendapat rekomendasi harga optimal dari AI berdasarkan okupansi &amp; tren.</p>
         )}
       </div>
       </>
@@ -490,71 +879,123 @@ export default function AdminDashboard() {
 
       {/* Toast notification */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-[100] px-5 py-3 rounded-xl text-xs font-bold shadow-2xl animate-scale-in ${
-          toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+        <div className={`fixed top-6 right-6 z-[100] px-5 py-3 rounded-2xl text-xs font-bold shadow-2xl animate-scale-in flex items-center gap-2 ${
+          toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
         }`}>
-          <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'} mr-2`} />
-          {toast.msg}
+          <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}`} />
+          <span>{toast.msg}</span>
         </div>
       )}
 
       {/* Add Room Modal */}
       {showAddRoom && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowAddRoom(false)}>
-          <div className="bg-[#1a1025] border border-white/10 rounded-2xl p-6 w-full max-w-lg space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-black text-white">Tambah Kamar Baru</h3>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddRoom(false)}>
+          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-lg space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Kamar Baru</h3>
+              <button onClick={() => setShowAddRoom(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+            </div>
             <form onSubmit={addRoom} className="space-y-4">
-              {/* Photo upload */}
               <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Foto Kamar</label>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Foto Kamar</label>
                 <input ref={roomFileRef} type="file" accept="image/*" onChange={handleRoomPhoto} className="hidden" id="roomPhotoInput" />
                 {roomForm.imageUrl ? (
-                  <div className="relative rounded-xl overflow-hidden border border-white/10">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
                     <img src={roomForm.imageUrl} alt="Preview" className="w-full h-40 object-cover" />
                     <button type="button" onClick={() => { setRoomForm((p) => ({ ...p, imageUrl: '' })); if (roomFileRef.current) roomFileRef.current.value = ''; }} className="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full text-xs flex items-center justify-center hover:bg-black/80 transition-all">
                       <i className="fa-solid fa-xmark" />
                     </button>
                   </div>
                 ) : (
-                  <label htmlFor="roomPhotoInput" className="block cursor-pointer border-2 border-dashed border-white/10 hover:border-orchid-tint/40 rounded-xl p-6 text-center transition-all hover:bg-white/3">
-                    <div className="w-10 h-10 rounded-xl bg-orchid-tint/10 text-orchid-tint flex items-center justify-center text-base mx-auto mb-2"><i className="fa-solid fa-camera" /></div>
-                    <p className="text-[10px] text-slate-500">Klik untuk upload foto kamar</p>
+                  <label htmlFor="roomPhotoInput" className="block cursor-pointer border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-purple-500 rounded-2xl p-6 text-center transition-all bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10">
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base mx-auto mb-2"><i className="fa-solid fa-camera" /></div>
+                    <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Klik untuk upload foto kamar</p>
+                    <p className="text-[9px] text-slate-400">JPG, PNG, atau WebP</p>
+                  </label>
+                )}
+              </div>
+
+              {/* 🎬 Video Tour Kamar */}
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
+                  <i className="fa-solid fa-video text-purple-500" /> Video Tur Kamar <span className="text-[9px] font-normal text-slate-400">(MP4/MOV/WebM · maks. 50MB)</span>
+                </label>
+                <input
+                  ref={roomVideoRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleRoomVideo}
+                  className="hidden"
+                  id="roomVideoInput"
+                />
+                {roomForm.videoUrl ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 bg-black">
+                    <video
+                      src={roomForm.videoUrl}
+                      controls
+                      playsInline
+                      className="w-full h-48 object-contain rounded-2xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRoomForm((p) => ({ ...p, videoUrl: '' }));
+                        if (roomVideoRef.current) roomVideoRef.current.value = '';
+                      }}
+                      className="absolute top-2 right-2 w-7 h-7 bg-black/70 text-white rounded-full text-xs flex items-center justify-center hover:bg-black/90 transition-all"
+                      title="Hapus video"
+                    >
+                      <i className="fa-solid fa-xmark" />
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <i className="fa-solid fa-circle-check text-emerald-400" /> Video siap di-upload
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="roomVideoInput"
+                    className="block cursor-pointer border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-purple-500 rounded-2xl p-5 text-center transition-all bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base mx-auto mb-2 group-hover:scale-110 transition-transform">
+                      <i className="fa-solid fa-film" />
+                    </div>
+                    <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Klik untuk upload video tur kamar</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">MP4, MOV, atau WebM · Maks. 50MB</p>
                   </label>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Nomor Kamar *</label>
-                  <input required value={roomForm.number} onChange={(e) => setRoomForm({ ...roomForm, number: e.target.value })} placeholder="cth: D-401" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nomor Kamar *</label>
+                  <input required value={roomForm.number} onChange={(e) => setRoomForm({ ...roomForm, number: e.target.value })} placeholder="cth: D-401" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Tipe Kamar *</label>
-                  <input required value={roomForm.type} onChange={(e) => setRoomForm({ ...roomForm, type: e.target.value })} placeholder="cth: Deluxe Studio" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Tipe Kamar *</label>
+                  <input required value={roomForm.type} onChange={(e) => setRoomForm({ ...roomForm, type: e.target.value })} placeholder="cth: Deluxe Studio" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Harga/bulan *</label>
-                  <input required type="number" value={roomForm.price} onChange={(e) => setRoomForm({ ...roomForm, price: e.target.value })} placeholder="1500000" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Harga/bulan *</label>
+                  <input required type="number" value={roomForm.price} onChange={(e) => setRoomForm({ ...roomForm, price: e.target.value })} placeholder="1500000" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Lantai</label>
-                  <input type="number" value={roomForm.floor} onChange={(e) => setRoomForm({ ...roomForm, floor: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Lantai</label>
+                  <input type="number" value={roomForm.floor} onChange={(e) => setRoomForm({ ...roomForm, floor: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors" />
                 </div>
               </div>
-              {/* Facilities */}
               <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-2">Fasilitas Kamar</label>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-2">Fasilitas Kamar</label>
                 <div className="flex flex-wrap gap-2">
                   {FACILITY_OPTIONS.map((f) => (
                     <button
                       key={f}
                       type="button"
                       onClick={() => toggleFacility(f)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border cursor-pointer ${
                         roomForm.facilities.includes(f)
-                          ? 'bg-orchid-tint/15 text-orchid-tint border-orchid-tint/30'
-                          : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10'
+                          ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/40 shadow-xs'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
                       }`}
                     >
                       {roomForm.facilities.includes(f) && <i className="fa-solid fa-check mr-1 text-[8px]" />}{f}
@@ -562,9 +1003,9 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddRoom(false)} className="flex-1 py-3 bg-white/5 border border-white/10 text-slate-300 font-bold text-xs rounded-xl hover:bg-white/10 transition-all">Batal</button>
-                <button type="submit" disabled={saving} className="flex-1 py-3 bg-white text-orchid-dark font-bold text-xs rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
+              <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
+                <button type="button" onClick={() => setShowAddRoom(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-white/15 transition-all cursor-pointer">Batal</button>
+                <button type="submit" disabled={saving} className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 shadow-md transition-all disabled:opacity-50 cursor-pointer">
                   {saving ? <i className="fa-solid fa-spinner fa-spin" /> : 'Simpan Kamar'}
                 </button>
               </div>
@@ -575,38 +1016,45 @@ export default function AdminDashboard() {
 
       {/* Add Tenant Modal */}
       {showAddTenant && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowAddTenant(false)}>
-          <div className="bg-[#1a1025] border border-white/10 rounded-2xl p-6 w-full max-w-md space-y-5 animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-black text-white">Tambah Penyewa Baru</h3>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddTenant(false)}>
+          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Penyewa Baru</h3>
+              <button onClick={() => setShowAddTenant(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+            </div>
             <form onSubmit={addTenant} className="space-y-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Nama Lengkap *</label>
-                <input required value={tenantForm.name} onChange={(e) => setTenantForm({ ...tenantForm, name: e.target.value })} placeholder="cth: Budi Santoso" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nama Lengkap *</label>
+                <input required value={tenantForm.name} onChange={(e) => setTenantForm({ ...tenantForm, name: e.target.value })} placeholder="cth: Budi Santoso" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Email *</label>
-                  <input required type="email" value={tenantForm.email} onChange={(e) => setTenantForm({ ...tenantForm, email: e.target.value })} placeholder="email@contoh.com" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Email *</label>
+                  <input required type="email" value={tenantForm.email} onChange={(e) => setTenantForm({ ...tenantForm, email: e.target.value })} placeholder="email@contoh.com" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">No. WhatsApp *</label>
-                  <input required value={tenantForm.phone} onChange={(e) => setTenantForm({ ...tenantForm, phone: e.target.value })} placeholder="0812xxxx" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">No. WhatsApp *</label>
+                  <input required value={tenantForm.phone} onChange={(e) => setTenantForm({ ...tenantForm, phone: e.target.value })} placeholder="0812xxxx" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Password</label>
-                <input type="password" value={tenantForm.password} onChange={(e) => setTenantForm({ ...tenantForm, password: e.target.value })} placeholder="Password login tenant" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Password</label>
+                <input type="password" value={tenantForm.password} onChange={(e) => setTenantForm({ ...tenantForm, password: e.target.value })} placeholder="Password login tenant" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Assign Kamar (opsional)</label>
-                <select value={tenantForm.roomId} onChange={(e) => setTenantForm({ ...tenantForm, roomId: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors">
-                  <option value="" className="bg-[#1a1025]">Tanpa kamar</option>
-                  {rooms.filter((r) => r.status === 'AVAILABLE').map((r) => <option key={r.id} value={r.id} className="bg-[#1a1025]">{r.number} - {r.type} ({formatIDR(r.price)})</option>)}
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Assign Kamar (opsional)</label>
+                <select value={tenantForm.roomId} onChange={(e) => setTenantForm({ ...tenantForm, roomId: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors">
+                  <option value="" className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">Tanpa kamar</option>
+                  {rooms.filter((r) => r.status === 'AVAILABLE').map((r) => (
+                    <option key={r.id} value={r.id} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">
+                      {r.number} - {r.type} ({formatIDR(r.price)})
+                    </option>
+                  ))}
                 </select>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddTenant(false)} className="flex-1 py-3 bg-white/5 border border-white/10 text-slate-300 font-bold text-xs rounded-xl hover:bg-white/10 transition-all">Batal</button>
-                <button type="submit" disabled={saving} className="flex-1 py-3 bg-white text-orchid-dark font-bold text-xs rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
+              <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
+                <button type="button" onClick={() => setShowAddTenant(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-white/15 transition-all cursor-pointer">Batal</button>
+                <button type="submit" disabled={saving} className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 shadow-md transition-all disabled:opacity-50 cursor-pointer">
                   {saving ? <i className="fa-solid fa-spinner fa-spin" /> : 'Simpan Penyewa'}
                 </button>
               </div>
@@ -617,40 +1065,47 @@ export default function AdminDashboard() {
 
       {/* Add Invoice Modal */}
       {showAddInvoice && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowAddInvoice(false)}>
-          <div className="bg-[#1a1025] border border-white/10 rounded-2xl p-6 w-full max-w-md space-y-5 animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base font-black text-white">Buat Invoice Baru</h3>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddInvoice(false)}>
+          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Buat Invoice Baru</h3>
+              <button onClick={() => setShowAddInvoice(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+            </div>
             <form onSubmit={addInvoice} className="space-y-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Penyewa *</label>
-                <select required value={invForm.userId} onChange={(e) => setInvForm({ ...invForm, userId: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors">
-                  <option value="" className="bg-[#1a1025]">Pilih penyewa...</option>
-                  {tenants.map((t) => <option key={t.id} value={t.id} className="bg-[#1a1025]">{t.name}</option>)}
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Penyewa *</label>
+                <select required value={invForm.userId} onChange={(e) => setInvForm({ ...invForm, userId: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors">
+                  <option value="" className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">Pilih penyewa...</option>
+                  {tenants.map((t) => (
+                    <option key={t.id} value={t.id} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">{t.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Kamar *</label>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Kamar *</label>
                 <select required value={invForm.roomId} onChange={(e) => {
                   const room = rooms.find((r) => r.id === e.target.value);
                   setInvForm({ ...invForm, roomId: e.target.value, amount: room ? String(room.price) : invForm.amount });
-                }} className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors">
-                  <option value="" className="bg-[#1a1025]">Pilih kamar...</option>
-                  {rooms.map((r) => <option key={r.id} value={r.id} className="bg-[#1a1025]">{r.number} - {r.type}</option>)}
+                }} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors">
+                  <option value="" className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">Pilih kamar...</option>
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.id} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">{r.number} - {r.type}</option>
+                  ))}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Nominal *</label>
-                  <input required type="number" value={invForm.amount} onChange={(e) => setInvForm({ ...invForm, amount: e.target.value })} placeholder="1500000" className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors placeholder-slate-600" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nominal *</label>
+                  <input required type="number" value={invForm.amount} onChange={(e) => setInvForm({ ...invForm, amount: e.target.value })} placeholder="1500000" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-400 block mb-1.5">Jatuh Tempo *</label>
-                  <input required type="date" value={invForm.dueDate} onChange={(e) => setInvForm({ ...invForm, dueDate: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs outline-none focus:border-orchid-tint/40 transition-colors" />
+                  <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Jatuh Tempo *</label>
+                  <input required type="date" value={invForm.dueDate} onChange={(e) => setInvForm({ ...invForm, dueDate: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors" />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddInvoice(false)} className="flex-1 py-3 bg-white/5 border border-white/10 text-slate-300 font-bold text-xs rounded-xl hover:bg-white/10 transition-all">Batal</button>
-                <button type="submit" disabled={saving} className="flex-1 py-3 bg-white text-orchid-dark font-bold text-xs rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
+              <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
+                <button type="button" onClick={() => setShowAddRoom(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-white/15 transition-all cursor-pointer">Batal</button>
+                <button type="submit" disabled={saving} className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 shadow-md transition-all disabled:opacity-50 cursor-pointer">
                   {saving ? <i className="fa-solid fa-spinner fa-spin" /> : 'Buat Invoice'}
                 </button>
               </div>
@@ -659,5 +1114,6 @@ export default function AdminDashboard() {
         </div>
       )}
     </div>
+    </SequenceSaaSLayout>
   );
 }

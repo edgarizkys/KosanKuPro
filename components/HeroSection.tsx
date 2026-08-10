@@ -51,12 +51,13 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
         {/* Top Navbar Floating Inside Canvas */}
         <div className="relative z-40 flex items-center justify-between w-full px-4 py-3 sm:px-10 sm:py-5">
           {/* Left Logo */}
-          <div className="flex items-center gap-2 font-bold text-base sm:text-xl tracking-tight text-slate-900 dark:text-white">
-            <div className="flex gap-[2.5px]">
-              <span className="w-1.5 h-4 sm:w-2.5 sm:h-6 bg-slate-900 dark:bg-white rounded-[2px]" />
-              <span className="w-1.5 h-4 sm:w-2.5 sm:h-6 bg-slate-900 dark:bg-white rounded-[2px] mt-0.5" />
+          <div className="flex items-center gap-2.5 cursor-pointer select-none group">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#120e20] p-0.5 flex items-center justify-center shadow-md shadow-purple-900/30 group-hover:scale-105 transition-all overflow-hidden border border-white/20 dark:border-white/15">
+              <img src="/images/logo.png" alt="KosanKu Pro Logo" className="w-full h-full object-cover rounded-xl" />
             </div>
-            KosanKu <span className="font-light text-slate-500 dark:text-slate-400">Pro</span>
+            <div className="flex items-center gap-1.5 font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
+              KosanKu <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black text-[9px] sm:text-[10px] tracking-wider uppercase">PRO</span>
+            </div>
           </div>
 
           {/* Center Floating Pill Menu */}

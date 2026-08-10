@@ -620,3 +620,55 @@ button, a, input, select, textarea {
 .pt-safe {
   padding-top: env(safe-area-inset-top, 1rem);
 }
+
+/* ===== EXECUTIVE PDF PRINT MEDIA STYLES ===== */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  /* Hide interactive controls and floating widgets when printing */
+  header,
+  nav,
+  button,
+  .no-print,
+  #whatsapp-widget,
+  .floating-widget {
+    display: none !important;
+  }
+
+  /* Force clean white background on cards */
+  .bg-white\/90,
+  .dark\:bg-\[\#161224\]\/80,
+  .bg-slate-50,
+  .dark\:bg-black\/20 {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    color: #000000 !important;
+  }
+
+  .text-slate-900,
+  .dark\:text-white,
+  .text-slate-700,
+  .dark\:text-slate-300 {
+    color: #000000 !important;
+  }
+
+  /* Page break rules */
+  .print-page-break {
+    page-break-before: always;
+  }
+
+  /* Ensure tables render cleanly with borders */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px 12px !important;
+  }
+}

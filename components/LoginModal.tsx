@@ -9,7 +9,7 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) {
-  const [email, setEmail] = useState('admin@kosanku.com');
+  const [email, setEmail] = useState('owner@kosanku.com');
   const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,49 +39,147 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
     }
   };
 
+  const selectPreset = (eMail: string) => {
+    setEmail(eMail);
+    setPassword('password123');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#181224] max-w-md w-full p-6 sm:p-8 rounded-2xl sm:rounded-3xl space-y-5 sm:space-y-6 border border-black/10 dark:border-white/10 shadow-2xl relative animate-scale-in text-slate-900 dark:text-white">
-        <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><i className="fa-solid fa-xmark text-lg" /></button>
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mx-auto shadow-sm"><i className="fa-solid fa-lock" /></div>
-          <h3 className="text-xl font-black text-slate-900 dark:text-white">Masuk ke KosanKu Pro</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Role terdeteksi otomatis dari akun</p>
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-[#181224] max-w-lg w-full p-6 sm:p-8 rounded-3xl space-y-5 border border-black/10 dark:border-white/10 shadow-2xl relative animate-scale-in text-slate-900 dark:text-white">
+        <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+          <i className="fa-solid fa-xmark text-lg" />
+        </button>
+        
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mx-auto shadow-sm">
+            <i className="fa-solid fa-lock" />
+          </div>
+          <h3 className="text-xl font-black text-slate-900 dark:text-white">Login Multi-Role KosanKu Pro</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Pilih akun demo 5-Role di bawah untuk masuk ke dashboard</p>
         </div>
+
         {error && (
           <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 text-xs font-semibold text-center">
             <i className="fa-solid fa-circle-exclamation mr-1.5" />{error}
           </div>
         )}
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => { setEmail('admin@kosanku.com'); setPassword('password123'); }} className="p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-white/10 transition-all">
-            <span className="text-xs font-bold text-slate-900 dark:text-white block">👑 Admin</span>
-            <span className="text-[10px] text-slate-500">admin@kosanku.com</span>
-          </button>
-          <button type="button" onClick={() => { setEmail('budi@kosanku.com'); setPassword('password123'); }} className="p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-white/10 transition-all">
-            <span className="text-xs font-bold text-slate-900 dark:text-white block">👤 Tenant</span>
-            <span className="text-[10px] text-slate-500">budi@kosanku.com</span>
-          </button>
+
+        {/* 5 Quick Preset Accounts */}
+        <div className="space-y-1.5">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Pilih Akun Demo Multi-Role:</span>
+          <div className="grid grid-cols-2 gap-2 text-left">
+            <button
+              type="button"
+              onClick={() => selectPreset('owner@kosanku.com')}
+              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+                email === 'owner@kosanku.com'
+                  ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-400 dark:border-amber-500/50 shadow-xs'
+                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+              }`}
+            >
+              <span className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                👑 Owner
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">owner@kosanku.com</span>
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Plotting &amp; Approval</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => selectPreset('admin@kosanku.com')}
+              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+                email === 'admin@kosanku.com'
+                  ? 'bg-purple-100 dark:bg-purple-500/20 border-purple-400 dark:border-purple-500/50 shadow-xs'
+                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+              }`}
+            >
+              <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                🛡️ Admin
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">admin@kosanku.com</span>
+              <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold block mt-0.5">Control Center</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => selectPreset('staf@kosanku.com')}
+              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+                email === 'staf@kosanku.com'
+                  ? 'bg-blue-100 dark:bg-blue-500/20 border-blue-400 dark:border-blue-500/50 shadow-xs'
+                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+              }`}
+            >
+              <span className="text-xs font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                🪪 Karyawan
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">staf@kosanku.com</span>
+              <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold block mt-0.5">Tugas &amp; Plotting</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => selectPreset('vendor@kosanku.com')}
+              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+                email === 'vendor@kosanku.com'
+                  ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-400 dark:border-emerald-500/50 shadow-xs'
+                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+              }`}
+            >
+              <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                🏪 Vendor Mitra
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">vendor@kosanku.com</span>
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Laundry &amp; Galon/Gas</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => selectPreset('budi@kosanku.com')}
+              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer col-span-2 ${
+                email === 'budi@kosanku.com'
+                  ? 'bg-purple-100 dark:bg-purple-500/20 border-purple-400 dark:border-purple-500/50 shadow-xs'
+                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+              }`}
+            >
+              <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                👤 Tenant (Penghuni Kos)
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">budi@kosanku.com</span>
+            </button>
+          </div>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="w-full p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors placeholder-slate-400"
-          />
-          <input
-            required
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            className="w-full p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors placeholder-slate-400"
-          />
-          <button type="submit" disabled={loading} className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl shadow-md hover:scale-[1.01] transition-all disabled:opacity-50">
-            {loading ? <i className="fa-solid fa-spinner fa-spin mr-2" /> : null}Masuk
+
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs pt-1">
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Email Terdaftar</label>
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors font-mono"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Password</label>
+            <input
+              required
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors font-mono"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl shadow-md hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs"
+          >
+            {loading ? <i className="fa-solid fa-spinner fa-spin mr-2" /> : <i className="fa-solid fa-right-to-bracket mr-2" />}
+            Masuk ke Portal Dashboard
           </button>
         </form>
       </div>

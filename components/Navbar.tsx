@@ -1,134 +1,148 @@
 'use client';
 
 import { useState } from 'react';
-import type { ViewType } from '@/app/page';
+import type { ViewType, RoleType } from '@/app/page';
+import KosanKuLogo from './KosanKuLogo';
 
 interface NavbarProps {
   view: ViewType;
-  role: 'admin' | 'tenant';
+  role: RoleType;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
   onLogin: () => void;
   onLogout: () => void;
-  onSwitchRole: (r: 'admin' | 'tenant') => void;
+  onSwitchRole: (r: RoleType) => void;
   onToggleNotif: () => void;
   onNavigate: (v: ViewType) => void;
 }
 
-export default function Navbar({ view, role, theme, onToggleTheme, onLogin, onLogout, onSwitchRole, onToggleNotif, onNavigate }: NavbarProps) {
+export default function Navbar({ view, role, theme, onToggleTheme, onLogout, onSwitchRole, onToggleNotif, onNavigate }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isPublic = view === 'landing';
-  const iconClass = theme === 'light' ? 'fa-solid fa-sun text-xs' : 'fa-solid fa-moon text-xs';
 
   const closeMobile = () => setMobileOpen(false);
 
-  // On landing page, the Lume AI Pill Navbar inside HeroSection serves as the single main header
   if (isPublic) {
     return null;
   }
 
+  const roleSubtitle =
+    role === 'owner'
+      ? 'Owner Executive Portal'
+      : role === 'employee'
+      ? 'Staf Operasional'
+      : role === 'vendor'
+      ? 'Mitra Vendor Kosan'
+      : role === 'admin'
+      ? 'Admin Control Center'
+      : 'Tenant Portal';
+
+  const getDynamicGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 3 && hour < 11) return 'Selamat Pagi 🌅';
+    if (hour >= 11 && hour < 15) return 'Selamat Siang ☀️';
+    if (hour >= 15 && hour < 18) return 'Selamat Sore 🌇';
+    return 'Selamat Malam 🌙';
+  };
+
+  const userProfileName =
+    role === 'owner'
+      ? 'Bapak Hendra'
+      : role === 'admin'
+      ? 'Pak Admin Properti'
+      : role === 'employee'
+      ? 'Bambang (Staf Lapangan)'
+      : role === 'vendor'
+      ? 'Depot Suci (Mitra Vendor)'
+      : 'Budi Santoso (Tenant A-101)';
+
   return (
-    <header className="sticky top-0 z-40 glass-panel px-4 sm:px-6 py-3 navbar-visible">
+    <header className="sticky top-0 z-40 bg-white/85 dark:bg-[#0f0c18]/85 backdrop-blur-xl border-b border-black/5 dark:border-white/10 px-4 sm:px-6 py-3 navbar-visible shadow-xs transition-colors">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 cursor-pointer group" onClick={() => { onNavigate('landing'); closeMobile(); }}>
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-orchid-tint to-orchid-violet flex items-center justify-center text-orchid-dark text-base sm:text-lg shadow-lg shadow-orchid-violet/30 group-hover:shadow-orchid-violet/50 transition-shadow">
-            <i className="fa-solid fa-building-user" />
-          </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-white leading-none">
-              KosanKu <span className="text-gradient-animated">Pro</span>
-            </h1>
-            <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium tracking-wide">LUXURY LIVING MANAGEMENT</p>
-          </div>
-        </div>
-
-        {/* Desktop public nav */}
-        {isPublic && (
-          <div className="hidden md:flex items-center gap-5">
-            <button onClick={() => onNavigate('landing')} className="text-xs font-semibold text-slate-300 hover:text-orchid-tint transition-colors">Home</button>
-            <a href="#rooms-section" className="text-xs font-semibold text-slate-300 hover:text-orchid-tint transition-colors">Kamar</a>
-            <a href="#amenities-section" className="text-xs font-semibold text-slate-300 hover:text-orchid-tint transition-colors">Fasilitas</a>
-            <a href="#location-section" className="text-xs font-semibold text-slate-300 hover:text-orchid-tint transition-colors">Lokasi</a>
-            <button onClick={onToggleTheme} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-orchid-tint hover:border-orchid-tint/30 transition-all duration-300" title="Toggle Dark/Light Mode">
-              <i className={iconClass} />
-            </button>
-            <button onClick={onLogin} className="px-5 py-2.5 rounded-xl text-xs font-bold bg-white text-orchid-dark shadow-lg shadow-white/10 hover:shadow-white/20 hover:scale-[1.03] transition-all duration-300 magnetic-btn ripple-effect">
-              Masuk
-            </button>
-          </div>
-        )}
+        <KosanKuLogo
+          size="md"
+          subtitle={roleSubtitle}
+          onClick={() => { onNavigate('landing'); closeMobile(); }}
+        />
 
         {/* Desktop authenticated nav */}
         {!isPublic && (
-          <div className="hidden md:flex items-center gap-4">
-            <button onClick={onToggleTheme} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-orchid-tint hover:border-orchid-tint/30 transition-all duration-300" title="Toggle Dark/Light Mode">
-              <i className={iconClass} />
+          <div className="hidden lg:flex items-center gap-3">
+            {/* Theme Toggle Button */}
+            <button 
+              onClick={onToggleTheme} 
+              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-800 dark:text-amber-400 hover:scale-105 active:scale-95 transition-all cursor-pointer text-sm shadow-xs" 
+              title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <div className="bg-orchid-dark/80 p-1 rounded-xl border border-orchid-tint/10 flex items-center gap-0.5">
-              <button onClick={() => onSwitchRole('admin')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${role === 'admin' ? 'active-tab' : 'text-slate-400 hover:text-white'}`}>
-                <i className="fa-solid fa-shield-halved text-[10px]" /> Admin
-              </button>
-              <button onClick={() => onSwitchRole('tenant')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 flex items-center gap-1.5 ${role === 'tenant' ? 'active-tab' : 'text-slate-400 hover:text-white'}`}>
-                <i className="fa-solid fa-user text-[10px]" /> Tenant
-              </button>
+
+            {/* Dynamic Greeting & User Indicator (Replaced manual role switcher tab) */}
+            <div className="px-3.5 py-1.5 bg-[#047857]/10 dark:bg-emerald-950/40 rounded-xl border border-[#047857]/20 flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-emerald-300">
+              <span className="text-[11px] font-extrabold text-[#047857] dark:text-emerald-400">
+                {getDynamicGreeting()}
+              </span>
+              <span className="text-slate-400">•</span>
+              <span>{userProfileName}</span>
+              <span className="px-2 py-0.5 rounded-full bg-[#047857] text-white text-[9px] font-black uppercase ml-1">
+                {role === 'owner' ? '👑 Owner' : role === 'admin' ? '🛡️ Admin' : role === 'employee' ? '👷 Staf' : role === 'vendor' ? '🏪 Vendor' : '👤 Tenant'}
+              </span>
             </div>
-            <button onClick={onToggleNotif} className="relative p-2.5 rounded-xl bg-gradient-to-br from-orchid-violet/20 to-orchid-tint/10 border border-orchid-violet/30 text-orchid-tint hover:from-orchid-violet/30 hover:to-orchid-tint/20 hover:border-orchid-violet/50 hover:shadow-lg hover:shadow-orchid-violet/20 transition-all duration-300">
+
+            {/* Notification Button */}
+            <button 
+              onClick={onToggleNotif} 
+              className="relative p-2 rounded-xl bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/20 transition-all cursor-pointer"
+              title="Notifikasi"
+            >
               <i className="fa-solid fa-bell text-sm" />
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-full text-[9px] font-black flex items-center justify-center shadow-md shadow-rose-500/40 animate-pulse">3</span>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-sm">3</span>
             </button>
-            <button onClick={onLogout} className="px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all">
-              <i className="fa-solid fa-arrow-right-from-bracket" />
+
+            {/* Logout Button */}
+            <button 
+              onClick={onLogout}
+              className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-50/50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <i className="fa-solid fa-arrow-right-from-bracket text-[10px]" />
+              <span>Keluar</span>
             </button>
           </div>
         )}
 
-        {/* Mobile right actions */}
-        <div className="flex md:hidden items-center gap-2">
-          {!isPublic && (
-            <>
-              <button onClick={onToggleNotif} className="relative p-2 rounded-xl bg-white/5 border border-white/10 text-slate-300">
-                <i className="fa-solid fa-bell text-xs" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center">3</span>
-              </button>
-              <button onClick={onLogout} className="p-2 rounded-xl bg-white/5 border border-white/10 text-rose-400">
-                <i className="fa-solid fa-arrow-right-from-bracket text-xs" />
-              </button>
-            </>
-          )}
-          <button onClick={onToggleTheme} className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-300">
-            <i className={iconClass} />
+        {/* Mobile menu trigger */}
+        <div className="lg:hidden flex items-center gap-2">
+          <button 
+            onClick={onToggleTheme} 
+            className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center text-xs"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
           </button>
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-300">
-            <i className={`fa-solid ${mobileOpen ? 'fa-xmark' : 'fa-bars'} text-sm`} />
+          <button 
+            onClick={() => setMobileOpen((o) => !o)} 
+            className="p-2 text-slate-700 dark:text-slate-200 font-bold"
+          >
+            <i className={`fa-solid ${mobileOpen ? 'fa-xmark' : 'fa-bars'}`} />
           </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile dropdown */}
       {mobileOpen && (
-        <div className="md:hidden mt-3 pb-3 border-t border-white/5 pt-3 space-y-2 animate-fade-down">
-          {isPublic && (
-            <>
-              <button onClick={() => { onNavigate('landing'); closeMobile(); }} className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-orchid-tint hover:bg-white/5 rounded-lg transition-colors">Home</button>
-              <a href="#rooms-section" onClick={closeMobile} className="block px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-orchid-tint hover:bg-white/5 rounded-lg transition-colors">Kamar</a>
-              <a href="#amenities-section" onClick={closeMobile} className="block px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-orchid-tint hover:bg-white/5 rounded-lg transition-colors">Fasilitas</a>
-              <a href="#location-section" onClick={closeMobile} className="block px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-orchid-tint hover:bg-white/5 rounded-lg transition-colors">Lokasi</a>
-              <div className="pt-2 border-t border-white/5">
-                <button onClick={() => { onLogin(); closeMobile(); }} className="w-full py-3 rounded-xl text-xs font-bold bg-white text-orchid-dark shadow-lg">Masuk</button>
-              </div>
-            </>
-          )}
-          {!isPublic && (
-            <div className="flex gap-2 px-1">
-              <button onClick={() => { onSwitchRole('admin'); closeMobile(); }} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${role === 'admin' ? 'active-tab' : 'text-slate-400 bg-white/5 border border-white/10'}`}>
-                <i className="fa-solid fa-shield-halved mr-1.5 text-[10px]" /> Admin
-              </button>
-              <button onClick={() => { onSwitchRole('tenant'); closeMobile(); }} className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${role === 'tenant' ? 'active-tab' : 'text-slate-400 bg-white/5 border border-white/10'}`}>
-                <i className="fa-solid fa-user mr-1.5 text-[10px]" /> Tenant
-              </button>
-            </div>
-          )}
+        <div className="lg:hidden border-t border-slate-200 dark:border-white/10 mt-3 pt-3 space-y-3 pb-2 animate-scale-in">
+          <div className="p-3 bg-[#047857]/10 rounded-xl border border-[#047857]/20 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-white">
+            <span>{getDynamicGreeting()} • {userProfileName}</span>
+            <span className="px-2 py-0.5 rounded-full bg-[#047857] text-white text-[9px] uppercase">
+              {role}
+            </span>
+          </div>
+          <button
+            onClick={onLogout}
+            className="w-full py-2.5 text-center font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 rounded-xl mt-2"
+          >
+            Keluar dari Sesi
+          </button>
         </div>
       )}
     </header>

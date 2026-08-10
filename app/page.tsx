@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import HeroSection from '@/components/HeroSection';
 import MarqueeTicker from '@/components/MarqueeTicker';
 import RoomsSection from '@/components/RoomsSection';
@@ -12,11 +12,15 @@ import WhatsAppWidget from '@/components/WhatsAppWidget';
 import LoginModal from '@/components/LoginModal';
 import NotificationDrawer from '@/components/NotificationDrawer';
 import AdminDashboard from '@/components/AdminDashboard';
+import OwnerDashboard from '@/components/OwnerDashboard';
+import EmployeeDashboard from '@/components/EmployeeDashboard';
+import VendorDashboard from '@/components/VendorDashboard';
 import TenantDashboard from '@/components/TenantDashboard';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { useAppEffects } from '@/lib/useAppEffects';
 
-export type ViewType = 'landing' | 'admin' | 'tenant';
+export type RoleType = 'owner' | 'admin' | 'superadmin' | 'employee' | 'vendor' | 'tenant';
+export type ViewType = 'landing' | RoleType;
 
 interface LoggedUser {
   id: string;
@@ -28,7 +32,7 @@ interface LoggedUser {
 
 export default function Home() {
   const [view, setView] = useState<ViewType>('landing');
-  const [role, setRole] = useState<'admin' | 'tenant'>('admin');
+  const [role, setRole] = useState<RoleType>('owner');
   const [user, setUser] = useState<LoggedUser | null>(null);
   const [showLogin, setShowLogin] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
@@ -58,11 +62,12 @@ export default function Home() {
   const handleLogin = (userData: LoggedUser) => {
     setShowLogin(false);
     setUser(userData);
-    setRole(userData.role === 'admin' ? 'admin' : 'tenant');
-    setView(userData.role === 'admin' ? 'admin' : 'tenant');
+    const assignedRole = (userData.role as RoleType) || 'admin';
+    setRole(assignedRole);
+    setView(assignedRole);
   };
 
-  const switchRole = (newRole: 'admin' | 'tenant') => {
+  const switchRole = (newRole: RoleType) => {
     setRole(newRole);
     setView(newRole);
   };
@@ -120,15 +125,51 @@ export default function Home() {
             </div>
           </div>
         )}
-        {view === 'admin' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <AdminDashboard />
-          </div>
+        {view === 'owner' && (
+          <OwnerDashboard
+            onSwitchRole={(r) => {
+              setRole(r);
+              setView(r);
+            }}
+            onLogout={() => setView('landing')}
+          />
+        )}
+        {(view === 'admin' || view === 'superadmin') && (
+          <AdminDashboard
+            onSwitchRole={(r) => {
+              setRole(r);
+              setView(r);
+            }}
+            onLogout={() => setView('landing')}
+          />
+        )}
+        {view === 'employee' && (
+          <EmployeeDashboard
+            onSwitchRole={(r) => {
+              setRole(r);
+              setView(r);
+            }}
+            onLogout={() => setView('landing')}
+          />
+        )}
+        {view === 'vendor' && (
+          <VendorDashboard
+            onSwitchRole={(r) => {
+              setRole(r);
+              setView(r);
+            }}
+            onLogout={() => setView('landing')}
+          />
         )}
         {view === 'tenant' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <TenantDashboard user={user} />
-          </div>
+          <TenantDashboard
+            user={user}
+            onSwitchRole={(r) => {
+              setRole(r);
+              setView(r);
+            }}
+            onLogout={() => setView('landing')}
+          />
         )}
       </main>
 

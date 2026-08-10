@@ -1,7 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// POST /api/auth/login — verify credentials against DB
+const DEMO_USERS: Record<string, any> = {
+  'owner@kosanku.com': {
+    id: 'usr_owner_01',
+    name: 'Bapak Hendra (Property Owner)',
+    email: 'owner@kosanku.com',
+    role: 'owner',
+    phone: '0811-9988-7766',
+  },
+  'admin@kosanku.com': {
+    id: 'usr_admin_01',
+    name: 'Pak Admin (Manager Kosan)',
+    email: 'admin@kosanku.com',
+    role: 'admin',
+    phone: '0812-3456-7890',
+  },
+  'staf@kosanku.com': {
+    id: 'usr_staf_01',
+    name: 'Bambang (Staf Maintenance)',
+    email: 'staf@kosanku.com',
+    role: 'employee',
+    phone: '0813-5544-3322',
+  },
+  'vendor@kosanku.com': {
+    id: 'usr_vendor_01',
+    name: 'Depot Air & Gas Suci (Vendor Mitra)',
+    email: 'vendor@kosanku.com',
+    role: 'vendor',
+    phone: '0814-7788-9900',
+  },
+  'budi@kosanku.com': {
+    id: 'usr_tenant_01',
+    name: 'Budi Santoso',
+    email: 'budi@kosanku.com',
+    role: 'tenant',
+    phone: '0815-6677-8899',
+    rooms: [{ id: '1', number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000 }],
+  },
+};
+
+// POST /api/auth/login — verify credentials against DB or Demo presets
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -11,37 +50,53 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email dan password wajib diisi' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        passwordHash: true,
-        avatar: true,
-        rooms: { select: { id: true, number: true, type: true, price: true } },
-      },
-    });
+    const cleanEmail = email.toLowerCase().trim();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Email tidak terdaftar' }, { status: 401 });
+    // Check demo accounts first for quick role switching test
+    if (DEMO_USERS[cleanEmail]) {
+      const demoUser = DEMO_USERS[cleanEmail];
+      return NextResponse.json({
+        data: {
+          ...demoUser,
+          token: Buffer.from(`${demoUser.id}:${demoUser.role}:${Date.now()}`).toString('base64'),
+        },
+      });
     }
 
-    // Simple password check (in production, use bcrypt.compare)
-    if (user.passwordHash !== password && user.passwordHash !== 'default_password_hash') {
-      return NextResponse.json({ error: 'Password salah' }, { status: 401 });
+    // Otherwise check Prisma DB
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: cleanEmail },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          passwordHash: true,
+          avatar: true,
+          rooms: { select: { id: true, number: true, type: true, price: true } },
+        },
+      });
+
+      if (user) {
+        if (user.passwordHash !== password && user.passwordHash !== 'default_password_hash') {
+          return NextResponse.json({ error: 'Password salah' }, { status: 401 });
+        }
+        const { passwordHash, ...safeUser } = user;
+        return NextResponse.json({
+          data: {
+            ...safeUser,
+            token: Buffer.from(`${user.id}:${user.role}:${Date.now()}`).toString('base64'),
+          },
+        });
+      }
+    } catch {
+      // DB optional fallback
     }
 
-    const { passwordHash, ...safeUser } = user;
-
-    return NextResponse.json({
-      data: {
-        ...safeUser,
-        token: Buffer.from(`${user.id}:${user.role}:${Date.now()}`).toString('base64'),
-      },
-    });
+    // Default fallback if unknown user
+    return NextResponse.json({ error: 'Email atau password tidak valid' }, { status: 401 });
   } catch (error) {
     console.error('[POST /api/auth/login]', error);
     return NextResponse.json({ error: 'Login gagal' }, { status: 500 });

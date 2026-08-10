@@ -8,7 +8,11 @@ generator client {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
+  OWNER
+  EMPLOYEE
+  VENDOR
   TENANT
 }
 
@@ -192,3 +196,22 @@ model Conversation {
 
   @@unique([phone])
 }
+
+model StockOpnameAudit {
+  id            String   @id @default(uuid())
+  itemName      String
+  category      String
+  systemStock   Int
+  physicalStock Int
+  discrepancy   Int
+  photoUrl      String?
+  watermarkText String?
+  geoLat        Float?
+  geoLng        Float?
+  auditedBy     String
+  branchId      String   @default("all")
+  createdAt     DateTime @default(now())
+
+  @@index([branchId, createdAt])
+}
+
