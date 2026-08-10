@@ -496,36 +496,38 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
         </div>
 
         {/* Custom Luxury Navigation Controls (← [🏠] →) */}
-        <div className="flex items-center justify-center gap-3.5 mt-6 sm:mt-8">
+        <div className="flex items-center justify-center gap-3 mt-6 sm:mt-8">
           {/* Left Arrow Button */}
           <button
             type="button"
             onClick={() => swiperInstance.current?.slidePrev()}
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#edf2f9] dark:bg-white/10 hover:bg-[#e2e8f0] dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer border border-black/5 dark:border-white/10 shrink-0"
             title="Unit Sebelumnya"
             aria-label="Previous Slide"
           >
-            <i className="fa-solid fa-arrow-left text-xs sm:text-sm" />
+            <i className="fa-solid fa-arrow-left" />
           </button>
 
           {/* Center House Navigation Icon */}
-          <div
+          <button
+            type="button"
             onClick={() => swiperInstance.current?.slideTo(0)}
-            className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#131b3e] dark:bg-white text-white dark:text-[#131b3e] flex items-center justify-center text-base sm:text-lg shadow-xl shadow-[#131b3e]/30 dark:shadow-white/20 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer group"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center text-sm sm:text-base shadow-lg shadow-slate-900/25 dark:shadow-white/20 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer group shrink-0"
             title="Kembali ke Unit Pertama"
+            aria-label="Reset to First Slide"
           >
-            <i className="fa-solid fa-house group-hover:scale-110 transition-transform duration-200 text-sm sm:text-base" />
-          </div>
+            <i className="fa-solid fa-house group-hover:scale-110 transition-transform duration-200" />
+          </button>
 
           {/* Right Arrow Button */}
           <button
             type="button"
             onClick={() => swiperInstance.current?.slideNext()}
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#edf2f9] dark:bg-white/10 hover:bg-[#e2e8f0] dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer border border-black/5 dark:border-white/10 shrink-0"
             title="Unit Selanjutnya"
             aria-label="Next Slide"
           >
-            <i className="fa-solid fa-arrow-right text-xs sm:text-sm" />
+            <i className="fa-solid fa-arrow-right" />
           </button>
         </div>
       </div>
