@@ -44,12 +44,12 @@ export default function WhatsAppWidget() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50">
       {open && (
         <div
           id="waChatBox"
-          className="mb-3 sm:mb-4 w-[calc(100vw-2rem)] sm:w-[360px] max-w-[360px] rounded-2xl shadow-2xl overflow-hidden animate-scale-in flex flex-col border border-slate-200/10"
-          style={{ height: 'min(500px, calc(100vh - 120px))', background: 'linear-gradient(180deg, #1e1b2e 0%, #151222 100%)' }}
+          className="mb-3 sm:mb-4 w-[calc(100vw-2rem)] sm:w-[360px] max-w-[360px] rounded-2xl shadow-2xl overflow-hidden animate-scale-in flex flex-col border border-black/10 dark:border-white/10 bg-white dark:bg-[#181224] text-slate-900 dark:text-white"
+          style={{ height: 'min(500px, calc(100vh - 120px))' }}
         >
           {/* Header */}
           <div className="relative px-5 py-4 flex items-center justify-between shrink-0 overflow-hidden">
@@ -64,16 +64,16 @@ export default function WhatsAppWidget() {
               </div>
               <div>
                 <h4 className="font-bold text-[13px] text-white tracking-wide">Admin KosanKu</h4>
-                <span className="text-[10px] text-white/70 font-medium">Online &bull; Siap Membantu</span>
+                <span className="text-[10px] text-white/80 font-medium">Online &bull; Siap Membantu</span>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="relative w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm text-white/70 hover:text-white hover:bg-white/20 transition-all flex items-center justify-center">
+            <button onClick={() => setOpen(false)} className="relative w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm text-white/80 hover:text-white hover:bg-white/20 transition-all flex items-center justify-center">
               <i className="fa-solid fa-xmark text-sm" />
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 text-xs scrollbar-none">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 text-xs scrollbar-none bg-slate-50/50 dark:bg-transparent">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {m.role === 'assistant' && (
@@ -83,8 +83,8 @@ export default function WhatsAppWidget() {
                 )}
                 <div className={`max-w-[80%] px-3.5 py-2.5 text-[11px] leading-relaxed whitespace-pre-wrap ${
                   m.role === 'user'
-                    ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white font-medium rounded-2xl rounded-br-md shadow-md shadow-indigo-500/20'
-                    : 'bg-white/[0.07] backdrop-blur-sm border border-white/[0.08] text-slate-200 rounded-2xl rounded-bl-md'
+                    ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-medium rounded-2xl rounded-br-md shadow-md shadow-indigo-500/20'
+                    : 'bg-white dark:bg-white/[0.08] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-white/[0.08] shadow-sm rounded-2xl rounded-bl-md'
                 }`}>
                   {m.content}
                 </div>
@@ -95,11 +95,11 @@ export default function WhatsAppWidget() {
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center mr-2 mt-0.5 shrink-0 shadow-sm">
                   <i className="fa-solid fa-headset text-[8px] text-white" />
                 </div>
-                <div className="px-4 py-3 bg-white/[0.07] backdrop-blur-sm border border-white/[0.08] rounded-2xl rounded-bl-md">
+                <div className="px-4 py-3 bg-white dark:bg-white/[0.08] border border-slate-200/80 dark:border-white/[0.08] shadow-sm rounded-2xl rounded-bl-md">
                   <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-fuchsia-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-fuchsia-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </span>
                 </div>
               </div>
@@ -109,45 +109,45 @@ export default function WhatsAppWidget() {
 
           {/* Quick actions */}
           {messages.length <= 1 && (
-            <div className="px-4 pb-2.5 space-y-1.5 shrink-0">
+            <div className="px-4 pb-2.5 space-y-1.5 shrink-0 bg-slate-50/50 dark:bg-transparent">
               <button
                 onClick={() => sendMessage('Kamar apa saja yang tersedia?')}
-                className="w-full text-left px-3.5 py-2.5 bg-white/[0.05] hover:bg-indigo-500/15 border border-white/[0.08] hover:border-indigo-400/30 rounded-xl text-[11px] text-slate-300 hover:text-indigo-300 font-medium transition-all flex items-center gap-2"
+                className="w-full text-left px-3.5 py-2.5 bg-white dark:bg-white/[0.05] hover:bg-indigo-50 dark:hover:bg-indigo-500/15 border border-slate-200 dark:border-white/[0.08] hover:border-indigo-400/40 rounded-xl text-[11px] text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 font-medium transition-all flex items-center gap-2 shadow-xs"
               >
-                <span className="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-[10px]"><i className="fa-solid fa-bed" /></span>
+                <span className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-[10px]"><i className="fa-solid fa-bed" /></span>
                 Lihat Kamar Tersedia
               </button>
               <button
                 onClick={() => sendMessage('Berapa harga kamar yang ada?')}
-                className="w-full text-left px-3.5 py-2.5 bg-white/[0.05] hover:bg-purple-500/15 border border-white/[0.08] hover:border-purple-400/30 rounded-xl text-[11px] text-slate-300 hover:text-purple-300 font-medium transition-all flex items-center gap-2"
+                className="w-full text-left px-3.5 py-2.5 bg-white dark:bg-white/[0.05] hover:bg-purple-50 dark:hover:bg-purple-500/15 border border-slate-200 dark:border-white/[0.08] hover:border-purple-400/40 rounded-xl text-[11px] text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 font-medium transition-all flex items-center gap-2 shadow-xs"
               >
-                <span className="w-6 h-6 rounded-lg bg-purple-500/15 flex items-center justify-center text-[10px]"><i className="fa-solid fa-tag" /></span>
+                <span className="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-[10px]"><i className="fa-solid fa-tag" /></span>
                 Info Harga & Fasilitas
               </button>
               <button
                 onClick={() => sendMessage('Bagaimana cara booking kamar?')}
-                className="w-full text-left px-3.5 py-2.5 bg-white/[0.05] hover:bg-fuchsia-500/15 border border-white/[0.08] hover:border-fuchsia-400/30 rounded-xl text-[11px] text-slate-300 hover:text-fuchsia-300 font-medium transition-all flex items-center gap-2"
+                className="w-full text-left px-3.5 py-2.5 bg-white dark:bg-white/[0.05] hover:bg-fuchsia-50 dark:hover:bg-fuchsia-500/15 border border-slate-200 dark:border-white/[0.08] hover:border-fuchsia-400/40 rounded-xl text-[11px] text-slate-700 dark:text-slate-300 hover:text-fuchsia-600 dark:hover:text-fuchsia-300 font-medium transition-all flex items-center gap-2 shadow-xs"
               >
-                <span className="w-6 h-6 rounded-lg bg-fuchsia-500/15 flex items-center justify-center text-[10px]"><i className="fa-solid fa-calendar-check" /></span>
+                <span className="w-6 h-6 rounded-lg bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center text-[10px]"><i className="fa-solid fa-calendar-check" /></span>
                 Cara Booking
               </button>
             </div>
           )}
 
           {/* Input */}
-          <div className="px-4 py-3 border-t border-white/[0.06] shrink-0 bg-black/20">
+          <div className="px-4 py-3 border-t border-slate-200 dark:border-white/[0.06] shrink-0 bg-white dark:bg-black/20">
             <div className="flex gap-2 items-end">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="Ketik pesan..."
-                className="flex-1 px-4 py-2.5 bg-white/[0.06] border border-white/[0.08] rounded-xl text-white text-[12px] outline-none focus:border-indigo-400/40 focus:bg-white/[0.08] transition-all placeholder-slate-500"
+                className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white text-[12px] outline-none focus:border-indigo-500 transition-all placeholder-slate-400 dark:placeholder-slate-500"
               />
               <button
                 onClick={() => sendMessage()}
                 disabled={typing || !input.trim()}
-                className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center text-sm shadow-lg shadow-indigo-500/25 disabled:opacity-30 disabled:shadow-none hover:shadow-indigo-500/40 hover:scale-105 transition-all duration-200"
+                className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center text-sm shadow-md shadow-indigo-500/25 disabled:opacity-30 disabled:shadow-none hover:scale-105 transition-all duration-200"
               >
                 <i className="fa-solid fa-paper-plane text-xs" />
               </button>

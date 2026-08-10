@@ -32,12 +32,31 @@ export function useAppEffects() {
     document.addEventListener('mousemove', onMove);
     rafId = requestAnimationFrame(loop);
 
-    // Scroll reveal
+    // Scroll reveal observer with dynamic support for new nodes
     const obs = new IntersectionObserver(
-      (entries) => { entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('active'); }); },
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('active');
+          }
+        });
+      },
       { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
     );
-    document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale').forEach((el) => obs.observe(el));
+
+    const observeElements = () => {
+      document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger-item').forEach((el) => {
+        obs.observe(el);
+      });
+    };
+
+    observeElements();
+
+    // Re-scan when new DOM elements appear
+    const mutObs = new MutationObserver(() => {
+      observeElements();
+    });
+    mutObs.observe(document.body, { childList: true, subtree: true });
 
     // Ripple
     const onRipple = (e: MouseEvent) => {
@@ -72,25 +91,62 @@ export function useAppEffects() {
       magneticHandlers.push({ el: btn, move, leave });
     });
 
+    // Scroll handling: Scroll progress bar + Parallax on Hero & Background
+    const progressBar = document.getElementById('scrollProgressBar');
+    const heroText = document.querySelector('.hero-parallax-text') as HTMLElement | null;
+    const heroHouse = document.querySelector('.hero-parallax-house') as HTMLElement | null;
+    const ambientGlows = document.querySelectorAll('.ambient-glow');
+
+    const onScrollUpdate = () => {
+      const y = window.pageYOffset;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      
+      // Update progress bar
+      if (progressBar && docHeight > 0) {
+        const progress = Math.min(100, Math.max(0, (y / docHeight) * 100));
+        progressBar.style.width = `${progress}%`;
+      }
+
+      // Parallax on Hero elements (smooth 60fps)
+      if (y < 800) {
+        if (heroText) {
+          heroText.style.transform = `translate3d(0, ${y * 0.15}px, 0)`;
+          heroText.style.opacity = `${Math.max(0, 1 - y / 650)}`;
+        }
+        if (heroHouse) {
+          heroHouse.style.transform = `translate3d(0, ${y * 0.06}px, 0) scale(${1 + y * 0.0001})`;
+        }
+      }
+
+      // Ambient glows parallax
+      ambientGlows.forEach((glow, idx) => {
+        const speed = idx === 0 ? 0.08 : -0.08;
+        (glow as HTMLElement).style.transform = `translate3d(0, ${y * speed}px, 0)`;
+      });
+    };
+
+    window.addEventListener('scroll', onScrollUpdate, { passive: true });
+    onScrollUpdate(); // Initial call
+
     // Navbar scroll
     let last = 0;
     const h = document.querySelector('header');
-    const onScroll = () => {
+    const onScrollNavbar = () => {
       const cur = window.pageYOffset;
       if (!h) return;
       if (cur > last && cur > 80) { h.classList.add('navbar-hidden'); h.classList.remove('navbar-visible'); }
       else { h.classList.remove('navbar-hidden'); h.classList.add('navbar-visible'); }
       last = cur;
     };
-    window.addEventListener('scroll', onScroll);
+    window.addEventListener('scroll', onScrollNavbar, { passive: true });
 
     // Parallax orbs
     const orbs = document.querySelectorAll('.parallax-orb');
     const onParallax = () => {
       const y = window.pageYOffset;
-      orbs.forEach((o, i) => { (o as HTMLElement).style.transform = `translateY(${y * (i + 1) * 0.02}px)`; });
+      orbs.forEach((o, i) => { (o as HTMLElement).style.transform = `translate3d(0, ${y * (i + 1) * 0.03}px, 0)`; });
     };
-    window.addEventListener('scroll', onParallax);
+    window.addEventListener('scroll', onParallax, { passive: true });
 
     // Spotlight cards
     const spotCards = document.querySelectorAll('.spotlight-card');
@@ -112,9 +168,11 @@ export function useAppEffects() {
       document.removeEventListener('mousemove', onMove);
       cancelAnimationFrame(rafId);
       document.removeEventListener('click', onRipple);
-      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('scroll', onScrollUpdate);
+      window.removeEventListener('scroll', onScrollNavbar);
       window.removeEventListener('scroll', onParallax);
       obs.disconnect();
+      mutObs.disconnect();
       magneticHandlers.forEach(({ el, move, leave }) => { el.removeEventListener('mousemove', move); el.removeEventListener('mouseleave', leave); });
       spotHandlers.forEach(({ el, move }) => { el.removeEventListener('mousemove', move); });
     };

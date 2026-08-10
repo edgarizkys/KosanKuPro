@@ -1,37 +1,206 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-interface RoomItem {
+export interface RoomItem {
   id: string;
   number: string;
   type: string;
   price: number;
   status: string;
   floor: number;
+  size?: string;
+  bedType?: string;
+  electricity?: string;
+  view?: string;
+  capacity?: string;
+  videoUrl?: string;
+  gallery?: string[];
   facilities?: string[];
+  categorizedFacilities?: {
+    kamar: string[];
+    kamarMandi: string[];
+    smart: string[];
+    bersama: string[];
+  };
   imageUrl?: string | null;
 }
 
 const FALLBACK_ROOMS: RoomItem[] = [
-  { id: '1', number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000, status: 'OCCUPIED', floor: 1, imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80' },
-  { id: '2', number: 'A-102', type: 'Deluxe Studio Smart', price: 1500000, status: 'AVAILABLE', floor: 1, imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80' },
-  { id: '3', number: 'B-201', type: 'VIP Balcony Resort', price: 2000000, status: 'OCCUPIED', floor: 2, imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80' },
-  { id: '4', number: 'B-202', type: 'VIP Balcony Resort', price: 2000000, status: 'MAINTENANCE', floor: 2, imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80' },
-  { id: '5', number: 'C-301', type: 'Standard Smart Suite', price: 1200000, status: 'AVAILABLE', floor: 3, imageUrl: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80' },
-  { id: '6', number: 'C-302', type: 'Standard Smart Suite', price: 1200000, status: 'OCCUPIED', floor: 3, imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80' },
+  {
+    id: '1',
+    number: 'A-101',
+    type: 'Deluxe Studio Smart',
+    price: 1500000,
+    status: 'OCCUPIED',
+    floor: 1,
+    size: '4 x 5 m (20 m²)',
+    bedType: 'Queen Bed (160x200)',
+    electricity: 'Token Mandiri 1300W',
+    view: 'Inner Garden Courtyard',
+    capacity: '1 - 2 Orang',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-modern-luxury-apartment-living-room-42861-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1000&q=80',
+    ],
+    facilities: ['Springbed Queen', 'Smart TV 43"', 'AC 1 PK Daikin', 'Water Heater', 'Smart Lock', 'WiFi 100Mbps'],
+    categorizedFacilities: {
+      kamar: ['Springbed Queen Comfort', 'AC 1 PK Daikin Inverter', 'Smart TV 43" 4K HDR', 'Lemari 3 Pintu Cermin', 'Meja Kerja & Kursi Ergonomis', 'Gorden Blackout Premium'],
+      kamarMandi: ['Kamar Mandi Dalam', 'Water Heater Ariston 24 Jam', 'Rain Shower Modern', 'Kloset Duduk Toto Eco Washer', 'Wastafel Marmer & Cermin LED'],
+      smart: ['Smart Door Lock (Fingerprint & PIN)', 'Dedicated WiFi Router 100Mbps', 'Smart Lighting Control', 'Intercom Unit ke Resepsionis'],
+      bersama: ['Dapur Bersama Lengkap + Kulkas', 'Dispenser Air RO Hot & Cold', 'Mesin Cuci Otomatis Gratis', 'Rooftop Lounge & Co-Working Space'],
+    },
+  },
+  {
+    id: '2',
+    number: 'A-102',
+    type: 'Deluxe Studio Smart',
+    price: 1500000,
+    status: 'AVAILABLE',
+    floor: 1,
+    size: '4 x 5 m (20 m²)',
+    bedType: 'Queen Bed (160x200)',
+    electricity: 'Token Mandiri 1300W',
+    view: 'Inner Garden Courtyard',
+    capacity: '1 - 2 Orang',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-bright-hotel-room-with-a-king-bed-42862-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1000&q=80',
+    ],
+    facilities: ['Springbed Queen', 'Smart TV 43"', 'AC 1 PK Daikin', 'Water Heater', 'Smart Lock', 'WiFi 100Mbps'],
+    categorizedFacilities: {
+      kamar: ['Springbed Queen Comfort', 'AC 1 PK Daikin Inverter', 'Smart TV 43" 4K', 'Lemari 3 Pintu', 'Meja Kerja & Kursi Ergonomis'],
+      kamarMandi: ['Kamar Mandi Dalam', 'Water Heater Ariston 24 Jam', 'Rain Shower', 'Kloset Duduk Toto', 'Wastafel Marmer'],
+      smart: ['Smart Door Lock (Fingerprint & PIN)', 'Dedicated WiFi Router 100Mbps', 'Smart Lighting Motion'],
+      bersama: ['Dapur Bersama Lengkap', 'Dispenser Air RO', 'Mesin Cuci Gratis', 'Rooftop Lounge'],
+    },
+  },
+  {
+    id: '3',
+    number: 'B-201',
+    type: 'VIP Balcony Resort',
+    price: 2000000,
+    status: 'OCCUPIED',
+    floor: 2,
+    size: '5 x 6 m (30 m²)',
+    bedType: 'King Size (180x200)',
+    electricity: 'Token Mandiri 2200W',
+    view: 'Balkon Pribadi City & Mountain View',
+    capacity: '1 - 2 Orang',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-modern-luxury-apartment-living-room-42861-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80',
+    ],
+    facilities: ['King Bed 180x200', 'Balkon Pribadi', 'Smart TV 50" 4K', 'Kulkas 2 Pintu', 'AC 1.5 PK Daikin', 'Bathtub / Jacuzzi'],
+    categorizedFacilities: {
+      kamar: ['King Size Bed 180x200 Orthopedic', 'Balkon Luas Pribadi + Meja Santai', 'Smart TV 50" 4K HDR', 'AC 1.5 PK Daikin Flash Inverter', 'Kulkas 2 Pintu Pribadi', 'Walk-in Closet Mewah'],
+      kamarMandi: ['Kamar Mandi Dalam Luas', 'Bathtub & Rain Shower Terpisah', 'Water Heater Ariston Digital 24 Jam', 'Kloset Smart Bidet Toto', 'Double Vanity Wastafel'],
+      smart: ['Smart Door Lock (Face Recognition & PIN)', 'High Speed WiFi 150Mbps Dedicated', 'Google Home Smart Assistant', 'Automated Curtain Control'],
+      bersama: ['Akses Eksklusif Rooftop VIP Lounge', 'Dapur Bersama Chef-Grade', 'Area Parkir Mobil Terdedikasi', 'Free Laundry 3x Seminggu'],
+    },
+  },
+  {
+    id: '4',
+    number: 'B-202',
+    type: 'VIP Balcony Resort',
+    price: 2000000,
+    status: 'MAINTENANCE',
+    floor: 2,
+    size: '5 x 6 m (30 m²)',
+    bedType: 'King Size (180x200)',
+    electricity: 'Token Mandiri 2200W',
+    view: 'Balkon Pribadi Garden View',
+    capacity: '1 - 2 Orang',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-bright-hotel-room-with-a-king-bed-42862-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1000&q=80',
+    ],
+    facilities: ['King Bed 180x200', 'Balkon Pribadi', 'Smart TV 50" 4K', 'Kulkas 2 Pintu', 'AC 1.5 PK Daikin'],
+    categorizedFacilities: {
+      kamar: ['King Size Bed 180x200', 'Balkon Pribadi', 'Smart TV 50" 4K', 'AC 1.5 PK Daikin Inverter', 'Kulkas 2 Pintu'],
+      kamarMandi: ['Kamar Mandi Dalam', 'Water Heater Ariston 24 Jam', 'Rain Shower', 'Kloset Toto'],
+      smart: ['Smart Door Lock Fingerprint', 'Dedicated WiFi 150Mbps'],
+      bersama: ['Akses Rooftop VIP Lounge', 'Dapur Bersama', 'Parkir Mobil'],
+    },
+  },
+  {
+    id: '5',
+    number: 'C-301',
+    type: 'Standard Smart Suite',
+    price: 1200000,
+    status: 'AVAILABLE',
+    floor: 3,
+    size: '3.5 x 4 m (14 m²)',
+    bedType: 'Single Bed (120x200)',
+    electricity: 'Token Mandiri 900W',
+    view: 'Skyline Dago Bandung',
+    capacity: '1 Orang',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-modern-luxury-apartment-living-room-42861-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80',
+    ],
+    facilities: ['Single Bed 120x200', 'AC 0.75 PK', 'Water Heater', 'Smart Lock', 'WiFi 100Mbps', 'Meja Belajar'],
+    categorizedFacilities: {
+      kamar: ['Single Bed 120x200 Comfort', 'AC 0.75 PK Hemat Energi', 'Meja Belajar & Rak Buku', 'Lemari 2 Pintu'],
+      kamarMandi: ['Kamar Mandi Dalam', 'Water Heater 24 Jam', 'Shower & Kloset Duduk Toto'],
+      smart: ['Smart Lock PIN Access', 'WiFi 100Mbps Cepat & Stabil'],
+      bersama: ['Dapur Bersama', 'Dispenser Air Minum', 'Mesin Cuci Gratis'],
+    },
+  },
+  {
+    id: '6',
+    number: 'C-302',
+    type: 'Standard Smart Suite',
+    price: 1200000,
+    status: 'OCCUPIED',
+    floor: 3,
+    size: '3.5 x 4 m (14 m²)',
+    bedType: 'Single Bed (120x200)',
+    electricity: 'Token Mandiri 900W',
+    view: 'Skyline Dago Bandung',
+    capacity: '1 Orang',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-bright-hotel-room-with-a-king-bed-42862-large.mp4',
+    imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1000&q=80',
+    gallery: [
+      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1000&q=80',
+    ],
+    facilities: ['Single Bed 120x200', 'AC 0.75 PK', 'Water Heater', 'Smart Lock', 'WiFi 100Mbps'],
+    categorizedFacilities: {
+      kamar: ['Single Bed 120x200', 'AC 0.75 PK', 'Meja Belajar', 'Lemari 2 Pintu'],
+      kamarMandi: ['Kamar Mandi Dalam', 'Water Heater', 'Shower & Kloset Duduk'],
+      smart: ['Smart Lock PIN', 'WiFi 100Mbps'],
+      bersama: ['Dapur Bersama', 'Dispenser RO', 'Mesin Cuci'],
+    },
+  },
 ];
 
-const DEFAULT_IMG = 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80';
+const DEFAULT_IMG = 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1000&q=80';
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
 }
 
 function statusColor(status: string) {
-  if (status === 'AVAILABLE') return 'bg-emerald-500/90 text-white';
-  if (status === 'OCCUPIED') return 'bg-rose-500/90 text-white';
-  return 'bg-amber-500/90 text-orchid-dark';
+  if (status === 'AVAILABLE') return 'bg-emerald-500 text-white';
+  if (status === 'OCCUPIED') return 'bg-rose-500 text-white';
+  return 'bg-amber-500 text-slate-900';
 }
 
 export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
@@ -40,13 +209,39 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
   const [rooms, setRooms] = useState<RoomItem[]>(FALLBACK_ROOMS);
   const [filter, setFilter] = useState<string>('all');
   const [detailRoom, setDetailRoom] = useState<RoomItem | null>(null);
+  const [selectedMediaTab, setSelectedMediaTab] = useState<'photo' | 'video'>('photo');
+  const [activePhotoIdx, setActivePhotoIdx] = useState<number>(0);
+  const [activeFacilityCategory, setActiveFacilityCategory] = useState<'all' | 'kamar' | 'kamarMandi' | 'smart' | 'bersama'>('all');
   const [bookingSent, setBookingSent] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetch('/api/rooms')
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
-        if (json?.data?.length) setRooms(json.data);
+        if (json?.data?.length) {
+          // Merge API data with rich fallback metadata if missing
+          const merged = json.data.map((r: any, idx: number) => {
+            const fb = FALLBACK_ROOMS[idx % FALLBACK_ROOMS.length];
+            return {
+              ...fb,
+              ...r,
+              gallery: r.gallery || fb.gallery,
+              videoUrl: r.videoUrl || fb.videoUrl,
+              size: r.size || fb.size,
+              bedType: r.bedType || fb.bedType,
+              electricity: r.electricity || fb.electricity,
+              view: r.view || fb.view,
+              capacity: r.capacity || fb.capacity,
+              categorizedFacilities: r.categorizedFacilities || fb.categorizedFacilities,
+            };
+          });
+          setRooms(merged);
+        }
       })
       .catch(() => {});
   }, []);
@@ -55,8 +250,8 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
   const available = rooms.filter((r) => r.status === 'AVAILABLE');
   const top3 = available.slice(0, 3).map((r, i) => ({
     ...r,
-    badge: i === 0 ? '👑 #1 Best' : i === 1 ? '⭐ #2' : '🔥 #3',
-    badgeClass: i === 0 ? 'bg-orchid-gold text-orchid-dark' : 'bg-orchid-violet text-white',
+    badge: i === 0 ? '👑 #1 Best Choice' : i === 1 ? '⭐ #2 Populer' : '🔥 #3 Favorite',
+    badgeClass: i === 0 ? 'bg-amber-400 text-slate-900 font-extrabold' : 'bg-purple-600 text-white font-bold',
   }));
 
   useEffect(() => {
@@ -64,22 +259,18 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
     const SwiperLib = (window as any).Swiper;
     if (!SwiperLib) return;
 
-    // Destroy previous instance before re-creating
     if (swiperInstance.current) {
       swiperInstance.current.destroy(true, true);
       swiperInstance.current = null;
     }
 
-    // Wait for DOM to settle after React re-render
     const timer = setTimeout(() => {
       if (!swiperRef.current) return;
       swiperInstance.current = new SwiperLib('.swiperRooms', {
         slidesPerView: 1,
-        spaceBetween: 20,
+        spaceBetween: 24,
         loop: filtered.length > 3,
-        autoplay: { delay: 3500, disableOnInteraction: false },
-        pagination: { el: '.swiperRooms .swiper-pagination', clickable: true },
-        navigation: { nextEl: '.swiperRooms .swiper-button-next', prevEl: '.swiperRooms .swiper-button-prev' },
+        autoplay: { delay: 4000, disableOnInteraction: false },
         breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } },
       });
     }, 100);
@@ -87,178 +278,574 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
     return () => clearTimeout(timer);
   }, [rooms, filter]);
 
+  const openRoomDetail = (room: RoomItem) => {
+    setDetailRoom(room);
+    setSelectedMediaTab('photo');
+    setActivePhotoIdx(0);
+    setActiveFacilityCategory('all');
+    setBookingSent(false);
+  };
+
   return (
     <section id="rooms-section" className="space-y-6 sm:space-y-10">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 reveal px-1 sm:px-0">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 reveal">
         <div>
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-orchid-gold">Katalog Kamar</span>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mt-1.5 sm:mt-2">Pilihan Unit Terbaik</h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1.5 sm:mt-2">{rooms.length} unit premium dengan fasilitas kelas atas di jantung Dago</p>
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Katalog Kamar Eksklusif</span>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mt-1.5 sm:mt-2 tracking-tight">Pilihan Unit Terbaik</h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1.5 sm:mt-2">{rooms.length} unit kamar siap huni dengan video tour, fasilitas hotel, &amp; smart system di Dago</p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 self-start overflow-x-auto scrollbar-none">
           {['all', 'AVAILABLE', 'OCCUPIED'].map((f) => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] font-bold transition-all border whitespace-nowrap flex-shrink-0 ${
-              filter === f ? 'bg-white text-orchid-dark border-white' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10'
-            }`}>
-              {f === 'all' ? 'Semua' : f === 'AVAILABLE' ? 'Tersedia' : 'Terisi'}
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-300 border whitespace-nowrap flex-shrink-0 active:scale-95 cursor-pointer ${
+                filter === f
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md'
+                  : 'bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              {f === 'all' ? 'Semua Unit' : f === 'AVAILABLE' ? '🟢 Tersedia' : '🔴 Terisi'}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Top 3 cards */}
+      {/* Top 3 Featured Cards */}
       {top3.length > 0 && (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {top3.map((room, idx) => (
-          <div key={room.id} className={`glass-card rounded-2xl sm:rounded-3xl overflow-hidden group card-premium spotlight-card border-gradient-animated`} style={{ animationDelay: `${idx * 0.12}s` }}>
-            <div className="relative h-40 sm:h-52 overflow-hidden bg-orchid-surface">
-              <img src={room.imageUrl || DEFAULT_IMG} alt={room.type} loading="lazy" className="w-full h-full object-cover img-zoom" onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_IMG; }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-orchid-dark/80 via-transparent to-transparent" />
-              <span className="absolute top-4 left-4 px-3 py-1 bg-emerald-500/90 text-white text-[10px] font-bold uppercase tracking-wider rounded-full backdrop-blur-sm">Available</span>
-              <span className={`absolute top-4 right-4 px-3 py-1.5 ${room.badgeClass} text-[10px] font-black uppercase rounded-full shadow-lg`}>{room.badge}</span>
-              <div className="absolute bottom-4 left-4">
-                <h3 className="text-lg font-extrabold text-white">{room.type}</h3>
-                <p className="text-[11px] text-slate-300">Kamar {room.number} • Lantai {room.floor}</p>
-              </div>
-            </div>
-            <div className="p-4 sm:p-5 space-y-2 sm:space-y-3">
-              {room.facilities && room.facilities.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {room.facilities.slice(0, 4).map((f) => (
-                    <span key={f} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-md text-[9px] text-slate-300 font-medium">{f}</span>
-                  ))}
-                  {room.facilities.length > 4 && <span className="text-[9px] text-slate-500">+{room.facilities.length - 4}</span>}
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-xl font-black text-white">Rp {(room.price / 1000000).toFixed(1)}<span className="text-sm font-bold text-slate-400">jt</span></span>
-                  <span className="text-[10px] text-slate-500 block">/bulan</span>
-                </div>
-                <button onClick={() => { setDetailRoom(room); setBookingSent(false); }} className="px-5 py-2.5 bg-white text-orchid-dark text-xs font-bold rounded-xl hover:shadow-lg hover:shadow-white/20 hover:scale-105 transition-all duration-300">Detail</button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {top3.map((room, idx) => (
+            <div
+              key={room.id}
+              className={`reveal delay-${idx + 1} bg-white dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl overflow-hidden group card-premium shadow-md hover:shadow-2xl hover:-translate-y-2 border border-black/5 dark:border-white/10 transition-all duration-500 flex flex-col justify-between`}
+            >
+              <div>
+                <div className="relative h-48 sm:h-56 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <img
+                    src={room.imageUrl || DEFAULT_IMG}
+                    alt={room.type}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_IMG;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
-      {/* Swiper carousel */}
-      <div className="reveal delay-2" ref={swiperRef}>
-        <div className="swiper swiperRooms">
-          <div className="swiper-wrapper">
-            {filtered.map((room) => (
-              <div key={room.id} className="swiper-slide">
-                <div className="glass-card rounded-xl sm:rounded-2xl overflow-hidden group h-full">
-                  <div className="relative h-36 sm:h-44 overflow-hidden">
-                    <img src={room.imageUrl || DEFAULT_IMG} alt={room.number} loading="lazy" className="w-full h-full object-cover img-zoom" onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_IMG; }} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-orchid-dark/70 to-transparent" />
-                    <span className={`absolute top-3 left-3 px-2.5 py-0.5 ${statusColor(room.status)} text-[9px] font-bold uppercase rounded-full`}>{room.status}</span>
-                    <div className="absolute bottom-3 left-3">
-                      <h3 className="text-sm font-bold text-white">{room.type}</h3>
-                      <p className="text-[10px] text-slate-300">Kamar {room.number} • Lt {room.floor}</p>
+                  {/* Top Badges */}
+                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+                    <span className={`px-3 py-1 ${statusColor(room.status)} text-[10px] font-bold uppercase rounded-full shadow-md backdrop-blur-xs`}>
+                      {room.status}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {room.videoUrl && (
+                        <span className="px-2.5 py-1 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
+                          <i className="fa-solid fa-video text-rose-400 animate-pulse" /> Video
+                        </span>
+                      )}
+                      <span className={`px-3 py-1 ${room.badgeClass} text-[10px] uppercase rounded-full shadow-lg`}>
+                        {room.badge}
+                      </span>
                     </div>
                   </div>
-                  <div className="p-3 sm:p-4 space-y-2">
-                    {room.facilities && room.facilities.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {room.facilities.slice(0, 3).map((f) => (
-                          <span key={f} className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[8px] text-slate-400">{f}</span>
-                        ))}
+
+                  {/* Bottom Room Headline in photo */}
+                  <div className="absolute bottom-3.5 left-4 right-4">
+                    <h3 className="text-lg sm:text-xl font-extrabold text-white drop-shadow-md">{room.type}</h3>
+                    <div className="flex items-center gap-2.5 text-[11px] text-slate-200 mt-0.5 drop-shadow">
+                      <span>Kamar {room.number}</span>
+                      <span>•</span>
+                      <span>Lt {room.floor}</span>
+                      <span>•</span>
+                      <span>{room.size || '20 m²'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-5 space-y-3.5">
+                  {/* Specification Quick Chips */}
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600 dark:text-slate-300 font-medium">
+                    <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 p-1.5 rounded-lg">
+                      <i className="fa-solid fa-bed text-amber-500" />
+                      <span className="truncate">{room.bedType || 'Queen Bed'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 p-1.5 rounded-lg">
+                      <i className="fa-solid fa-bolt text-amber-500" />
+                      <span className="truncate">{room.electricity || 'Token 1300W'}</span>
+                    </div>
+                  </div>
+
+                  {/* Key Facilities Badges */}
+                  {room.facilities && room.facilities.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {room.facilities.slice(0, 4).map((f) => (
+                        <span key={f} className="px-2 py-0.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md text-[9px] text-slate-700 dark:text-slate-300 font-medium">
+                          {f}
+                        </span>
+                      ))}
+                      {room.facilities.length > 4 && <span className="text-[9px] text-slate-400 font-semibold">+{room.facilities.length - 4} fasilitas</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Card Footer */}
+              <div className="p-5 pt-0">
+                <div className="flex items-center justify-between pt-3 border-t border-black/5 dark:border-white/10">
+                  <div>
+                    <span className="text-xl font-black text-slate-900 dark:text-white">
+                      Rp {(room.price / 1000000).toFixed(1)}
+                      <span className="text-sm font-bold text-slate-500">jt</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">/bulan</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      openRoomDetail(room);
+                    }}
+                    className="relative z-20 cursor-pointer px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-1.5"
+                  >
+                    <span>Lihat Detail</span>
+                    <i className="fa-solid fa-arrow-right text-[10px]" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Swiper Carousel for All Filtered Rooms */}
+      <div className="reveal delay-2" ref={swiperRef}>
+        <div className="swiper swiperRooms">
+          <div className="swiper-wrapper py-2">
+            {filtered.map((room) => (
+              <div key={room.id} className="swiper-slide h-auto">
+                <div className="bg-white dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl overflow-hidden group h-full border border-black/5 dark:border-white/10 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 flex flex-col justify-between">
+                  <div>
+                    <div className="relative h-44 sm:h-52 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <img
+                        src={room.imageUrl || DEFAULT_IMG}
+                        alt={room.number}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_IMG;
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      
+                      <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+                        <span className={`px-3 py-0.5 ${statusColor(room.status)} text-[9px] font-bold uppercase rounded-full shadow-md`}>
+                          {room.status}
+                        </span>
+                        {room.videoUrl && (
+                          <span className="px-2 py-0.5 bg-black/60 text-white text-[8px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
+                            <i className="fa-solid fa-video text-rose-400" /> Video Tour
+                          </span>
+                        )}
                       </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-black text-orchid-tint">{formatPrice(room.price)}</span>
-                      <button onClick={() => { setDetailRoom(room); setBookingSent(false); }} className="px-4 py-2 bg-white/5 hover:bg-white/15 border border-white/10 rounded-lg text-[10px] font-bold text-white transition-all">Detail</button>
+
+                      <div className="absolute bottom-3.5 left-3.5 right-3.5">
+                        <h3 className="text-base font-bold text-white drop-shadow">{room.type}</h3>
+                        <p className="text-[11px] text-slate-200 drop-shadow">Kamar {room.number} • Lantai {room.floor} • {room.size || '20 m²'}</p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 sm:p-5 space-y-3">
+                      {room.facilities && room.facilities.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {room.facilities.slice(0, 3).map((f) => (
+                            <span key={f} className="px-2 py-0.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md text-[9px] text-slate-700 dark:text-slate-300 font-medium">
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-4 sm:p-5 pt-0">
+                    <div className="flex items-center justify-between pt-2.5 border-t border-black/5 dark:border-white/10">
+                      <div>
+                        <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{formatPrice(room.price)}</span>
+                        <span className="text-[9px] text-slate-500 dark:text-slate-400 block">/bulan</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openRoomDetail(room);
+                        }}
+                        className="relative z-20 cursor-pointer px-4 py-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 rounded-xl text-[11px] font-bold text-slate-900 dark:text-white active:scale-95 transition-all duration-200"
+                      >
+                        Detail &amp; Video
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="swiper-pagination mt-5 sm:mt-8" />
-          <div className="swiper-button-next hidden sm:flex" />
-          <div className="swiper-button-prev hidden sm:flex" />
+        </div>
+
+        {/* Custom Luxury Navigation Controls (← [🏠] →) */}
+        <div className="flex items-center justify-center gap-3.5 mt-6 sm:mt-8">
+          {/* Left Arrow Button */}
+          <button
+            type="button"
+            onClick={() => swiperInstance.current?.slidePrev()}
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#edf2f9] dark:bg-white/10 hover:bg-[#e2e8f0] dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer"
+            title="Unit Sebelumnya"
+            aria-label="Previous Slide"
+          >
+            <i className="fa-solid fa-arrow-left text-xs sm:text-sm" />
+          </button>
+
+          {/* Center House Navigation Icon */}
+          <div
+            onClick={() => swiperInstance.current?.slideTo(0)}
+            className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#131b3e] dark:bg-white text-white dark:text-[#131b3e] flex items-center justify-center text-base sm:text-lg shadow-xl shadow-[#131b3e]/30 dark:shadow-white/20 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer group"
+            title="Kembali ke Unit Pertama"
+          >
+            <i className="fa-solid fa-house group-hover:scale-110 transition-transform duration-200 text-sm sm:text-base" />
+          </div>
+
+          {/* Right Arrow Button */}
+          <button
+            type="button"
+            onClick={() => swiperInstance.current?.slideNext()}
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#edf2f9] dark:bg-white/10 hover:bg-[#e2e8f0] dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer"
+            title="Unit Selanjutnya"
+            aria-label="Next Slide"
+          >
+            <i className="fa-solid fa-arrow-right text-xs sm:text-sm" />
+          </button>
         </div>
       </div>
 
-      {/* Room Detail Modal */}
-      {detailRoom && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDetailRoom(null)}>
-          <div className="bg-[#1a1025] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden animate-scale-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="relative h-56">
-              <img src={detailRoom.imageUrl || DEFAULT_IMG} alt={detailRoom.type} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_IMG; }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a1025] via-transparent to-transparent" />
-              <button onClick={() => setDetailRoom(null)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-all">
-                <i className="fa-solid fa-xmark" />
+      {/* Comprehensive Luxury Room Detail Modal (Photo Gallery + Video Tour + Categorized Facilities) */}
+      {mounted && detailRoom && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-5 animate-fade-in overflow-y-auto"
+          onClick={() => setDetailRoom(null)}
+        >
+          <div
+            className="bg-white dark:bg-[#151224] border border-black/10 dark:border-white/15 rounded-3xl w-full max-w-2xl overflow-hidden animate-scale-in max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-white my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header Media (Photo Gallery vs Video Tour Switcher) */}
+            <div className="relative bg-black flex-shrink-0">
+              {/* Media Switcher Tab Buttons */}
+              <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-md p-1 rounded-xl border border-white/15">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMediaTab('photo')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    selectedMediaTab === 'photo'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  <i className="fa-solid fa-image mr-1.5 text-[11px]" />
+                  Foto ({detailRoom.gallery?.length || 1})
+                </button>
+                {detailRoom.videoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMediaTab('video')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      selectedMediaTab === 'video'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    <i className="fa-solid fa-play mr-1.5 text-[11px]" />
+                    Video Tour 360°
+                  </button>
+                )}
+              </div>
+
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setDetailRoom(null)}
+                className="absolute top-4 right-4 z-20 w-9 h-9 bg-black/60 hover:bg-black text-white rounded-full flex items-center justify-center transition-all shadow-md cursor-pointer border border-white/15"
+                title="Tutup"
+              >
+                <i className="fa-solid fa-xmark text-sm" />
               </button>
-              <span className={`absolute top-4 left-4 px-3 py-1 ${statusColor(detailRoom.status)} text-[10px] font-bold uppercase rounded-full`}>{detailRoom.status}</span>
-              <div className="absolute bottom-4 left-5">
-                <h3 className="text-xl font-black text-white">{detailRoom.type}</h3>
-                <p className="text-xs text-slate-300">Kamar {detailRoom.number} • Lantai {detailRoom.floor}</p>
+
+              {/* Media Viewport */}
+              <div className="h-60 sm:h-72 w-full relative overflow-hidden bg-slate-900 flex items-center justify-center">
+                {selectedMediaTab === 'photo' ? (
+                  <>
+                    <img
+                      src={(detailRoom.gallery && detailRoom.gallery[activePhotoIdx]) || detailRoom.imageUrl || DEFAULT_IMG}
+                      alt={detailRoom.type}
+                      className="w-full h-full object-cover transition-all duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                  </>
+                ) : (
+                  <div className="w-full h-full relative">
+                    <video
+                      src={detailRoom.videoUrl}
+                      controls
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Bottom Overlay Info */}
+                <div className="absolute bottom-4 left-5 right-5 pointer-events-none">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`px-2.5 py-0.5 ${statusColor(detailRoom.status)} text-[9px] font-black uppercase rounded-full shadow-md`}>
+                      {detailRoom.status}
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-xs border border-white/20">
+                      Lantai {detailRoom.floor}
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white drop-shadow-md">{detailRoom.type}</h3>
+                  <p className="text-xs text-slate-200 drop-shadow">Kamar No. {detailRoom.number} • {detailRoom.view || 'Dago Scenic View'}</p>
+                </div>
               </div>
+
+              {/* Photo Thumbnails Strip (Only if Photo tab active & multiple photos) */}
+              {selectedMediaTab === 'photo' && detailRoom.gallery && detailRoom.gallery.length > 1 && (
+                <div className="bg-slate-950 p-2 flex items-center gap-2 overflow-x-auto scrollbar-none border-t border-white/10">
+                  {detailRoom.gallery.map((img, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setActivePhotoIdx(i)}
+                      className={`relative w-14 h-10 sm:w-16 sm:h-11 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all cursor-pointer ${
+                        activePhotoIdx === i ? 'border-amber-400 scale-105 ring-2 ring-amber-400/30' : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="p-6 space-y-5">
-              <div className="flex items-center justify-between">
+
+            {/* Scrollable Content Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
+              {/* Pricing & Key Specs Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10">
                 <div>
-                  <span className="text-2xl font-black text-white">{formatPrice(detailRoom.price)}</span>
-                  <span className="text-xs text-slate-500 block">/bulan</span>
+                  <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                    {formatPrice(detailRoom.price)}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium mt-0.5">
+                    / bulan (termasuk WiFi 100Mbps &amp; air bersih)
+                  </span>
                 </div>
-                <div className="text-right text-[11px] text-slate-400">
-                  <p><i className="fa-solid fa-ruler-combined mr-1 text-orchid-tint" /> Lt {detailRoom.floor}</p>
-                  <p className="mt-1"><i className="fa-solid fa-hashtag mr-1 text-orchid-tint" /> {detailRoom.number}</p>
+                <div className="text-right sm:text-right">
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-3 py-1 rounded-full">
+                    ✓ Garansi Unit Bersih &amp; Siap Huni
+                  </span>
                 </div>
               </div>
-              {detailRoom.facilities && detailRoom.facilities.length > 0 && (
-                <div>
-                  <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Fasilitas</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {detailRoom.facilities.map((f) => (
-                      <span key={f} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] text-slate-300 font-medium">
-                        <i className="fa-solid fa-check text-emerald-400 mr-1.5 text-[8px]" />{f}
-                      </span>
+
+              {/* Room Specifications Grid */}
+              <div>
+                <h4 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
+                  Spesifikasi Kamar
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <i className="fa-solid fa-ruler-combined text-amber-500" />
+                      <span>Luas Kamar</span>
+                    </div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">{detailRoom.size || '20 m²'}</div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <i className="fa-solid fa-bed text-amber-500" />
+                      <span>Tipe Ranjang</span>
+                    </div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{detailRoom.bedType || 'Queen Bed'}</div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <i className="fa-solid fa-bolt text-amber-500" />
+                      <span>Listrik</span>
+                    </div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{detailRoom.electricity || 'Token 1300W'}</div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <i className="fa-solid fa-user-group text-amber-500" />
+                      <span>Kapasitas</span>
+                    </div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">{detailRoom.capacity || '1-2 Orang'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Categorized Facilities Tabs */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Fasilitas Lengkap
+                  </h4>
+                  <div className="flex gap-1 overflow-x-auto scrollbar-none">
+                    {[
+                      { key: 'all', label: 'Semua' },
+                      { key: 'kamar', label: '🛏️ Kamar' },
+                      { key: 'kamarMandi', label: '🚿 Kamar Mandi' },
+                      { key: 'smart', label: '⚡ Smart & IT' },
+                      { key: 'bersama', label: '🏡 Bersama' },
+                    ].map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveFacilityCategory(tab.key as any)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          activeFacilityCategory === tab.key
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                            : 'bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-black/10 dark:hover:bg-white/10'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
                     ))}
                   </div>
                 </div>
-              )}
-              <div className="pt-3 border-t border-white/5 space-y-3">
-                {detailRoom.status === 'AVAILABLE' ? (
-                  bookingSent ? (
-                    <div className="text-center py-4">
-                      <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mx-auto mb-3"><i className="fa-solid fa-check" /></div>
-                      <p className="text-sm font-bold text-white">Permintaan Booking Terkirim!</p>
-                      <p className="text-[11px] text-slate-400 mt-1">Admin akan menghubungi kamu via WhatsApp untuk konfirmasi DP.</p>
-                    </div>
-                  ) : (
+
+                {/* Filtered Facility Chips */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* If categorizedFacilities available */}
+                  {detailRoom.categorizedFacilities ? (
                     <>
-                      <button
-                        onClick={async () => {
-                          try {
-                            await fetch('/api/whatsapp/send', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ message: `Halo, saya tertarik booking kamar ${detailRoom.number} (${detailRoom.type}) - ${formatPrice(detailRoom.price)}/bln. Mohon info DP-nya.`, target: '' }),
-                            });
-                          } catch {}
-                          setBookingSent(true);
-                        }}
-                        className="w-full py-3.5 bg-white text-orchid-dark font-bold text-sm rounded-xl hover:shadow-lg hover:shadow-white/20 transition-all"
-                      >
-                        <i className="fa-solid fa-calendar-check mr-2" />Booking Sekarang
-                      </button>
-                      <p className="text-center text-[10px] text-slate-500">Gratis • Admin akan konfirmasi via WhatsApp</p>
+                      {(activeFacilityCategory === 'all' || activeFacilityCategory === 'kamar') &&
+                        detailRoom.categorizedFacilities.kamar?.map((f) => (
+                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                            <i className="fa-solid fa-bed text-amber-500 text-[11px]" />
+                            <span>{f}</span>
+                          </div>
+                        ))}
+
+                      {(activeFacilityCategory === 'all' || activeFacilityCategory === 'kamarMandi') &&
+                        detailRoom.categorizedFacilities.kamarMandi?.map((f) => (
+                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                            <i className="fa-solid fa-shower text-cyan-500 text-[11px]" />
+                            <span>{f}</span>
+                          </div>
+                        ))}
+
+                      {(activeFacilityCategory === 'all' || activeFacilityCategory === 'smart') &&
+                        detailRoom.categorizedFacilities.smart?.map((f) => (
+                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                            <i className="fa-solid fa-fingerprint text-purple-500 text-[11px]" />
+                            <span>{f}</span>
+                          </div>
+                        ))}
+
+                      {(activeFacilityCategory === 'all' || activeFacilityCategory === 'bersama') &&
+                        detailRoom.categorizedFacilities.bersama?.map((f) => (
+                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                            <i className="fa-solid fa-house-chimney-user text-emerald-500 text-[11px]" />
+                            <span>{f}</span>
+                          </div>
+                        ))}
                     </>
-                  )
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-sm font-bold text-slate-400"><i className="fa-solid fa-lock mr-2" />Kamar sedang {detailRoom.status === 'OCCUPIED' ? 'terisi' : 'maintenance'}</p>
-                    <button onClick={onLogin} className="mt-3 px-5 py-2.5 bg-white/5 border border-white/10 text-white text-xs font-bold rounded-xl hover:bg-white/10 transition-all">Hubungi Admin</button>
-                  </div>
-                )}
+                  ) : (
+                    detailRoom.facilities?.map((f) => (
+                      <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                        <i className="fa-solid fa-check text-emerald-500 text-[11px]" />
+                        <span>{f}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Modal Bottom Fixed CTA Actions */}
+            <div className="p-4 sm:p-5 border-t border-black/5 dark:border-white/10 bg-slate-50/80 dark:bg-[#110d1c]/80 backdrop-blur-md flex-shrink-0">
+              {detailRoom.status === 'AVAILABLE' ? (
+                bookingSent ? (
+                  <div className="text-center py-2 space-y-1">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg mx-auto">
+                      <i className="fa-solid fa-check" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">Permintaan Booking Terkirim!</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Admin KosanKu Pro akan segera menghubungi kamu via WhatsApp untuk konfirmasi ketersediaan &amp; jadwal check-in.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await fetch('/api/whatsapp/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              message: `Halo Admin KosanKu Pro, saya tertarik booking Kamar No. ${detailRoom.number} (${detailRoom.type}) - ${formatPrice(detailRoom.price)}/bulan. Mohon info ketersediaan dan jadwal surveinya. Terima kasih!`,
+                              target: '',
+                            }),
+                          });
+                        } catch {}
+                        setBookingSent(true);
+                      }}
+                      className="w-full sm:flex-1 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs sm:text-sm rounded-xl shadow-xl hover:scale-[1.01] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <i className="fa-brands fa-whatsapp text-emerald-500 text-base" />
+                      <span>Booking Sekarang via WhatsApp</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open(`https://wa.me/6281234567890?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20ingin%20jadwalkan%20survei%20untuk%20Kamar%20${detailRoom.number}%20(${detailRoom.type}).`, '_blank');
+                      }}
+                      className="w-full sm:w-auto px-5 py-3.5 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <i className="fa-regular fa-calendar" />
+                      <span>Jadwal Survei</span>
+                    </button>
+                  </div>
+                )
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <i className="fa-solid fa-lock text-rose-500" />
+                    <span>Kamar sedang {detailRoom.status === 'OCCUPIED' ? 'ditempati penghuni' : 'dalam tahap perawatan'}.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailRoom(null);
+                      onLogin();
+                    }}
+                    className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    Hubungi Admin / Masuk Waiting List
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

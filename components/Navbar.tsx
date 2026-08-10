@@ -22,6 +22,11 @@ export default function Navbar({ view, role, theme, onToggleTheme, onLogin, onLo
 
   const closeMobile = () => setMobileOpen(false);
 
+  // On landing page, the Lume AI Pill Navbar inside HeroSection serves as the single main header
+  if (isPublic) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-40 glass-panel px-4 sm:px-6 py-3 navbar-visible">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
