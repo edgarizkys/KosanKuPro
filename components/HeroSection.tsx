@@ -45,8 +45,8 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
   return (
     <section className="relative w-full font-sans select-none overflow-hidden transition-colors">
       
-      {/* Seamless Full-Width Canvas Container (Mobile: Editorial Height | Desktop: Full Luxury) */}
-      <div className="relative w-full h-[450px] xs:h-[480px] sm:h-[84vh] sm:min-h-[640px] sm:max-h-[820px] bg-[#f8f7f4] dark:bg-[#121018] rounded-[2rem] sm:rounded-[3rem] border border-black/5 dark:border-white/10 overflow-hidden shadow-sm flex flex-col justify-between transition-colors">
+      {/* Seamless Full-Width Canvas Container (Mobile: Compact Editorial | Desktop: Full Luxury) */}
+      <div className="relative w-full h-[420px] xs:h-[450px] sm:h-[84vh] sm:min-h-[640px] sm:max-h-[820px] bg-[#f8f7f4] dark:bg-[#121018] rounded-[2rem] sm:rounded-[3rem] border border-black/5 dark:border-white/10 overflow-hidden shadow-sm flex flex-col justify-between transition-colors">
         
         {/* Top Navbar Floating Inside Canvas */}
         <div className="relative z-40 flex items-center justify-between w-full px-4 py-3 sm:px-10 sm:py-5">
@@ -88,11 +88,10 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             {/* CTA Button: Solid Black in White Mode, Solid White in Dark Mode */}
             <button
               onClick={onLogin}
-              className="px-3.5 py-1.5 sm:px-5 sm:py-2.5 bg-black dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-100 rounded-full font-bold text-[11px] sm:text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+              className="px-4 py-1.5 sm:px-5 sm:py-2.5 bg-black dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-100 rounded-full font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <span>Sewa</span>
-              <span className="hidden sm:inline">Sekarang</span>
-              <span>→</span>
+              <i className="fa-solid fa-arrow-right-to-bracket text-[10px]" />
+              <span>Login</span>
             </button>
           </div>
         </div>
@@ -150,8 +149,8 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             </div>
           </div>
 
-          {/* LAYER 2: Modern 3-Story Kosan Villa Cutout (Grand & Perfectly Composed on Mobile) */}
-          <div className="hero-parallax-house relative z-20 w-full max-w-4xl sm:max-w-5xl lg:max-w-6xl mx-auto -mb-1 sm:-mb-3 lg:-mb-4 scale-[1.75] xs:scale-[1.85] sm:scale-105 lg:scale-110 origin-bottom translate-x-8 xs:translate-x-10 sm:translate-x-0 translate-y-3 sm:translate-y-0 pointer-events-none will-change-transform">
+          {/* LAYER 2: Modern 3-Story Kosan Villa Cutout (Massive & Grand on Mobile) */}
+          <div className="hero-parallax-house relative z-20 w-full max-w-4xl sm:max-w-5xl lg:max-w-6xl mx-auto -mb-1 sm:-mb-3 lg:-mb-4 scale-[2.85] xs:scale-[3.0] sm:scale-105 lg:scale-110 origin-bottom translate-x-4 xs:translate-x-6 sm:translate-x-0 translate-y-3 sm:translate-y-0 pointer-events-none will-change-transform">
             <img
               src="/images/modern_kosan_cutout.png"
               alt="KosanKu Pro Luxury Executive Villa"

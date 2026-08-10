@@ -137,14 +137,14 @@ export default function MobileBottomNav({ onLogin }: MobileBottomNavProps) {
           <span className="text-[9px] mt-0.5">Lokasi</span>
         </button>
 
-        {/* Sewa / Login CTA */}
+        {/* Login CTA */}
         <button
           type="button"
           onClick={onLogin}
           className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 rounded-full font-bold text-[11px] shadow-md shadow-amber-500/30 active:scale-95 transition-all cursor-pointer ml-1"
         >
-          <span>Sewa</span>
-          <i className="fa-solid fa-arrow-right text-[10px]" />
+          <i className="fa-solid fa-arrow-right-to-bracket text-[10px]" />
+          <span>Login</span>
         </button>
       </div>
     </div>
