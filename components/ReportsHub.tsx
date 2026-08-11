@@ -20,6 +20,7 @@ export default function ReportsHub({
   revenues,
 }: ReportsHubProps) {
   const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'inventory' | 'tickets' | 'vendor' | 'employee'>('all');
+  const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
 
   function formatIDR(n: number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -333,24 +334,61 @@ export default function ReportsHub({
         </div>
       </div>
 
-      {/* Mobile-Friendly Native Dropdown (Mobile) & Pill Navigation Grid (Desktop) */}
+      {/* Custom Luxury Mobile Dropdown (Unified Design Token matching Orchid Theme) & Desktop Pill Grid */}
       <div className="space-y-3 max-w-full">
-        {/* Mobile View: Native Select Menu (Ultra Mobile Friendly) */}
-        <div className="block sm:hidden neu-card p-3 rounded-2xl">
-          <select
-            value={activeReportTab}
-            onChange={(e) => setActiveReportTab(e.target.value as any)}
-            className="w-full neu-input py-3 px-3 rounded-xl text-xs font-black outline-none border border-emerald-500/40 text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800/80 cursor-pointer"
+        {/* Custom Mobile Dropdown Pill Trigger */}
+        <div className="block sm:hidden relative">
+          <button
+            onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
+            className="w-full neu-btn p-3.5 rounded-2xl flex items-center justify-between text-xs font-black border border-emerald-500/40 text-slate-800 dark:text-white cursor-pointer shadow-md active:scale-[0.99] transition-all bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl"
           >
-            <option value="all">📊 Semua Laporan</option>
-            <option value="financial">📈 Keuangan P&amp;L</option>
-            <option value="incomes">🟢 Penerimaan ({revenues.length})</option>
-            <option value="expenses">🔴 Pengeluaran ({expenses.length})</option>
-            <option value="occupancy">🏢 Okupansi ({occupancyData.length})</option>
-            <option value="inventory">📦 Inventori ({inventoryAuditData.length})</option>
-            <option value="vendor">🏪 Vendor ({vendorHistoryData.length})</option>
-            <option value="employee">👷‍♂️ Karyawan ({employeeTaskData.length})</option>
-          </select>
+            <span className="flex items-center gap-2">
+              <i className="fa-solid fa-filter text-emerald-500" />
+              <span>
+                {activeReportTab === 'all' && '📊 Semua Laporan'}
+                {activeReportTab === 'financial' && '📈 Keuangan P&L'}
+                {activeReportTab === 'incomes' && `🟢 Penerimaan (${revenues.length})`}
+                {activeReportTab === 'expenses' && `🔴 Pengeluaran (${expenses.length})`}
+                {activeReportTab === 'occupancy' && `🏢 Okupansi (${occupancyData.length})`}
+                {activeReportTab === 'inventory' && `📦 Inventori (${inventoryAuditData.length})`}
+                {activeReportTab === 'vendor' && `🏪 Vendor (${vendorHistoryData.length})`}
+                {activeReportTab === 'employee' && `👷‍♂️ Karyawan (${employeeTaskData.length})`}
+              </span>
+            </span>
+            <i className={`fa-solid fa-chevron-down transition-transform duration-300 ${mobileDropdownOpen ? 'rotate-180 text-emerald-500' : 'text-slate-400'}`} />
+          </button>
+
+          {/* Custom Popover Glass Menu */}
+          {mobileDropdownOpen && (
+            <div className="absolute left-0 right-0 top-14 z-50 p-2 neu-card rounded-2xl border border-emerald-500/30 bg-white/95 dark:bg-[#120d21]/95 backdrop-blur-2xl shadow-2xl space-y-1 animate-scale-in">
+              {[
+                { key: 'all', label: '📊 Semua Laporan' },
+                { key: 'financial', label: '📈 Keuangan P&L' },
+                { key: 'incomes', label: `🟢 Penerimaan (${revenues.length})` },
+                { key: 'expenses', label: `🔴 Pengeluaran (${expenses.length})` },
+                { key: 'occupancy', label: `🏢 Okupansi (${occupancyData.length})` },
+                { key: 'inventory', label: `📦 Inventori (${inventoryAuditData.length})` },
+                { key: 'vendor', label: `🏪 Vendor (${vendorHistoryData.length})` },
+                { key: 'employee', label: `👷‍♂️ Karyawan (${employeeTaskData.length})` },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => {
+                    setActiveReportTab(item.key as any);
+                    setMobileDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3.5 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    activeReportTab === item.key
+                      ? 'bg-emerald-600 text-white shadow-md font-black'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-emerald-500/10'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {activeReportTab === item.key && <i className="fa-solid fa-check text-xs" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tablet & Desktop View: Responsive Flex/Grid Pills */}
