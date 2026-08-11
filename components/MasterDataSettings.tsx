@@ -668,7 +668,7 @@ export default function MasterDataSettings() {
           <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Karyawan / Staf Baru</h3>
-              <button onClick={() => setShowAddEmpModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
+              <button onClick={() => setShowAddEmpModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
             </div>
             <form onSubmit={handleAddEmployee} className="space-y-3 text-xs">
               <div>
@@ -713,7 +713,7 @@ export default function MasterDataSettings() {
           <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Owner / Investor Baru</h3>
-              <button onClick={() => setShowAddOwnerModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
+              <button onClick={() => setShowAddOwnerModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
             </div>
             <form onSubmit={handleAddOwner} className="space-y-3 text-xs">
               <div>
@@ -745,7 +745,7 @@ export default function MasterDataSettings() {
           <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Master Barang Inventori</h3>
-              <button onClick={() => setShowAddInvModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
+              <button onClick={() => setShowAddInvModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
             </div>
             <form onSubmit={handleAddInventoryMaster} className="space-y-3.5 text-xs">
               <div>
@@ -781,7 +781,7 @@ export default function MasterDataSettings() {
           <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Vendor Mitra Baru</h3>
-              <button onClick={() => setShowAddVendorModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
+              <button onClick={() => setShowAddVendorModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
             </div>
             <form onSubmit={handleAddVendorMaster} className="space-y-3.5 text-xs">
               <div>
@@ -929,7 +929,7 @@ export default function MasterDataSettings() {
           <div className="neu-card rounded-3xl p-6 sm:p-8 shadow-2xl w-full max-w-md space-y-5 text-slate-900 dark:text-white border border-white/80 dark:border-white/10 animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">🏨 Tambah Fasilitas Baru</h3>
-              <button onClick={() => setShowAddFacModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
+              <button onClick={() => setShowAddFacModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
             </div>
             <form
               onSubmit={(e) => {

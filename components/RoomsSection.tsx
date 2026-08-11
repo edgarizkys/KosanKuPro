@@ -335,16 +335,16 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                       (e.target as HTMLImageElement).src = DEFAULT_IMG;
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
                   {/* Top Badges */}
                   <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
-                    <span className={`px-3 py-1 ${statusColor(room.status)} text-[10px] font-bold uppercase rounded-full shadow-md backdrop-blur-xs`}>
+                    <span className={`px-3 py-1 ${statusColor(room.status)} text-[10px] font-extrabold uppercase rounded-full shadow-md backdrop-blur-xs`}>
                       {room.status}
                     </span>
                     <div className="flex items-center gap-1.5">
                       {room.videoUrl && (
-                        <span className="px-2.5 py-1 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
+                        <span className="px-2.5 py-1 bg-black/70 text-white text-[9px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
                           <i className="fa-solid fa-video text-rose-400 animate-pulse" /> Video
                         </span>
                       )}
@@ -354,10 +354,10 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                     </div>
                   </div>
 
-                  {/* Bottom Room Headline in photo */}
-                  <div className="absolute bottom-3.5 left-4 right-4">
-                    <h3 className="text-lg sm:text-xl font-extrabold text-white drop-shadow-md">{room.type}</h3>
-                    <div className="flex items-center gap-2.5 text-[11px] text-slate-200 mt-0.5 drop-shadow">
+                  {/* Bottom Room Headline in photo (Explicit White Text via style & !important to override light mode defaults) */}
+                  <div className="absolute bottom-3.5 left-4 right-4 text-white z-10" style={{ color: '#ffffff' }}>
+                    <h3 className="text-lg sm:text-xl font-black text-white !text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]" style={{ color: '#ffffff' }}>{room.type}</h3>
+                    <div className="flex items-center gap-2.5 text-[11px] text-white/95 !text-white/95 font-bold mt-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]" style={{ color: 'rgba(255,255,255,0.95)' }}>
                       <span>Kamar {room.number}</span>
                       <span>•</span>
                       <span>Lt {room.floor}</span>
@@ -442,22 +442,22 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                           (e.target as HTMLImageElement).src = DEFAULT_IMG;
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                       
                       <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
                         <span className={`px-3 py-0.5 ${statusColor(room.status)} text-[9px] font-bold uppercase rounded-full shadow-md`}>
                           {room.status}
                         </span>
                         {room.videoUrl && (
-                          <span className="px-2 py-0.5 bg-black/60 text-white text-[8px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
+                          <span className="px-2 py-0.5 bg-black/70 text-white text-[8px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
                             <i className="fa-solid fa-video text-rose-400" /> Video Tour
                           </span>
                         )}
                       </div>
 
-                      <div className="absolute bottom-3.5 left-3.5 right-3.5">
-                        <h3 className="text-base font-bold text-white drop-shadow">{room.type}</h3>
-                        <p className="text-[11px] text-slate-200 drop-shadow">Kamar {room.number} • Lantai {room.floor} • {room.size || '20 m²'}</p>
+                      <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white z-10" style={{ color: '#ffffff' }}>
+                        <h3 className="text-base font-black text-white !text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]" style={{ color: '#ffffff' }}>{room.type}</h3>
+                        <p className="text-[11px] text-white/95 !text-white/95 font-bold drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]" style={{ color: 'rgba(255,255,255,0.95)' }}>Kamar {room.number} • Lantai {room.floor} • {room.size || '20 m²'}</p>
                       </div>
                     </div>
 
@@ -582,10 +582,10 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
               <button
                 type="button"
                 onClick={() => setDetailRoom(null)}
-                className="absolute top-4 right-4 z-20 w-9 h-9 neu-btn flex items-center justify-center text-white rounded-full transition-all shadow-md cursor-pointer"
-                title="Tutup"
+                className="absolute top-4 right-4 z-30 w-10 h-10 bg-black/70 hover:bg-red-600 text-white font-black rounded-full flex items-center justify-center transition-all shadow-2xl border border-white/40 backdrop-blur-md cursor-pointer hover:scale-105"
+                title="Tutup Detail Kamar"
               >
-                <i className="fa-solid fa-xmark text-sm" />
+                <i className="fa-solid fa-xmark text-base" />
               </button>
 
               {/* Media Viewport */}

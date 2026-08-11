@@ -24,7 +24,7 @@ html {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-body, div, section, header, aside, main, nav, button, input, select, textarea {
+body, div:not(.text-white), section, header, aside, main, nav, button, input, select, textarea {
   transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
 }
 
@@ -162,12 +162,24 @@ html.dark body,
   }
 }
 @keyframes autoDoorSlideLeft {
-  0%, 20%, 80%, 100% { transform: translateX(0); }
-  40%, 60% { transform: translateX(-88%); }
+  0%, 20%, 80%, 100% { transform: translate3d(0, 0, 0); }
+  40%, 60% { transform: translate3d(-88%, 0, 0); }
 }
 @keyframes autoDoorSlideRight {
-  0%, 20%, 80%, 100% { transform: translateX(0); }
-  40%, 60% { transform: translateX(88%); }
+  0%, 20%, 80%, 100% { transform: translate3d(0, 0, 0); }
+  40%, 60% { transform: translate3d(88%, 0, 0); }
+}
+
+.door-panel-left {
+  transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  will-change: transform;
+}
+.door-panel-right {
+  transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  will-change: transform;
+}
+.door-glow {
+  transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1) !important;
 }
 @property --border-angle {
   syntax: '<angle>';
@@ -210,13 +222,13 @@ html.dark body,
 
 /* ===== NEUMORPHISM (SOFT UI 2026 DESIGN SYSTEM) ===== */
 :root {
-  --neu-bg: #f2f5fa;
-  --neu-surface: #f8fafc;
-  --neu-shadow-dark: rgba(166, 178, 196, 0.42);
-  --neu-shadow-light: rgba(255, 255, 255, 0.95);
-  --neu-inset-dark: rgba(166, 178, 196, 0.48);
-  --neu-inset-light: rgba(255, 255, 255, 0.9);
-  --neu-border: rgba(255, 255, 255, 0.65);
+  --neu-bg: #f0f3f8;
+  --neu-surface: #f4f7fb;
+  --neu-shadow-dark: rgba(160, 172, 190, 0.35);
+  --neu-shadow-light: rgba(255, 255, 255, 0.35);
+  --neu-inset-dark: rgba(160, 172, 190, 0.4);
+  --neu-inset-light: rgba(255, 255, 255, 0.3);
+  --neu-border: rgba(0, 0, 0, 0.05);
 }
 
 html[data-theme="dark"],

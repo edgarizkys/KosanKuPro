@@ -682,7 +682,7 @@ export default function OwnerDashboard({
             <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
                 <h3 className="text-base font-black text-slate-900 dark:text-white">Plotting Karyawan &amp; Hubungkan Vendor</h3>
-                <button onClick={() => setSelectedReq(null)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
+                <button onClick={() => setSelectedReq(null)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
               </div>
 
               <div className="p-3.5 neu-inset rounded-2xl text-xs">

@@ -192,22 +192,22 @@ export default function SequenceSaaSLayout({
         {
           title: 'KosanKu Executive Hub',
           items: [
-            { id: 'financial', label: 'Laporan Laba Rugi', icon: 'fa-solid fa-chart-pie' },
-            { id: 'deposit', label: 'Deposit Escrow & Late Fee', icon: 'fa-solid fa-vault' },
-            { id: 'users', label: 'Manajemen User & Profil', icon: 'fa-solid fa-users-gear', highlight: true },
-            { id: 'master_data', label: 'Master Data & Setting Kosan', icon: 'fa-solid fa-sliders' },
-            { id: 'inventory', label: 'Audit Stock Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
-            { id: 'autopilot', label: 'Auto-Pilot AI Engine', icon: 'fa-solid fa-wand-magic-sparkles' },
+            { id: 'financial', label: 'Laporan P&L', icon: 'fa-solid fa-chart-pie' },
+            { id: 'deposit', label: 'Escrow & Fee', icon: 'fa-solid fa-vault' },
+            { id: 'users', label: 'Manajemen User', icon: 'fa-solid fa-users-gear', highlight: true },
+            { id: 'master_data', label: 'Master Setting', icon: 'fa-solid fa-sliders' },
+            { id: 'inventory', label: 'Audit Stock (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'autopilot', label: 'Auto-Pilot AI', icon: 'fa-solid fa-wand-magic-sparkles' },
             { id: 'tenant_requests', label: 'Permintaan Tenant', icon: 'fa-solid fa-route', badge: pendingRequestsCount },
             { id: 'approval', label: 'Approval Dana', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
           ],
         },
         {
-          title: 'Operasional & Properti',
+          title: 'Operasional Properti',
           items: [
             { id: 'rooms_ai', label: 'Kamar & Pricing AI', icon: 'fa-solid fa-door-open' },
             { id: 'invoices', label: 'Invoice & Midtrans', icon: 'fa-solid fa-file-invoice-dollar' },
-            { id: 'complaints', label: 'Tiket Keluhan Tenant', icon: 'fa-solid fa-headset' },
+            { id: 'complaints', label: 'Tiket Keluhan', icon: 'fa-solid fa-headset' },
           ],
         },
       ];
@@ -218,23 +218,23 @@ export default function SequenceSaaSLayout({
         {
           title: 'Super Admin Control Hub',
           items: [
-            { id: 'users', label: 'Manajemen User & Profil', icon: 'fa-solid fa-users-gear', highlight: true },
-            { id: 'master_data', label: 'Setting Master Data Kosan', icon: 'fa-solid fa-sliders' },
-            { id: 'overview', label: 'Overview System Control', icon: 'fa-solid fa-gauge-high' },
-            { id: 'financial', label: 'Laporan Laba Rugi (P&L)', icon: 'fa-solid fa-chart-pie' },
-            { id: 'deposit', label: 'Deposit Escrow & Fee', icon: 'fa-solid fa-vault' },
-            { id: 'inventory', label: 'Audit Stock Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
-            { id: 'autopilot', label: 'Auto-Pilot AI Engine', icon: 'fa-solid fa-wand-magic-sparkles' },
+            { id: 'users', label: 'Manajemen User', icon: 'fa-solid fa-users-gear', highlight: true },
+            { id: 'master_data', label: 'Master Data Kosan', icon: 'fa-solid fa-sliders' },
+            { id: 'overview', label: 'Overview Control', icon: 'fa-solid fa-gauge-high' },
+            { id: 'financial', label: 'Laporan P&L', icon: 'fa-solid fa-chart-pie' },
+            { id: 'deposit', label: 'Deposit Escrow', icon: 'fa-solid fa-vault' },
+            { id: 'inventory', label: 'Audit Stock (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'autopilot', label: 'Auto-Pilot AI', icon: 'fa-solid fa-wand-magic-sparkles' },
           ],
         },
         {
           title: 'Modul Properti & Transaksi',
           items: [
             { id: 'rooms_ai', label: 'Kamar & Pricing AI', icon: 'fa-solid fa-door-open' },
-            { id: 'invoices', label: 'Invoice & Midtrans QRIS', icon: 'fa-solid fa-file-invoice-dollar' },
+            { id: 'invoices', label: 'Invoice QRIS', icon: 'fa-solid fa-file-invoice-dollar' },
             { id: 'tenant_requests', label: 'Permintaan Tenant', icon: 'fa-solid fa-route', badge: pendingRequestsCount },
             { id: 'approval', label: 'Approval Dana', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
-            { id: 'complaints', label: 'Pusat Keluhan System', icon: 'fa-solid fa-headset', badge: 1 },
+            { id: 'complaints', label: 'Pusat Keluhan', icon: 'fa-solid fa-headset', badge: 1 },
           ],
         },
       ];

@@ -179,33 +179,33 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
               className="w-full h-auto object-contain drop-shadow-2xl"
             />
 
-            {/* LAYER 3: Smart Automatic Glass Sliding Door (Placed Exactly on Front Entrance Doorway) */}
+            {/* LAYER 3: Smart Automatic Glass Sliding Door (Dedicated CSS Motion Engine) */}
             <div 
-              className="absolute bottom-[7.0%] left-[57.9%] w-[7.8%] h-[10.8%] pointer-events-auto flex items-center justify-between p-0.5 overflow-hidden cursor-pointer rounded-t-sm group"
+              className="absolute bottom-[7.0%] left-[57.9%] w-[7.8%] h-[10.8%] pointer-events-auto flex items-center justify-between p-0.5 overflow-hidden cursor-pointer rounded-t-sm group shadow-inner"
               onClick={() => setDoorOpen(!doorOpen)}
-              title="Smart Keyless Door Lock (Klik untuk Buka/Tutup)"
+              title="Smart Keyless Door Lock (Klik untuk Buka/Tutup Pintu Otomatis)"
             >
-              {/* Warm Interior Welcome Glow */}
+              {/* Warm Interior Welcome Ambient Light Glow */}
               <div 
-                className={`absolute inset-0 bg-amber-400/45 blur-[2px] transition-opacity duration-700 ${
+                className={`absolute inset-0 bg-gradient-to-t from-amber-400/90 via-amber-300/50 to-yellow-100/10 blur-[3px] rounded-t-sm pointer-events-none door-glow ${
                   doorOpen ? 'opacity-100' : 'opacity-0'
-                }`} 
+                }`}
               />
               
-              {/* Left Glass Panel (Slides Left) */}
+              {/* Left Glass Panel (Silky Smooth Motion) */}
               <div 
-                className="h-full w-[49%] bg-white/40 dark:bg-white/20 backdrop-blur-[2px] border border-white/60 shadow-sm rounded-l-[1px] flex items-center justify-end pr-0.5 transition-transform duration-700 ease-in-out origin-left"
-                style={{ transform: doorOpen ? 'translateX(-85%)' : 'translateX(0)' }}
+                className="h-full w-[49%] bg-white/40 dark:bg-white/15 backdrop-blur-[2px] border border-white/70 dark:border-white/20 shadow-md rounded-l-[1px] flex items-center justify-end pr-0.5 door-panel-left"
+                style={{ transform: doorOpen ? 'translate3d(-90%, 0, 0)' : 'translate3d(0, 0, 0)' }}
               >
-                <div className="w-[2px] h-3.5 bg-slate-900/80 rounded-full" />
+                <div className="w-[2px] h-3.5 bg-slate-900/80 dark:bg-amber-400 rounded-full" />
               </div>
 
-              {/* Right Glass Panel (Slides Right) */}
+              {/* Right Glass Panel (Silky Smooth Motion) */}
               <div 
-                className="h-full w-[49%] bg-white/40 dark:bg-white/20 backdrop-blur-[2px] border border-white/60 shadow-sm rounded-r-[1px] flex items-center justify-start pl-0.5 transition-transform duration-700 ease-in-out origin-right"
-                style={{ transform: doorOpen ? 'translateX(85%)' : 'translateX(0)' }}
+                className="h-full w-[49%] bg-white/40 dark:bg-white/15 backdrop-blur-[2px] border border-white/70 dark:border-white/20 shadow-md rounded-r-[1px] flex items-center justify-start pl-0.5 door-panel-right"
+                style={{ transform: doorOpen ? 'translate3d(90%, 0, 0)' : 'translate3d(0, 0, 0)' }}
               >
-                <div className="w-[2px] h-3.5 bg-slate-900/80 rounded-full" />
+                <div className="w-[2px] h-3.5 bg-slate-900/80 dark:bg-amber-400 rounded-full" />
               </div>
             </div>
           </div>

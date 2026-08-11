@@ -302,7 +302,7 @@ export default function UserManagementView({
       {/* MODAL + TAMBAH USER BARU */}
       {showAddModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/5 dark:bg-black/20 backdrop-blur-xs animate-fade-in" onClick={() => setShowAddModal(false)}>
-          <div className="w-full max-w-xl neu-card rounded-3xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-white/80 dark:border-white/10 shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-xl neu-card rounded-3xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-black/5 dark:border-white/10 shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl neu-inset text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg font-black">
