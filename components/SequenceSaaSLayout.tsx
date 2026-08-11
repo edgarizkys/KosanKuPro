@@ -128,25 +128,41 @@ export default function SequenceSaaSLayout({
     }
   }, [role]);
 
+  const DEFAULT_FALLBACK_USER: UserProfile = {
+    id: 'USR-ACT-01',
+    name: 'Bapak Hendra Gunawan',
+    email: 'owner@kosanku.com',
+    phone: '0811-9988-7766',
+    role: role || 'owner',
+    title: 'Pemilik Properti KosanKu',
+    avatar: '👑',
+    avatarBg: 'bg-amber-500',
+    branchId: activeBranch || 'all',
+    branchName: 'Konsolidasi Semua Cabang',
+    status: 'ACTIVE',
+    joinDate: '01 Jan 2024',
+  };
+
   const currentUser: UserProfile =
-    (activeSessionUser && activeSessionUser.role?.toLowerCase() === role
+    (activeSessionUser && activeSessionUser.role?.toLowerCase() === (role || 'owner')
       ? {
           id: activeSessionUser.id || 'USR-ACT-01',
           name: activeSessionUser.name || 'User KosanKu',
           email: activeSessionUser.email || '',
           phone: '0812-3456-7890',
-          role: role,
+          role: role || 'owner',
           title: activeSessionUser.role === 'SUPERADMIN' ? '👑 Super Admin SaaS' : activeSessionUser.role === 'ADMIN' ? '🛡️ Admin Operasional' : 'Pemilik Properti KosanKu',
           avatar: activeSessionUser.role === 'SUPERADMIN' ? '👑' : activeSessionUser.role === 'ADMIN' ? '🛡️' : '👑',
           avatarBg: activeSessionUser.role === 'SUPERADMIN' ? 'bg-amber-500' : 'bg-emerald-600',
-          branchId: activeBranch,
+          branchId: activeBranch || 'all',
           branchName: 'Konsolidasi Semua Cabang',
           status: 'ACTIVE',
           joinDate: '01 Jan 2024',
         }
       : null) ||
     users.find((u) => u.role === role) ||
-    users[0];
+    users[0] ||
+    DEFAULT_FALLBACK_USER;
 
   const handleSwitchUserProfile = (targetUser: UserProfile) => {
     onSwitchRole(targetUser.role);
@@ -364,8 +380,8 @@ export default function SequenceSaaSLayout({
             className="px-2.5 py-1 rounded-full neu-btn flex items-center gap-1.5 cursor-pointer"
             title="Buka Profil"
           >
-            <span className="text-xs">{currentUser.avatar}</span>
-            <span className="text-[9px] font-black uppercase text-slate-800 dark:text-slate-200">{role}</span>
+            <span className="text-xs">{currentUser?.avatar || '👤'}</span>
+            <span className="text-[9px] font-black uppercase text-slate-800 dark:text-slate-200">{role || 'owner'}</span>
           </button>
 
           <button
