@@ -352,17 +352,6 @@ export default function SequenceSaaSLayout({
           >
             <i className="fa-solid fa-bars text-sm" />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#047857] to-[#10b981] flex items-center justify-center text-white font-black text-xs shadow-md">
-              K
-            </div>
-            <div>
-              <span className="font-black text-sm tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-emerald-800 to-emerald-600 dark:from-white dark:via-emerald-300 dark:to-emerald-500 block leading-none">
-                KOSANKU<span className="text-[#047857] dark:text-[#10b981]">.PRO</span>
-              </span>
-              <span className="text-[9px] font-mono text-slate-400 font-bold">Luxury SaaS</span>
-            </div>
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -384,27 +373,13 @@ export default function SequenceSaaSLayout({
             <span className="text-[9px] font-black uppercase text-slate-800 dark:text-slate-200">{role || 'owner'}</span>
           </button>
 
-          <button
-            onClick={() => {
-              if ((window as any).__toggleNotifDrawer) {
-                (window as any).__toggleNotifDrawer();
-              } else {
-                showToast('🔔 3 Notifikasi Kosan Baru');
-              }
-            }}
-            className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold relative cursor-pointer"
-            title="Buka Panel Rincian Notifikasi"
-          >
-            <i className="fa-solid fa-bell text-xs" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-sm">3</span>
-          </button>
-
+          {/* Direct Mobile Logout Button */}
           <button
             onClick={onLogout}
-            className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-rose-500 hover:text-rose-700 cursor-pointer text-xs"
-            title="Keluar"
+            className="w-9 h-9 rounded-2xl neu-btn text-rose-500 hover:text-rose-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
+            title="Keluar dari Sesi"
           >
-            <i className="fa-solid fa-arrow-right-from-bracket" />
+            <i className="fa-solid fa-arrow-right-from-bracket text-xs" />
           </button>
         </div>
       </div>
