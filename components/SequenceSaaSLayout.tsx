@@ -398,54 +398,64 @@ export default function SequenceSaaSLayout({
         ${mobileMenuOpen ? 'translate-x-0 shadow-2xl w-72 p-4' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="space-y-6">
-          {/* Top Brand Logo & Single 3-Bars Minimize / Maximize Trigger */}
-          {!sidebarCollapsed ? (
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className="w-9 h-9 rounded-2xl bg-[#047857] flex items-center justify-center text-white font-black neu-card-sm text-sm shrink-0">
-                  <i className="fa-solid fa-building-user" />
-                </div>
-                <div className="truncate">
-                  <span className="font-black text-base text-[#047857] tracking-tight block leading-none truncate max-w-[160px]" title={propertyName}>
-                    {propertyName}
-                  </span>
-                  <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase mt-0.5 block">
-                    {role.toUpperCase()} WORKSPACE
-                  </span>
-                </div>
+          {/* 🍎 macOS Style Window Control & User Profile Header Card */}
+          <div className="neu-card-sm p-3.5 rounded-2xl space-y-3">
+            {/* macOS Red/Yellow/Green Traffic Lights Bar */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm" />
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm" />
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="hidden lg:flex w-9 h-9 rounded-2xl neu-btn items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
-                  title="Perkecil Menu Navigasi (Minimize Sidebar)"
-                >
-                  <i className="fa-solid fa-bars-staggered text-xs" />
-                </button>
-
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="lg:hidden w-8 h-8 rounded-xl neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                >
-                  <i className="fa-solid fa-xmark text-sm" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2.5 py-1">
-              <div className="w-11 h-11 rounded-2xl bg-[#047857] flex items-center justify-center text-white font-black neu-card-sm text-base shadow-sm" title="KosanKu Pro Enterprise">
-                <i className="fa-solid fa-cubes-stacked" />
-              </div>
+              {/* Sidebar Collapse Toggle Arrow */}
               <button
-                onClick={() => setSidebarCollapsed(false)}
-                className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
-                title="Perbesar Menu Navigasi (Maximize Sidebar)"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="hidden lg:flex w-6 h-6 rounded-full neu-btn items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer text-[10px]"
+                title={sidebarCollapsed ? "Perluas Sidebar" : "Kecilkan Sidebar"}
               >
-                <i className="fa-solid fa-bars text-xs" />
+                <i className={`fa-solid ${sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`} />
+              </button>
+
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="lg:hidden w-6 h-6 rounded-full neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white text-[10px]"
+              >
+                <i className="fa-solid fa-xmark" />
               </button>
             </div>
-          )}
+
+            {/* Profile Avatar & Title Section */}
+            {!sidebarCollapsed ? (
+              <div 
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-3 pt-1 cursor-pointer group"
+                title="Klik untuk lihat rincian profil"
+              >
+                <div className={`w-11 h-11 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                  {currentUser?.avatar || '👤'}
+                </div>
+                <div className="truncate flex-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-400 block truncate">
+                    {currentUser?.title || role.toUpperCase()}
+                  </span>
+                  <span className="font-black text-sm text-slate-900 dark:text-white block truncate leading-tight group-hover:text-emerald-500 transition-colors">
+                    {currentUser?.name || 'User KosanKu'}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={() => setShowProfileModal(true)}
+                className="flex flex-col items-center pt-1 cursor-pointer"
+                title={`${currentUser?.name} (${currentUser?.title})`}
+              >
+                <div className={`w-10 h-10 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-base shadow-md hover:scale-105 transition-transform`}>
+                  {currentUser?.avatar || '👤'}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Dynamic Time-Based Greeting Card for All Roles */}
           {!sidebarCollapsed ? (
