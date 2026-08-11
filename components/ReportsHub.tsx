@@ -19,7 +19,7 @@ export default function ReportsHub({
   expenses,
   revenues,
 }: ReportsHubProps) {
-  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'inventory'>('all');
+  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses'>('all');
 
   function formatIDR(n: number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -40,12 +40,12 @@ export default function ReportsHub({
         </style>
       </head>
       <body>
-        <div className="title">KOSANKU PRO — LAPORAN EKSEKUTIF KONSOLIDASI</div>
+        <div class="title">KOSANKU PRO — LAPORAN EKSEKUTIF KONSOLIDASI</div>
         <p><strong>Tanggal Audit:</strong> ${timestamp} | <strong>Status:</strong> AUDITED &amp; VERIFIED</p>
         
         <h3>1. RINGKASAN EKSEKUTIF P&amp;L</h3>
         <table>
-          <tr className="header"><th>DESKRIPSI METRIK</th><th>NILAI (IDR)</th></tr>
+          <tr class="header"><th>DESKRIPSI METRIK</th><th>NILAI (IDR)</th></tr>
           <tr><td>Total Turnover Inflow (Penerimaan)</td><td>${formatIDR(totalRevenue)}</td></tr>
           <tr><td>Total Outflow (Pengeluaran Operasional)</td><td>${formatIDR(totalExpenses)}</td></tr>
           <tr><td>Laba Bersih (Net Profit)</td><td>${formatIDR(netProfit)}</td></tr>
@@ -55,7 +55,7 @@ export default function ReportsHub({
         <br/>
         <h3>2. DETAIL RINCIAN PENERIMAAN (REVENUE INFLOWS)</h3>
         <table>
-          <tr className="header">
+          <tr class="header">
             <th>NO REF</th>
             <th>TANGGAL</th>
             <th>PENGHUNI</th>
@@ -80,7 +80,7 @@ export default function ReportsHub({
         <br/>
         <h3>3. DETAIL RINCIAN PENGELUARAN (EXPENSE OUTFLOWS)</h3>
         <table>
-          <tr className="header">
+          <tr class="header">
             <th>NO REF</th>
             <th>TANGGAL</th>
             <th>KATEGORI</th>
@@ -110,6 +110,128 @@ export default function ReportsHub({
     document.body.removeChild(link);
   };
 
+  const exportExecutivePDF = () => {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const pdfHtmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Laporan_Eksekutif_KosanKuPro_${timestamp}</title>
+        <style>
+          @page { size: A4 portrait; margin: 15mm; }
+          body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1e293b; font-size: 11px; margin: 0; padding: 20px; }
+          .pdf-header { text-align: center; border-bottom: 2px solid #047857; padding-bottom: 15px; margin-bottom: 20px; }
+          .pdf-header h1 { color: #047857; font-size: 20px; margin: 0 0 5px 0; font-weight: 900; }
+          .pdf-header p { margin: 2px 0; color: #64748b; font-size: 10px; }
+          .summary-grid { display: table; width: 100%; margin-bottom: 25px; border-collapse: separate; border-spacing: 10px; }
+          .summary-card { display: table-cell; width: 25%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+          .summary-card span { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+          .summary-card div { font-size: 15px; font-weight: 900; color: #047857; margin-top: 4px; }
+          .section-title { font-size: 12px; font-weight: 800; color: #0f172a; margin: 20px 0 10px 0; border-left: 4px solid #047857; padding-left: 8px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th { background-color: #047857; color: #ffffff; font-weight: 800; text-align: left; padding: 8px; font-size: 10px; text-transform: uppercase; }
+          td { border-bottom: 1px solid #e2e8f0; padding: 8px; font-size: 10px; }
+          tr:nth-child(even) { background-color: #f8fafc; }
+          .badge-green { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 9px; }
+          .badge-red { background: #ffe4e6; color: #be123c; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 9px; }
+          .footer { margin-top: 30px; text-align: right; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="pdf-header">
+          <h1>KOSANKU PRO — OFFICIAL EXECUTIVE REPORT</h1>
+          <p>Laporan Konsolidasi Keuangan &amp; Audit Operasional Properti</p>
+          <p><strong>Tanggal Audit:</strong> ${timestamp} | <strong>Dokumen Terverifikasi AI Ledger System</strong></p>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <span>Total Inflow</span>
+            <div>${formatIDR(totalRevenue)}</div>
+          </div>
+          <div class="summary-card">
+            <span>Total Outflow</span>
+            <div style="color:#e11d48;">${formatIDR(totalExpenses)}</div>
+          </div>
+          <div class="summary-card">
+            <span>Net Profit</span>
+            <div>${formatIDR(netProfit)}</div>
+          </div>
+          <div class="summary-card">
+            <span>Margin Laba</span>
+            <div style="color:#7c3aed;">${margin}%</div>
+          </div>
+        </div>
+
+        <div class="section-title">1. RINCIAN PENERIMAAN (REVENUE INFLOWS)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>REF ID</th>
+              <th>TANGGAL</th>
+              <th>PENGHUNI &amp; KAMAR</th>
+              <th>SUMBER KATEGORI</th>
+              <th>METODE</th>
+              <th style="text-align:right;">NOMINAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${revenues.map(r => `
+              <tr>
+                <td><strong>${r.id}</strong></td>
+                <td>${r.date}</td>
+                <td>${r.tenantName} (Kamar ${r.roomNumber})</td>
+                <td>${r.source}</td>
+                <td><span class="badge-green">${r.method}</span></td>
+                <td style="text-align:right; font-weight:bold; color:#047857;">+${formatIDR(r.amount)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="section-title">2. RINCIAN PENGELUARAN (EXPENSE OUTFLOWS)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>REF ID</th>
+              <th>TANGGAL</th>
+              <th>KATEGORI</th>
+              <th>DESKRIPSI NOTA</th>
+              <th style="text-align:right;">NOMINAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${expenses.map((e, idx) => `
+              <tr>
+                <td><strong>EXP-00${idx + 1}</strong></td>
+                <td>${e.date}</td>
+                <td><span class="badge-red">${e.category.toUpperCase()}</span></td>
+                <td>${e.description}</td>
+                <td style="text-align:right; font-weight:bold; color:#e11d48;">-${formatIDR(e.amount)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          Dicetak secara otomatis oleh KosanKu Pro SaaS System • Dokumen Sah Tanpa Tanda Tangan Basah
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(pdfHtmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 300);
+    }
+  };
+
   return (
     <div className="space-y-6 sm:space-y-8 animate-fade-in text-slate-900 dark:text-white">
       
@@ -135,11 +257,11 @@ export default function ReportsHub({
             <span>Ekspor Excel Rinci (.xls)</span>
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={exportExecutivePDF}
             className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl text-xs flex items-center gap-2 shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
           >
-            <i className="fa-solid fa-print" />
-            <span>Cetak PDF Laporan</span>
+            <i className="fa-solid fa-file-pdf" />
+            <span>Export Official PDF Report</span>
           </button>
         </div>
       </div>
