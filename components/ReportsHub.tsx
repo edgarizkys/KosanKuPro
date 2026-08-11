@@ -19,7 +19,7 @@ export default function ReportsHub({
   expenses,
   revenues,
 }: ReportsHubProps) {
-  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'inventory' | 'tickets' | 'vendor'>('all');
+  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'inventory' | 'tickets' | 'vendor' | 'employee'>('all');
 
   function formatIDR(n: number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -46,6 +46,12 @@ export default function ReportsHub({
     { id: 'VND-ORD-02', vendorName: 'Laundry Express Clean & Fresh', category: 'Laundry Linen & Sprei', orderItem: 'Cuci & Setrika Sprei Bedding (12 Set)', totalCost: 240000, date: '2026-08-05', status: 'DELIVERED_PAID' },
     { id: 'VND-ORD-03', vendorName: 'Teknisi AC Surya Kencana', category: 'Maintenance & Service', orderItem: 'Cuci & Service Rutin 6 Unit AC Lt 2', totalCost: 450000, date: '2026-08-08', status: 'COMPLETED' },
     { id: 'VND-ORD-04', vendorName: 'Depot Air & Gas Suci', category: 'Galon Aqua & Gas', orderItem: '10 Galon Aqua 19L', totalCost: 200000, date: '2026-08-10', status: 'DELIVERED_PAID' },
+  ];
+
+  const employeeTaskData = [
+    { taskId: 'TSK-2026-01', staffName: 'Bambang Supriyanto', role: 'Staf Maintenance & Lapangan', taskTitle: 'Pembersihan Filter AC & Cek Kran Bocor Kamar A-101', priority: 'HIGH', assignedBy: 'Pak Hendra (Owner)', date: '2026-08-09', status: 'COMPLETED_VERIFIED', score: '98/100 (Sangat Baik)' },
+    { taskId: 'TSK-2026-02', staffName: 'Siti Aminah', role: 'Admin Operasional & Kasir', taskTitle: 'Stock Opname (SO) Fisik Inventori Sprei & LPG', priority: 'NORMAL', assignedBy: 'Pak Hendra (Owner)', date: '2026-08-10', status: 'COMPLETED_VERIFIED', score: '95/100 (Tepat Waktu)' },
+    { taskId: 'TSK-2026-03', staffName: 'Bambang Supriyanto', role: 'Staf Maintenance & Lapangan', taskTitle: 'Penerimaan Delivery 15 Galon Aqua dari Vendor Suci', priority: 'NORMAL', assignedBy: 'AI Auto-Pilot Engine', date: '2026-08-11', status: 'IN_PROGRESS', score: 'On-Track' },
   ];
 
   const exportExecutiveExcel = () => {
@@ -258,6 +264,25 @@ export default function ReportsHub({
           </tbody>
         </table>
 
+        <div class="section-title">6. PERFORMA KARYAWAN &amp; AUDIT TUGAS PENUGASAN OWNER</div>
+        <table>
+          <thead>
+            <tr><th>KODE TUGAS</th><th>TANGGAL</th><th>NAMA STAF / KARYAWAN</th><th>DESKRIPSI PENUGASAN OWNER</th><th>PENGATUR PENUGASAN</th><th>STATUS &amp; SKOR EVALUASI</th></tr>
+          </thead>
+          <tbody>
+            ${employeeTaskData.map(t => `
+              <tr>
+                <td><strong>${t.taskId}</strong></td>
+                <td>${t.date}</td>
+                <td>${t.staffName} (${t.role})</td>
+                <td>${t.taskTitle}</td>
+                <td>${t.assignedBy}</td>
+                <td><span class="badge-green">${t.status} - ${t.score}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
         <div class="footer">
           Dicetak secara otomatis oleh KosanKu Pro Master SaaS Engine • Dokumen Sah Resmi Tanpa Tanda Tangan Basah
         </div>
@@ -371,6 +396,7 @@ export default function ReportsHub({
           <i className="fa-solid fa-boxes-packing text-amber-500" />
           <span>Stok Inventori ({inventoryAuditData.length})</span>
         </button>
+
         <button
           onClick={() => setActiveReportTab('vendor')}
           className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
@@ -378,7 +404,17 @@ export default function ReportsHub({
           }`}
         >
           <i className="fa-solid fa-store text-blue-500" />
-          <span>History Vendor Mitra ({vendorHistoryData.length})</span>
+          <span>History Vendor ({vendorHistoryData.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveReportTab('employee')}
+          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            activeReportTab === 'employee' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <i className="fa-solid fa-user-check text-emerald-500" />
+          <span>Performa Karyawan ({employeeTaskData.length})</span>
         </button>
       </div>
 
@@ -618,6 +654,53 @@ export default function ReportsHub({
                     <td className="py-3.5 px-4 font-bold">{v.category}</td>
                     <td className="py-3.5 px-4">{v.orderItem}</td>
                     <td className="py-3.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm">{formatIDR(v.totalCost)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ===== SECTION 7: LAPORAN PERFORMA KARYAWAN & PENUGASAN OWNER ===== */}
+      {(activeReportTab === 'all' || activeReportTab === 'employee') && (
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
+            <h3 className="text-lg font-black flex items-center gap-2">
+              <i className="fa-solid fa-user-check text-emerald-500" />
+              <span>7. Laporan Performa Karyawan &amp; Audit Penugasan Owner</span>
+            </h3>
+            <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{employeeTaskData.length} Tugas Terdata</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-4">KODE TUGAS</th>
+                  <th className="py-3 px-4">TANGGAL</th>
+                  <th className="py-3 px-4">NAMA STAF / KARYAWAN</th>
+                  <th className="py-3 px-4">DESKRIPSI PENUGASAN OWNER</th>
+                  <th className="py-3 px-4">DITUGASKAN OLEH</th>
+                  <th className="py-3 px-4">STATUS &amp; SKOR KINERJA</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
+                {employeeTaskData.map((t, idx) => (
+                  <tr key={idx} className="hover:bg-slate-100/50 dark:hover:bg-white/5">
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">{t.taskId}</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-400">{t.date}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="font-bold text-slate-900 dark:text-white block">{t.staffName}</span>
+                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">{t.role}</span>
+                    </td>
+                    <td className="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">{t.taskTitle}</td>
+                    <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">{t.assignedBy}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px]">
+                        {t.score}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
