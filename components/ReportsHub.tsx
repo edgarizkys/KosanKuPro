@@ -19,7 +19,7 @@ export default function ReportsHub({
   expenses,
   revenues,
 }: ReportsHubProps) {
-  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'inventory' | 'tickets'>('all');
+  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'inventory' | 'tickets' | 'vendor'>('all');
 
   function formatIDR(n: number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -41,10 +41,11 @@ export default function ReportsHub({
     { code: 'INV-GAS-04', name: 'Tabung Gas LPG 12kg Dapur Bersama', location: 'Dapur Utama Lt 1', qty: 4, condition: 'NEEDS_REPAIR', auditor: 'Bambang (Staf)' },
   ];
 
-  const maintenanceTicketsData = [
-    { id: 'TKT-2026-001', room: 'A-101', issue: 'Refill Galon Aqua & Gas LPG', priority: 'NORMAL', status: 'COMPLETED', date: '2026-08-09' },
-    { id: 'TKT-2026-002', room: 'B-201', issue: 'Pengecekan Filter AC Berisik', priority: 'HIGH', status: 'IN_PROGRESS', date: '2026-08-10' },
-    { id: 'TKT-2026-003', room: 'C-302', issue: 'Ganti Lampu Smart LED Balkon', priority: 'LOW', status: 'RESOLVED', date: '2026-08-11' },
+  const vendorHistoryData = [
+    { id: 'VND-ORD-01', vendorName: 'Depot Air & Gas Suci', category: 'Galon Aqua & Gas', orderItem: '15 Galon Aqua 19L + 2 Gas LPG 12kg', totalCost: 380000, date: '2026-08-01', status: 'DELIVERED_PAID' },
+    { id: 'VND-ORD-02', vendorName: 'Laundry Express Clean & Fresh', category: 'Laundry Linen & Sprei', orderItem: 'Cuci & Setrika Sprei Bedding (12 Set)', totalCost: 240000, date: '2026-08-05', status: 'DELIVERED_PAID' },
+    { id: 'VND-ORD-03', vendorName: 'Teknisi AC Surya Kencana', category: 'Maintenance & Service', orderItem: 'Cuci & Service Rutin 6 Unit AC Lt 2', totalCost: 450000, date: '2026-08-08', status: 'COMPLETED' },
+    { id: 'VND-ORD-04', vendorName: 'Depot Air & Gas Suci', category: 'Galon Aqua & Gas', orderItem: '10 Galon Aqua 19L', totalCost: 200000, date: '2026-08-10', status: 'DELIVERED_PAID' },
   ];
 
   const exportExecutiveExcel = () => {
@@ -238,6 +239,25 @@ export default function ReportsHub({
           </tbody>
         </table>
 
+        <div class="section-title">5. RIWAYAT PEMESANAN &amp; TRANSAKSI MITRA VENDOR</div>
+        <table>
+          <thead>
+            <tr><th>NO ORDER</th><th>TANGGAL</th><th>NAMA VENDOR MITRA</th><th>KATEGORI BIASA</th><th>Rincian Pesanan</th><th style="text-align:right;">TOTAL BIAYA</th></tr>
+          </thead>
+          <tbody>
+            ${vendorHistoryData.map(v => `
+              <tr>
+                <td><strong>${v.id}</strong></td>
+                <td>${v.date}</td>
+                <td>${v.vendorName}</td>
+                <td>${v.category}</td>
+                <td>${v.orderItem}</td>
+                <td style="text-align:right; font-weight:bold;">${formatIDR(v.totalCost)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
         <div class="footer">
           Dicetak secara otomatis oleh KosanKu Pro Master SaaS Engine • Dokumen Sah Resmi Tanpa Tanda Tangan Basah
         </div>
@@ -350,6 +370,15 @@ export default function ReportsHub({
         >
           <i className="fa-solid fa-boxes-packing text-amber-500" />
           <span>Stok Inventori ({inventoryAuditData.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveReportTab('vendor')}
+          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+            activeReportTab === 'vendor' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <i className="fa-solid fa-store text-blue-500" />
+          <span>History Vendor Mitra ({vendorHistoryData.length})</span>
         </button>
       </div>
 
@@ -549,6 +578,46 @@ export default function ReportsHub({
                         {i.condition}
                       </span>
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ===== SECTION 6: RIWAYAT TRANSAKSI VENDOR MITRA ===== */}
+      {(activeReportTab === 'all' || activeReportTab === 'vendor') && (
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
+            <h3 className="text-lg font-black flex items-center gap-2">
+              <i className="fa-solid fa-store text-blue-500" />
+              <span>6. Laporan Riwayat Pemesanan &amp; Transaksi Vendor Mitra</span>
+            </h3>
+            <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">{vendorHistoryData.length} Pesanan Lunas</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-4">NO ORDER</th>
+                  <th className="py-3 px-4">TANGGAL</th>
+                  <th className="py-3 px-4">NAMA VENDOR MITRA</th>
+                  <th className="py-3 px-4">KATEGORI LAYANAN</th>
+                  <th className="py-3 px-4">RINCIAN ITEM PESANAN</th>
+                  <th className="py-3 px-4 text-right">TOTAL BIAYA (IDR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
+                {vendorHistoryData.map((v, idx) => (
+                  <tr key={idx} className="hover:bg-slate-100/50 dark:hover:bg-white/5">
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">{v.id}</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-400">{v.date}</td>
+                    <td className="py-3.5 px-4 font-bold text-blue-600 dark:text-blue-400">{v.vendorName}</td>
+                    <td className="py-3.5 px-4 font-bold">{v.category}</td>
+                    <td className="py-3.5 px-4">{v.orderItem}</td>
+                    <td className="py-3.5 px-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm">{formatIDR(v.totalCost)}</td>
                   </tr>
                 ))}
               </tbody>
