@@ -20,7 +20,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   {
     id: 'USR-OWN-01',
     name: 'Bapak Hendra Gunawan',
-    email: 'owner@kosanku.com',
+    email: 'owner@kosanku.pro',
     phone: '0811-9988-7766',
     role: 'owner',
     title: 'Owner Utama & Pemilik Properti',
@@ -36,7 +36,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   {
     id: 'USR-ADM-01',
     name: 'Pak Suryadi Wibowo',
-    email: 'admin@kosanku.com',
+    email: 'admin@kosanku.pro',
     phone: '0812-3456-7890',
     role: 'admin',
     title: 'Super Admin Control Center',
@@ -52,7 +52,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   {
     id: 'USR-EMP-01',
     name: 'Bambang Prasetyo',
-    email: 'staf@kosanku.com',
+    email: 'staf@kosanku.pro',
     phone: '0813-5544-3322',
     role: 'employee',
     title: 'Teknisi & Staf Lapangan',
@@ -68,7 +68,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   {
     id: 'USR-EMP-02',
     name: 'Siti Aminah',
-    email: 'siti@kosanku.com',
+    email: 'siti@kosanku.pro',
     phone: '0812-4433-2211',
     role: 'employee',
     title: 'Staf Operasional & Front Office',
@@ -84,7 +84,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   {
     id: 'USR-VND-01',
     name: 'Depot Suci Pratama',
-    email: 'vendor@kosanku.com',
+    email: 'vendor@kosanku.pro',
     phone: '0812-9988-7711',
     role: 'vendor',
     title: 'Mitra Vendor Galon & Gas',
@@ -100,7 +100,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   {
     id: 'USR-TNT-01',
     name: 'Budi Santoso',
-    email: 'budi@kosanku.com',
+    email: 'budi@kosanku.pro',
     phone: '0819-8765-4321',
     role: 'tenant',
     title: 'Penghuni Kamar Deluxe A-101',
