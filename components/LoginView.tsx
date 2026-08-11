@@ -38,7 +38,7 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
 
   const selectPreset = (eMail: string) => {
     setEmail(eMail);
-    setPassword('password123');
+    setPassword('demo123');
   };
 
   return (
@@ -138,25 +138,25 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
-                onClick={() => selectPreset('owner@kosanku.com')}
+                onClick={() => selectPreset('owner@kosanku.pro')}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'owner@kosanku.com'
-                    ? 'neu-inset border-2 border-amber-500 bg-amber-500/10'
+                  email === 'owner@kosanku.pro'
+                    ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
                     : 'neu-card-sm hover:scale-[1.02]'
                 }`}
               >
-                <span className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                  👑 Owner (Pemilik)
+                <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                  👑 Owner Kosan
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">owner@kosanku.com</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">owner@kosanku.pro</span>
                 <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Executive &amp; P&L</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => selectPreset('admin@kosanku.com')}
+                onClick={() => selectPreset('admin@kosanku.pro')}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'admin@kosanku.com'
+                  email === 'admin@kosanku.pro'
                     ? 'neu-inset border-2 border-purple-500 bg-purple-500/10'
                     : 'neu-card-sm hover:scale-[1.02]'
                 }`}
@@ -164,15 +164,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
                 <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
                   🛡️ Super Admin
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">admin@kosanku.com</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">admin@kosanku.pro</span>
                 <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold block mt-0.5">Full System Control</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => selectPreset('staf@kosanku.com')}
+                onClick={() => selectPreset('staf@kosanku.pro')}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'staf@kosanku.com'
+                  email === 'staf@kosanku.pro'
                     ? 'neu-inset border-2 border-blue-500 bg-blue-500/10'
                     : 'neu-card-sm hover:scale-[1.02]'
                 }`}
@@ -180,15 +180,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
                 <span className="text-xs font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
                   🪪 Staf / Karyawan
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">staf@kosanku.com</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">staf@kosanku.pro</span>
                 <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold block mt-0.5">Tugas &amp; Maintenance</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => selectPreset('vendor@kosanku.com')}
+                onClick={() => selectPreset('vendor@kosanku.pro')}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'vendor@kosanku.com'
+                  email === 'vendor@kosanku.pro'
                     ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
                     : 'neu-card-sm hover:scale-[1.02]'
                 }`}
@@ -196,15 +196,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
                 <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                   🏪 Vendor Mitra
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">vendor@kosanku.com</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">vendor@kosanku.pro</span>
                 <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Order Laundry/Gas</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => selectPreset('budi@kosanku.com')}
+                onClick={() => selectPreset('tenant@kosanku.pro')}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer col-span-2 ${
-                  email === 'budi@kosanku.com'
+                  email === 'tenant@kosanku.pro'
                     ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
                     : 'neu-card-sm hover:scale-[1.02]'
                 }`}
@@ -212,7 +212,7 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
                 <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
                   👤 Tenant (Penghuni Kos)
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">budi@kosanku.com</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">tenant@kosanku.pro</span>
               </button>
             </div>
 
