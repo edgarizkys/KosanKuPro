@@ -305,16 +305,14 @@ export default function ReportsHub({
     <div className="space-y-6 sm:space-y-8 animate-fade-in text-slate-900 dark:text-white">
       
       {/* Top Header Card */}
-      <div className="neu-card p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="neu-card p-5 sm:p-7 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-              📋 Consolidated Master Report
+              📋 Master Audit
             </span>
-            <span className="text-xs text-slate-500 font-bold">Audit Komprehensif Properti</span>
           </div>
-          <h2 className="text-2xl font-black mt-1">Pusat Laporan &amp; Ekspor Master Audit</h2>
-          <p className="text-xs text-slate-500">Laporan terstruktur konsolidasi P&amp;L, penerimaan, pengeluaran, okupansi kamar, dan inventori fisik</p>
+          <h2 className="text-xl sm:text-2xl font-black mt-1">Pusat Laporan</h2>
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -323,14 +321,14 @@ export default function ReportsHub({
             className="px-4 py-2.5 neu-btn border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-black rounded-2xl text-xs flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] transition-all"
           >
             <i className="fa-solid fa-file-excel text-emerald-500" />
-            <span>Ekspor Master Excel (.xls)</span>
+            <span>Ekspor Excel (.xls)</span>
           </button>
           <button
             onClick={exportExecutivePDF}
             className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl text-xs flex items-center gap-2 shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
           >
             <i className="fa-solid fa-file-pdf" />
-            <span>Export Official Master PDF</span>
+            <span>Cetak PDF</span>
           </button>
         </div>
       </div>
@@ -339,23 +337,19 @@ export default function ReportsHub({
       <div className="space-y-3 max-w-full">
         {/* Mobile View: Native Select Menu (Ultra Mobile Friendly) */}
         <div className="block sm:hidden neu-card p-3 rounded-2xl">
-          <label className="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5 flex items-center gap-1.5">
-            <i className="fa-solid fa-[#047857] fa-filter" />
-            <span>Pilih Kategori Laporan:</span>
-          </label>
           <select
             value={activeReportTab}
             onChange={(e) => setActiveReportTab(e.target.value as any)}
-            className="w-full neu-input py-3 px-3.5 rounded-xl text-xs font-black outline-none border border-emerald-500/40 text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800/80 cursor-pointer"
+            className="w-full neu-input py-3 px-3 rounded-xl text-xs font-black outline-none border border-emerald-500/40 text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800/80 cursor-pointer"
           >
-            <option value="all">📊 Semua Laporan (Konsolidasi Master)</option>
-            <option value="financial">📈 Ringkasan Eksekutif P&amp;L</option>
-            <option value="incomes">🟢 Rincian Penerimaan ({revenues.length})</option>
-            <option value="expenses">🔴 Rincian Pengeluaran ({expenses.length})</option>
-            <option value="occupancy">🏢 Status Okupansi Kamar ({occupancyData.length})</option>
-            <option value="inventory">📦 Audit Stok Inventori ({inventoryAuditData.length})</option>
-            <option value="vendor">🏪 History Mitra Vendor ({vendorHistoryData.length})</option>
-            <option value="employee">👷‍♂️ Performa Karyawan ({employeeTaskData.length})</option>
+            <option value="all">📊 Semua Laporan</option>
+            <option value="financial">📈 Keuangan P&amp;L</option>
+            <option value="incomes">🟢 Penerimaan ({revenues.length})</option>
+            <option value="expenses">🔴 Pengeluaran ({expenses.length})</option>
+            <option value="occupancy">🏢 Okupansi ({occupancyData.length})</option>
+            <option value="inventory">📦 Inventori ({inventoryAuditData.length})</option>
+            <option value="vendor">🏪 Vendor ({vendorHistoryData.length})</option>
+            <option value="employee">👷‍♂️ Karyawan ({employeeTaskData.length})</option>
           </select>
         </div>
 
@@ -368,7 +362,7 @@ export default function ReportsHub({
             }`}
           >
             <i className="fa-solid fa-layer-group" />
-            <span>Semua Laporan</span>
+            <span>Semua</span>
           </button>
 
           <button
@@ -378,7 +372,7 @@ export default function ReportsHub({
             }`}
           >
             <i className="fa-solid fa-chart-pie" />
-            <span>P&amp;L</span>
+            <span>Keuangan P&amp;L</span>
           </button>
 
           <button
@@ -445,38 +439,34 @@ export default function ReportsHub({
 
       {/* ===== SECTION 1: P&L SUMMARY ===== */}
       {(activeReportTab === 'all' || activeReportTab === 'financial') && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
           <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-black flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
               <i className="fa-solid fa-chart-pie text-emerald-500" />
-              <span>1. Ringkasan Eksekutif Keuangan P&amp;L</span>
+              <span>Ringkasan Keuangan P&amp;L</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-slate-400">Periode 2026</span>
+            <span className="text-xs font-mono font-bold text-slate-400">2026</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Total Turnover Penerimaan</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Penerimaan</span>
               <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{formatIDR(totalRevenue)}</p>
-              <span className="text-[9px] text-slate-400">Sewa, Deposit &amp; Add-on</span>
             </div>
 
             <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Total Outflow Pengeluaran</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Pengeluaran</span>
               <p className="text-xl font-black text-rose-600 dark:text-rose-400">{formatIDR(totalExpenses)}</p>
-              <span className="text-[9px] text-slate-400">Listrik, Air &amp; Maintenance</span>
             </div>
 
             <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Laba Bersih Bersih</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Laba Bersih</span>
               <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{formatIDR(netProfit)}</p>
-              <span className="text-[9px] text-emerald-600 font-bold">Net Turnover</span>
             </div>
 
             <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Profit Margin Ratio</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Margin Laba</span>
               <p className="text-xl font-black text-purple-600 dark:text-purple-400">{margin}%</p>
-              <span className="text-[9px] text-purple-500 font-bold">Effisiensi Biaya</span>
             </div>
           </div>
         </div>
@@ -484,13 +474,13 @@ export default function ReportsHub({
 
       {/* ===== SECTION 2: RINCIAN PENERIMAAN ===== */}
       {(activeReportTab === 'all' || activeReportTab === 'incomes') && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
           <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-black flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
               <i className="fa-solid fa-sack-dollar text-emerald-500" />
-              <span>2. Laporan Rinci Transaksi Penerimaan (Inflows)</span>
+              <span>Rincian Penerimaan</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{revenues.length} Terverifikasi</span>
+            <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{revenues.length} Data</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -500,9 +490,9 @@ export default function ReportsHub({
                   <th className="py-3 px-4">REF &amp; WAKTU</th>
                   <th className="py-3 px-4">PENGHUNI</th>
                   <th className="py-3 px-4">KAMAR</th>
-                  <th className="py-3 px-4">SUMBER PENERIMAAN</th>
-                  <th className="py-3 px-4">METODE BAYAR</th>
-                  <th className="py-3 px-4 text-right">NOMINAL (IDR)</th>
+                  <th className="py-3 px-4">SUMBER</th>
+                  <th className="py-3 px-4">METODE</th>
+                  <th className="py-3 px-4 text-right">NOMINAL</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
@@ -527,24 +517,24 @@ export default function ReportsHub({
 
       {/* ===== SECTION 3: RINCIAN PENGELUARAN ===== */}
       {(activeReportTab === 'all' || activeReportTab === 'expenses') && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
           <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-black flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
               <i className="fa-solid fa-receipt text-rose-500" />
-              <span>3. Laporan Rinci Transaksi Pengeluaran (Outflows)</span>
+              <span>Rincian Pengeluaran</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-rose-600 dark:text-rose-400">{expenses.length} Transaksi</span>
+            <span className="text-xs font-mono font-bold text-rose-600 dark:text-rose-400">{expenses.length} Data</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="py-3 px-4">NO REF</th>
+                  <th className="py-3 px-4">REF</th>
                   <th className="py-3 px-4">KATEGORI</th>
-                  <th className="py-3 px-4">DESKRIPSI PENGELUARAN</th>
-                  <th className="py-3 px-4">TANGGAL TRANSAKSI</th>
-                  <th className="py-3 px-4 text-right">NOMINAL (IDR)</th>
+                  <th className="py-3 px-4">DESKRIPSI</th>
+                  <th className="py-3 px-4">TANGGAL</th>
+                  <th className="py-3 px-4 text-right">NOMINAL</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
@@ -565,24 +555,24 @@ export default function ReportsHub({
 
       {/* ===== SECTION 4: OKUPANSI & STATUS KAMAR ===== */}
       {(activeReportTab === 'all' || activeReportTab === 'occupancy') && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
           <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-black flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
               <i className="fa-solid fa-door-open text-purple-500" />
-              <span>4. Laporan Status Okupansi Kamar Properti</span>
+              <span>Laporan Okupansi Kamar</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">Okupansi Rate: 95.4%</span>
+            <span className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">95.4% Terisi</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="py-3 px-4">NOMOR KAMAR</th>
-                  <th className="py-3 px-4">TIPE KAMAR</th>
-                  <th className="py-3 px-4">STATUS UNIT</th>
-                  <th className="py-3 px-4">PENGHUNI AKTIF</th>
-                  <th className="py-3 px-4 text-right">TARIF SEWA</th>
+                  <th className="py-3 px-4">KAMAR</th>
+                  <th className="py-3 px-4">TIPE</th>
+                  <th className="py-3 px-4">STATUS</th>
+                  <th className="py-3 px-4">PENGHUNI</th>
+                  <th className="py-3 px-4 text-right">TARIF</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
@@ -607,24 +597,24 @@ export default function ReportsHub({
 
       {/* ===== SECTION 5: AUDIT FISIK INVENTORI STOK ===== */}
       {(activeReportTab === 'all' || activeReportTab === 'inventory') && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
           <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-black flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
               <i className="fa-solid fa-boxes-packing text-amber-500" />
-              <span>5. Laporan Audit Fisik Stok Inventori Properti</span>
+              <span>Audit Inventori</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">Stock Opname Verified</span>
+            <span className="text-xs font-mono font-bold text-amber-600 dark:text-amber-400">Stock Verified</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="py-3 px-4">KODE BARANG</th>
-                  <th className="py-3 px-4">NAMA MEBEL / BARANG</th>
-                  <th className="py-3 px-4">LOKASI UNIT</th>
-                  <th className="py-3 px-4">JUMLAH STOK</th>
-                  <th className="py-3 px-4">KONDISI FISIK</th>
+                  <th className="py-3 px-4">KODE</th>
+                  <th className="py-3 px-4">BARANG</th>
+                  <th className="py-3 px-4">LOKASI</th>
+                  <th className="py-3 px-4">STOK</th>
+                  <th className="py-3 px-4">KONDISI</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
@@ -649,13 +639,13 @@ export default function ReportsHub({
 
       {/* ===== SECTION 6: RIWAYAT TRANSAKSI VENDOR MITRA ===== */}
       {(activeReportTab === 'all' || activeReportTab === 'vendor') && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
           <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-black flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
               <i className="fa-solid fa-store text-blue-500" />
-              <span>6. Laporan Riwayat Pemesanan &amp; Transaksi Vendor Mitra</span>
+              <span>History Mitra Vendor</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">{vendorHistoryData.length} Pesanan Lunas</span>
+            <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">{vendorHistoryData.length} Order</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -664,10 +654,10 @@ export default function ReportsHub({
                 <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
                   <th className="py-3 px-4">NO ORDER</th>
                   <th className="py-3 px-4">TANGGAL</th>
-                  <th className="py-3 px-4">NAMA VENDOR MITRA</th>
-                  <th className="py-3 px-4">KATEGORI LAYANAN</th>
-                  <th className="py-3 px-4">RINCIAN ITEM PESANAN</th>
-                  <th className="py-3 px-4 text-right">TOTAL BIAYA (IDR)</th>
+                  <th className="py-3 px-4">VENDOR</th>
+                  <th className="py-3 px-4">KATEGORI</th>
+                  <th className="py-3 px-4">ITEM PESANAN</th>
+                  <th className="py-3 px-4 text-right">TOTAL</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
@@ -689,25 +679,25 @@ export default function ReportsHub({
 
       {/* ===== SECTION 7: LAPORAN PERFORMA KARYAWAN & PENUGASAN OWNER ===== */}
       {(activeReportTab === 'all' || activeReportTab === 'employee') && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
           <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
-            <h3 className="text-lg font-black flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
               <i className="fa-solid fa-user-check text-emerald-500" />
-              <span>7. Laporan Performa Karyawan &amp; Audit Penugasan Owner</span>
+              <span>Performa Karyawan</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{employeeTaskData.length} Tugas Terdata</span>
+            <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{employeeTaskData.length} Tugas</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="py-3 px-4">KODE TUGAS</th>
+                  <th className="py-3 px-4">TUGAS</th>
                   <th className="py-3 px-4">TANGGAL</th>
-                  <th className="py-3 px-4">NAMA STAF / KARYAWAN</th>
-                  <th className="py-3 px-4">DESKRIPSI PENUGASAN OWNER</th>
-                  <th className="py-3 px-4">DITUGASKAN OLEH</th>
-                  <th className="py-3 px-4">STATUS &amp; SKOR KINERJA</th>
+                  <th className="py-3 px-4">STAF</th>
+                  <th className="py-3 px-4">PENUGASAN</th>
+                  <th className="py-3 px-4">OLES HENDRA (OWNER)</th>
+                  <th className="py-3 px-4">STATUS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
@@ -717,7 +707,6 @@ export default function ReportsHub({
                     <td className="py-3.5 px-4 font-mono text-slate-400">{t.date}</td>
                     <td className="py-3.5 px-4">
                       <span className="font-bold text-slate-900 dark:text-white block">{t.staffName}</span>
-                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">{t.role}</span>
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">{t.taskTitle}</td>
                     <td className="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">{t.assignedBy}</td>
