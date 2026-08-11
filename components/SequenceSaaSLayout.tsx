@@ -343,8 +343,17 @@ export default function SequenceSaaSLayout({
     <div className="min-h-screen bg-[#f8f7f4] dark:bg-[#0a0710] flex flex-col lg:flex-row font-sans overflow-x-hidden max-w-full">
       
       {/* 🟣 MOBILE TOP BAR NAVIGATION HEADER */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 sticky top-0 z-40 shadow-sm max-w-full overflow-hidden">
-        <div className="flex items-center gap-3">
+      <div className="lg:hidden flex items-center justify-between p-3 sm:p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 sticky top-0 z-40 shadow-sm max-w-full overflow-hidden">
+        {/* LEFT SIDE: Foto User Avatar Pill + Garis 3 Menu Button */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center cursor-pointer active:scale-95 transition-all bg-gradient-to-br from-amber-500/10 to-emerald-500/10 border border-emerald-500/30"
+            title="Buka Profil Akun"
+          >
+            <span className="text-base">{currentUser?.avatar || '👤'}</span>
+          </button>
+
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 transition-all"
@@ -354,32 +363,22 @@ export default function SequenceSaaSLayout({
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Mobile Theme Toggle */}
+        {/* RIGHT SIDE: Dark/Light Mode Toggle + Logout Button */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleToggleTheme}
-            className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-amber-500 dark:text-amber-400 cursor-pointer text-xs"
+            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-amber-500 dark:text-amber-400 cursor-pointer text-sm active:scale-95 transition-all"
             title="Toggle Dark/Light Mode"
           >
             <i className={`fa-solid ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
           </button>
 
           <button
-            onClick={() => setShowProfileModal(true)}
-            className="px-2.5 py-1 rounded-full neu-btn flex items-center gap-1.5 cursor-pointer"
-            title="Buka Profil"
-          >
-            <span className="text-xs">{currentUser?.avatar || '👤'}</span>
-            <span className="text-[9px] font-black uppercase text-slate-800 dark:text-slate-200">{role || 'owner'}</span>
-          </button>
-
-          {/* Direct Mobile Logout Button */}
-          <button
             onClick={onLogout}
-            className="w-9 h-9 rounded-2xl neu-btn text-rose-500 hover:text-rose-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
+            className="w-10 h-10 rounded-2xl neu-btn text-rose-500 hover:text-rose-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
             title="Keluar dari Sesi"
           >
-            <i className="fa-solid fa-arrow-right-from-bracket text-xs" />
+            <i className="fa-solid fa-arrow-right-from-bracket text-sm" />
           </button>
         </div>
       </div>
