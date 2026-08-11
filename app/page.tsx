@@ -85,23 +85,49 @@ export default function Home() {
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Restore persistent session on page refresh
+    const savedUser = localStorage.getItem('kosanku_user_session');
+    const savedRole = localStorage.getItem('kosanku_user_role') as RoleType;
+    const savedView = localStorage.getItem('kosanku_current_view') as ViewType;
+
+    if (savedUser && savedRole && savedView && savedView !== 'landing') {
+      try {
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed);
+        setRole(savedRole);
+        setView(savedView);
+      } catch (e) {
+        console.error('Failed to restore session:', e);
+      }
+    }
   }, []);
 
   const handleLogin = (userData: LoggedUser) => {
     setUser(userData);
-    const assignedRole = (userData.role as RoleType) || 'admin';
+    const assignedRole = (userData.role.toLowerCase() as RoleType) || 'admin';
     setRole(assignedRole);
     setView(assignedRole);
+
+    // Save session to localStorage
+    localStorage.setItem('kosanku_user_session', JSON.stringify(userData));
+    localStorage.setItem('kosanku_user_role', assignedRole);
+    localStorage.setItem('kosanku_current_view', assignedRole);
   };
 
   const switchRole = (newRole: RoleType) => {
     setRole(newRole);
     setView(newRole);
+    localStorage.setItem('kosanku_user_role', newRole);
+    localStorage.setItem('kosanku_current_view', newRole);
   };
 
   const handleLogout = () => {
     setUser(null);
     setView('landing');
+    localStorage.removeItem('kosanku_user_session');
+    localStorage.removeItem('kosanku_user_role');
+    localStorage.removeItem('kosanku_current_view');
   };
 
   return (
