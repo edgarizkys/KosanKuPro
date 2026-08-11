@@ -153,131 +153,120 @@ export default function FinancialDashboard() {
         </div>
       </div>
 
-      {/* ===== HIGH-END ANIMATED AREA WAVE CHART (SVG SMOOTH BEZIER) ===== */}
-      <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
-          <div>
-            <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
-              <i className="fa-solid fa-chart-line text-emerald-500 animate-bounce" />
-              <span>Grafik Analitik Tren Keuangan (High-End Dynamic Wave AI Chart)</span>
-            </h3>
-            <p className="text-xs text-slate-500">Visualisasi data interaktif arus kas penerimaan vs pengeluaran bulanan</p>
+      {/* ===== MODERN CLEAN SAAS DASHBOARD ANALYTICS CARD (INSPIRED BY REFERENCE) ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Main Chart Card (2 Cols) */}
+        <div className="lg:col-span-2 neu-card p-6 sm:p-8 rounded-3xl space-y-6 flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-4">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">P&amp;L Analytics</span>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">Arus Kas Bulanan</h3>
+            </div>
+
+            <div className="flex items-center gap-2 neu-inset p-1 rounded-2xl text-xs font-bold">
+              <button
+                onClick={() => setActiveChartTab('revenue')}
+                className={`px-3 py-1 rounded-xl transition-all cursor-pointer ${
+                  activeChartTab === 'revenue' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Revenue
+              </button>
+              <button
+                onClick={() => setActiveChartTab('profit')}
+                className={`px-3 py-1 rounded-xl transition-all cursor-pointer ${
+                  activeChartTab === 'profit' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Net Profit
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 neu-inset p-1.5 rounded-2xl text-xs font-bold">
-            <button
-              onClick={() => setActiveChartTab('revenue')}
-              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
-                activeChartTab === 'revenue' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Revenue vs Expense
-            </button>
-            <button
-              onClick={() => setActiveChartTab('profit')}
-              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
-                activeChartTab === 'profit' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Laba Bersih
-            </button>
+          {/* Clean Curved Sparkline Area Graph + Glowing Points */}
+          <div className="h-56 w-full relative pt-4 flex flex-col justify-between">
+            <svg className="w-full h-40 overflow-visible" viewBox="0 0 600 160" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="cleanInflowGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              {/* Background Horizontal Grid Lines */}
+              <line x1="0" y1="20" x2="600" y2="20" stroke="currentColor" className="text-slate-200 dark:text-white/5" strokeDasharray="3 3" />
+              <line x1="0" y1="80" x2="600" y2="80" stroke="currentColor" className="text-slate-200 dark:text-white/5" strokeDasharray="3 3" />
+              <line x1="0" y1="140" x2="600" y2="140" stroke="currentColor" className="text-slate-200 dark:text-white/5" strokeDasharray="3 3" />
+
+              {/* Smooth Spline Path */}
+              <path
+                d="M 0,90 C 100,70 150,85 240,60 C 330,35 450,45 600,15 L 600,160 L 0,160 Z"
+                fill="url(#cleanInflowGrad)"
+              />
+              <path
+                d="M 0,90 C 100,70 150,85 240,60 C 330,35 450,45 600,15"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+              />
+
+              {/* Interactive Data Dots with Tooltips */}
+              <circle cx="0" cy="90" r="4" fill="#10b981" />
+              <circle cx="120" cy="75" r="4" fill="#10b981" />
+              <circle cx="240" cy="60" r="4" fill="#10b981" />
+              <circle cx="360" cy="40" r="4" fill="#10b981" />
+              <circle cx="480" cy="30" r="4" fill="#10b981" />
+              <circle cx="600" cy="15" r="6" fill="#34d399" className="animate-ping" />
+              <circle cx="600" cy="15" r="5" fill="#059669" />
+            </svg>
+
+            {/* X-Axis Month Tags */}
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 font-mono pt-2">
+              {MONTHLY_DATA.map((d, idx) => (
+                <span key={idx} className="hover:text-emerald-500 cursor-pointer transition-colors">{d.month}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200/60 dark:border-white/5">
+            <span className="text-slate-500 font-medium">Status Arus Kas: <strong className="text-emerald-600 dark:text-emerald-400">Surplus +74%</strong></span>
+            <span className="text-[10px] text-slate-400">Diperbarui realtime via AI Ledger</span>
+          </div>
+        </div>
+
+        {/* Side KPI Card (1 Col) - Inspired by reference card 4 */}
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 flex flex-col justify-between bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-xl relative overflow-hidden">
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-emerald-200">Performa Okupansi</span>
+            <h3 className="text-2xl font-black">Target Terpenuhi</h3>
+            <p className="text-xs text-emerald-100/80">Rata-rataketerisian kamar periode 2026</p>
+          </div>
+
+          <div className="flex items-center justify-between my-2">
+            <div>
+              <div className="text-4xl font-black tracking-tight">95.4%</div>
+              <span className="text-xs text-emerald-200 font-bold flex items-center gap-1 mt-1">
+                <i className="fa-solid fa-arrow-up text-emerald-300" /> +12.5% dibanding bulan lalu
+              </span>
+            </div>
+            <div className="w-16 h-16 rounded-full border-4 border-emerald-300/30 border-t-emerald-300 flex items-center justify-center font-black text-sm">
+              95%
+            </div>
+          </div>
+
+          <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl text-xs space-y-1">
+            <div className="flex justify-between font-bold text-emerald-100 text-[11px]">
+              <span>Kamar Terisi:</span>
+              <span>19 / 20 Unit</span>
+            </div>
+            <div className="w-full h-2 bg-black/20 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-300 rounded-full w-[95%]" />
+            </div>
           </div>
         </div>
 
-        {/* Ultra-Sleek Modern Animated Bar & Line Hybrid Chart Container */}
-        <div className="h-72 w-full pt-6 pb-2 px-2 sm:px-6 relative flex items-end justify-between gap-3 sm:gap-6">
-          
-          {/* Y-Axis Grid Lines */}
-          <div className="absolute inset-x-0 top-6 border-b border-slate-200/60 dark:border-white/5 text-[10px] text-slate-400 font-mono pl-2 flex justify-between">
-            <span>Rp 40.000.000</span>
-            <span className="text-[9px] text-emerald-500 font-bold">Target Inflow 🔥</span>
-          </div>
-          <div className="absolute inset-x-0 top-1/3 border-b border-slate-200/60 dark:border-white/5 text-[10px] text-slate-400 font-mono pl-2">Rp 25.000.000</div>
-          <div className="absolute inset-x-0 top-2/3 border-b border-slate-200/60 dark:border-white/5 text-[10px] text-slate-400 font-mono pl-2">Rp 10.000.000</div>
-
-          {/* Animated Bar & Hover Tooltips Column Grid */}
-          {MONTHLY_DATA.map((d, i) => {
-            const revHeight = Math.min(100, Math.round((d.revenue / 40000000) * 100));
-            const expHeight = Math.min(100, Math.round((d.expenses / 40000000) * 100));
-            const profit = d.revenue - d.expenses;
-            const profitHeight = Math.min(100, Math.round((profit / 40000000) * 100));
-
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group z-10 relative">
-                
-                {/* Floating Glassmorphism Tooltip on Hover */}
-                <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-2 absolute -top-12 bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2 rounded-2xl text-[10px] font-bold shadow-2xl border border-white/10 pointer-events-none z-30 flex flex-col items-center gap-0.5 min-w-[130px]">
-                  <span className="text-amber-400 uppercase tracking-wider text-[9px] font-black">{d.month}</span>
-                  <div className="flex items-center justify-between w-full gap-2">
-                    <span className="text-slate-400">Revenue:</span>
-                    <span className="text-emerald-400 font-mono font-black">{formatShort(d.revenue)}</span>
-                  </div>
-                  <div className="flex items-center justify-between w-full gap-2">
-                    <span className="text-slate-400">Expense:</span>
-                    <span className="text-rose-400 font-mono font-black">{formatShort(d.expenses)}</span>
-                  </div>
-                  <div className="flex items-center justify-between w-full gap-2 pt-1 border-t border-white/10">
-                    <span className="text-slate-300">Profit:</span>
-                    <span className="text-amber-300 font-mono font-black">{formatShort(profit)}</span>
-                  </div>
-                </div>
-
-                {/* Animated Bars */}
-                {activeChartTab === 'revenue' ? (
-                  <div className="w-full flex items-end justify-center gap-1 sm:gap-2.5 h-full pt-8">
-                    {/* Revenue Bar */}
-                    <div
-                      style={{ height: `${revHeight}%` }}
-                      className="w-1/2 bg-gradient-to-t from-emerald-600 via-emerald-500 to-teal-400 rounded-t-2xl transition-all duration-700 ease-out group-hover:scale-105 shadow-lg shadow-emerald-500/20 relative overflow-hidden group-hover:shadow-emerald-500/40"
-                    >
-                      <div className="absolute inset-x-0 top-0 h-1 bg-white/40" />
-                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-
-                    {/* Expense Bar */}
-                    <div
-                      style={{ height: `${expHeight}%` }}
-                      className="w-1/2 bg-gradient-to-t from-rose-600 via-rose-500 to-pink-400 rounded-t-2xl transition-all duration-700 ease-out group-hover:scale-105 shadow-lg shadow-rose-500/20 relative overflow-hidden group-hover:shadow-rose-500/40"
-                    >
-                      <div className="absolute inset-x-0 top-0 h-1 bg-white/40" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full flex items-end justify-center h-full pt-8">
-                    {/* Net Profit Bar */}
-                    <div
-                      style={{ height: `${profitHeight}%` }}
-                      className="w-2/3 bg-gradient-to-t from-amber-600 via-amber-500 to-yellow-400 rounded-t-2xl transition-all duration-700 ease-out group-hover:scale-105 shadow-lg shadow-amber-500/20 relative overflow-hidden flex items-start justify-center pt-1"
-                    >
-                      <span className="text-[9px] font-black text-slate-900 font-mono drop-shadow">{formatShort(profit)}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* X-Axis Month Tag */}
-                <span className="mt-3 text-[11px] font-black text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors font-mono tracking-tight">
-                  {d.month}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-8 pt-3 border-t border-slate-200 dark:border-white/10 text-xs font-bold">
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-md shadow-emerald-500/30" />
-            <span className="text-slate-700 dark:text-slate-200">Penerimaan (Inflow Revenue)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-rose-600 to-pink-400 shadow-md shadow-rose-500/30" />
-            <span className="text-slate-700 dark:text-slate-200">Pengeluaran (Outflow Expenses)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-amber-600 to-yellow-400 shadow-md shadow-amber-500/30" />
-            <span className="text-slate-700 dark:text-slate-200">Laba Bersih (Net Profit)</span>
-          </div>
-        </div>
       </div>
 
       {/* ===== RINCIAN LENGKAP PENDAPATAN & PENGELUARAN DIPALING BAWAH LAPORAN P&L ===== */}
