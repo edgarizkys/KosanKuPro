@@ -566,7 +566,7 @@ export default function AdminDashboard({
           </div>
           <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-white">{occupancyPct}%</div>
           <div className="w-full neu-inset rounded-full h-2 overflow-hidden p-0.5">
-            <div className="bg-gradient-to-r from-amber-500 to-purple-600 h-1 rounded-full transition-all duration-700 shadow-xs" style={{ width: `${occupancyPct}%` }} />
+            <div className="bg-[#047857] dark:bg-emerald-400 h-1 rounded-full transition-all duration-700 shadow-xs" style={{ width: `${occupancyPct}%` }} />
           </div>
         </div>
 
@@ -826,7 +826,7 @@ export default function AdminDashboard({
           <button
             onClick={fetchAIPricing}
             disabled={pricingLoading}
-            className="px-3.5 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold rounded-xl text-[9px] sm:text-[10px] hover:shadow-md transition-all disabled:opacity-50 flex-shrink-0 cursor-pointer"
+            className="px-3.5 sm:px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl text-[9px] sm:text-[10px] shadow-sm hover:scale-[1.02] transition-all disabled:opacity-50 flex-shrink-0 cursor-pointer"
           >
             {pricingLoading ? <><i className="fa-solid fa-spinner fa-spin mr-1.5" />Menganalisis...</> : <><i className="fa-solid fa-wand-magic-sparkles mr-1.5" />Analisis Harga</>}
           </button>

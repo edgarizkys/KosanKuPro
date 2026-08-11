@@ -192,18 +192,18 @@ export default function VendorDashboard({
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-mono text-[10px] font-bold">
                     #{order.id}
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-bold text-[10px]">
+                  <span className="px-2.5 py-1 rounded-lg neu-inset text-[#047857] dark:text-emerald-400 font-bold text-[10px]">
                     Kamar {order.roomNumber} ({order.tenantName})
                   </span>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">{order.item}</h4>
                 </div>
                 <div className="flex items-center gap-2">
                   {order.addOnBilled ? (
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
                       💳 Add-On Masuk Tagihan Tenant
                     </span>
                   ) : (
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                       ⏳ Belum Di-charge
                     </span>
                   )}
@@ -216,7 +216,7 @@ export default function VendorDashboard({
                     Waktu Pesan: <strong className="text-slate-900 dark:text-white">{order.orderTime}</strong> • Staf: <strong className="text-emerald-600 dark:text-emerald-400">{order.assignedStaff}</strong>
                   </span>
                   {order.extraDetails && (
-                    <span className="text-[11px] text-purple-700 dark:text-purple-300 font-bold block mt-1">
+                    <span className="text-[11px] text-[#047857] dark:text-emerald-400 font-bold block mt-1">
                       📌 Catatan Kelebihan: {order.extraDetails}
                     </span>
                   )}
@@ -234,10 +234,10 @@ export default function VendorDashboard({
                       setAddOnCost(String(order.amount));
                       setAddOnNote(order.extraDetails || '');
                     }}
-                    className="px-4 py-2 bg-gradient-to-r from-amber-500 to-purple-600 text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-2"
                   >
                     <i className="fa-solid fa-plus-circle" />
-                    <span>➕ Masukkan Add-On ke Tagihan Bulanan Tenant</span>
+                    <span>Masukkan Add-On ke Tagihan Bulanan Tenant</span>
                   </button>
                 )}
 
@@ -245,9 +245,9 @@ export default function VendorDashboard({
                   {order.status === 'NEW' && (
                     <button
                       onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer"
+                      className="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      Proses Pesanan
+                      <i className="fa-solid fa-gears" /> Proses Pesanan
                     </button>
                   )}
                   {order.status === 'PROCESSING' && (
@@ -267,15 +267,15 @@ export default function VendorDashboard({
 
       {/* Add-On Billing Modal Dialog */}
       {selectedOrderForAddOn && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedOrderForAddOn(null)}>
-          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedOrderForAddOn(null)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Add-On ke Tagihan Tenant</h3>
               <button onClick={() => setSelectedOrderForAddOn(null)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
 
             <div className="p-3.5 neu-inset rounded-2xl text-xs space-y-1">
-              <span className="font-bold block text-purple-900 dark:text-purple-300">Penerima Tagihan:</span>
+              <span className="font-bold block text-[#047857] dark:text-emerald-400">Penerima Tagihan:</span>
               <p className="text-slate-900 dark:text-white font-black text-sm">{selectedOrderForAddOn.tenantName} (Kamar {selectedOrderForAddOn.roomNumber})</p>
               <p className="text-slate-600 dark:text-slate-300">{selectedOrderForAddOn.item}</p>
             </div>
@@ -293,7 +293,7 @@ export default function VendorDashboard({
 
               <div className="flex gap-3 pt-2 border-t border-slate-200/60 dark:border-white/10">
                 <button type="button" onClick={() => setSelectedOrderForAddOn(null)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer">Akumulasikan ke Tagihan</button>
+                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl shadow-md transition-all cursor-pointer">Akumulasikan ke Tagihan</button>
               </div>
             </form>
           </div>

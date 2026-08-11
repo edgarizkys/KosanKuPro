@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: 'KosanKu Pro — Luxury Living Management',
   description: 'Platform manajemen kos premium dengan pembayaran otomatis, AI chatbot, dan smart living.',

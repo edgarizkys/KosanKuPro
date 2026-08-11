@@ -171,8 +171,8 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             </div>
           </div>
 
-          {/* LAYER 2: Modern 3-Story Kosan Villa Cutout (Massive & Grand on Mobile) */}
-          <div className="hero-parallax-house relative z-20 w-full max-w-4xl sm:max-w-5xl lg:max-w-6xl mx-auto -mb-1 sm:-mb-3 lg:-mb-4 scale-[2.85] xs:scale-[3.0] sm:scale-105 lg:scale-110 origin-bottom translate-x-4 xs:translate-x-6 sm:translate-x-0 translate-y-3 sm:translate-y-0 pointer-events-none will-change-transform">
+          {/* LAYER 2: Modern 3-Story Kosan Villa Cutout */}
+          <div className="hero-parallax-house relative z-20 w-full max-w-4xl sm:max-w-5xl lg:max-w-6xl mx-auto -mb-1 sm:-mb-3 lg:-mb-4 scale-100 sm:scale-105 lg:scale-110 origin-bottom pointer-events-none will-change-transform">
             <img
               src="/images/modern_kosan_cutout.png"
               alt="KosanKu Pro Luxury Executive Villa"

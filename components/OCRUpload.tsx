@@ -171,7 +171,7 @@ export default function OCRUpload() {
             <button
               onClick={runOCR}
               disabled={loading}
-              className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold text-xs rounded-xl shadow-md hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full py-3.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold text-xs rounded-2xl shadow-md hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2"><i className="fa-solid fa-spinner fa-spin" /> Memproses OCR AI...</span>
