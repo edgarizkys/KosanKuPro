@@ -87,8 +87,8 @@ async function main() {
 
   // Assign tenants to rooms
   await prisma.room.update({ where: { number: 'A-101' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
-  await prisma.room.update({ where: { number: 'B-201' }, data: { status: 'OCCUPIED', tenantId: tenants[1].id } });
-  await prisma.room.update({ where: { number: 'C-302' }, data: { status: 'OCCUPIED', tenantId: tenants[2].id } });
+  await prisma.room.update({ where: { number: 'B-201' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
+  await prisma.room.update({ where: { number: 'C-302' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
   await prisma.room.update({ where: { number: 'B-202' }, data: { status: 'MAINTENANCE' } });
   console.log('✅ Room assignments done');
 
