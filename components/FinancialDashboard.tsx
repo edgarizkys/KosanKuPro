@@ -93,6 +93,10 @@ export default function FinancialDashboard() {
     ? revenues
     : revenues.filter((r) => r.category === revenueFilter);
 
+  const filteredExpenses = filterCategory === 'all'
+    ? expenses
+    : expenses.filter((e) => e.category === filterCategory);
+
   const maxRevenue = Math.max(...MONTHLY_DATA.map((d) => d.revenue));
   const maxExpenses = Math.max(...MONTHLY_DATA.map((d) => d.expenses));
 
@@ -149,21 +153,21 @@ export default function FinancialDashboard() {
         </div>
       </div>
 
-      {/* ===== DYNAMIC ANIMATED GRAPH CHART COMPONENT ===== */}
+      {/* ===== HIGH-END ANIMATED AREA WAVE CHART (SVG SMOOTH BEZIER) ===== */}
       <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
           <div>
             <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
-              <i className="fa-solid fa-chart-line text-emerald-500" />
-              <span>Grafik Analitik Tren Keuangan &amp; Okupansi (Interactive AI Chart)</span>
+              <i className="fa-solid fa-chart-line text-emerald-500 animate-bounce" />
+              <span>Grafik Analitik Tren Keuangan (High-End Dynamic Wave AI Chart)</span>
             </h3>
-            <p className="text-xs text-slate-500">Visualisasi data berkala dengan perbandingan tren bulanan</p>
+            <p className="text-xs text-slate-500">Visualisasi data interaktif arus kas penerimaan vs pengeluaran bulanan</p>
           </div>
 
-          <div className="flex items-center gap-2 neu-inset p-1 rounded-2xl text-xs font-bold">
+          <div className="flex items-center gap-2 neu-inset p-1.5 rounded-2xl text-xs font-bold">
             <button
               onClick={() => setActiveChartTab('revenue')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
                 activeChartTab === 'revenue' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -171,215 +175,261 @@ export default function FinancialDashboard() {
             </button>
             <button
               onClick={() => setActiveChartTab('profit')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer ${
                 activeChartTab === 'profit' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Tren Laba Bersih
-            </button>
-            <button
-              onClick={() => setActiveChartTab('occupancy')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                activeChartTab === 'occupancy' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Okupansi (%)
+              Laba Bersih
             </button>
           </div>
         </div>
 
-        {/* Animated Smooth Wave SVG Line & Area Chart */}
+        {/* Dynamic Curved SVG Area Wave Chart */}
         <div className="h-64 sm:h-72 w-full pt-8 pb-4 px-2 sm:px-6 relative overflow-hidden">
-          
           {/* Background Grid Lines */}
-          <div className="absolute inset-x-0 top-0 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 40jt</div>
-          <div className="absolute inset-x-0 top-1/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 25jt</div>
-          <div className="absolute inset-x-0 top-2/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 10jt</div>
+          <div className="absolute inset-x-0 top-2 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 40.000.000</div>
+          <div className="absolute inset-x-0 top-1/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 25.000.000</div>
+          <div className="absolute inset-x-0 top-2/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 10.000.000</div>
 
-          {/* SVG Smooth Curve Area Chart */}
-          <svg className="w-full h-44 overflow-visible" viewBox="0 0 500 150" preserveAspectRatio="none">
+          <svg className="w-full h-48 overflow-visible" viewBox="0 0 500 150" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+              <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
                 <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
               </linearGradient>
-              <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.3" />
+              <linearGradient id="gradExpense" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.35" />
                 <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
               </linearGradient>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
             </defs>
 
-            {/* Revenue Smooth Curve Path */}
+            {/* Revenue Wave Fill & Stroke */}
             <path
-              d="M 0,60 C 80,50 160,40 250,55 C 330,65 410,35 500,20 L 500,150 L 0,150 Z"
-              fill="url(#revenueGrad)"
-              className="transition-all duration-1000"
+              d="M 0,70 Q 100,50 200,60 T 400,35 T 500,15 L 500,150 L 0,150 Z"
+              fill="url(#gradRevenue)"
+              className="transition-all duration-700"
             />
             <path
-              d="M 0,60 C 80,50 160,40 250,55 C 330,65 410,35 500,20"
+              d="M 0,70 Q 100,50 200,60 T 400,35 T 500,15"
               fill="none"
               stroke="#10b981"
               strokeWidth="4"
               strokeLinecap="round"
-              className="transition-all duration-1000"
+              filter="url(#glow)"
+              className="transition-all duration-700"
             />
 
-            {/* Expense Smooth Curve Path */}
+            {/* Expense Wave Fill & Stroke */}
             <path
-              d="M 0,110 C 80,115 160,105 250,110 C 330,120 410,100 500,95 L 500,150 L 0,150 Z"
-              fill="url(#expenseGrad)"
-              className="transition-all duration-1000"
+              d="M 0,115 Q 100,120 200,110 T 400,115 T 500,105 L 500,150 L 0,150 Z"
+              fill="url(#gradExpense)"
+              className="transition-all duration-700"
             />
             <path
-              d="M 0,110 C 80,115 160,105 250,110 C 330,120 410,100 500,95"
+              d="M 0,115 Q 100,120 200,110 T 400,115 T 500,105"
               fill="none"
               stroke="#f43f5e"
               strokeWidth="3"
-              strokeDasharray="4 4"
+              strokeDasharray="5 5"
               strokeLinecap="round"
-              className="transition-all duration-1000"
+              className="transition-all duration-700"
             />
 
-            {/* Glowing Pulse Nodes */}
-            <circle cx="0" cy="60" r="5" fill="#10b981" className="animate-ping" />
-            <circle cx="250" cy="55" r="5" fill="#10b981" />
-            <circle cx="500" cy="20" r="6" fill="#10b981" className="animate-pulse" />
+            {/* Animated Interactive Pulsing Data Nodes */}
+            <g className="cursor-pointer group">
+              <circle cx="0" cy="70" r="5" fill="#10b981" />
+              <circle cx="100" cy="55" r="5" fill="#10b981" />
+              <circle cx="200" cy="60" r="5" fill="#10b981" />
+              <circle cx="300" cy="45" r="5" fill="#10b981" />
+              <circle cx="400" cy="35" r="5" fill="#10b981" />
+              <circle cx="500" cy="15" r="7" fill="#34d399" className="animate-pulse" />
+            </g>
           </svg>
 
-          {/* Month Labels Axis */}
-          <div className="flex items-center justify-between pt-3 text-[10px] font-bold text-slate-500">
+          {/* Month Labels */}
+          <div className="flex items-center justify-between pt-2 text-[10px] font-black text-slate-500">
             {MONTHLY_DATA.map((d, i) => (
-              <span key={i} className="hover:text-emerald-500 cursor-pointer transition-colors">{d.month}</span>
+              <span key={i} className="hover:text-emerald-500 cursor-pointer transition-colors font-mono">{d.month}</span>
             ))}
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-6 pt-2 border-t border-slate-200 dark:border-white/10 text-xs font-bold">
+        <div className="flex items-center justify-center gap-8 pt-2 border-t border-slate-200 dark:border-white/10 text-xs font-bold">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span>Revenue Inflow</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/30" />
+            <span>Penerimaan (Inflow Revenue)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-rose-500" />
-            <span>Expense Outflow</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-purple-500" />
-            <span>Okupansi Kamar</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-rose-500 shadow-md shadow-rose-500/30" />
+            <span>Pengeluaran (Outflow Expenses)</span>
           </div>
         </div>
       </div>
 
-      {/* ===== RINCIAN LENGKAP PENDAPATAN (DETAILED REVENUE INFLOWS) ===== */}
-      <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-                💰 Revenue Inflow Breakdown
-              </span>
-              <span className="text-xs text-slate-500 font-bold">Audit Asal Mula Pendapatan Kosan</span>
+      {/* ===== RINCIAN LENGKAP PENDAPATAN & PENGELUARAN DIPALING BAWAH LAPORAN P&L ===== */}
+      <div className="space-y-6 pt-4">
+        
+        {/* 1. RINCIAN TERKINI PENERIMAAN (REVENUE INFLOWS) */}
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
+                  💰 Revenue Inflow Breakdown
+                </span>
+                <span className="text-xs text-slate-500 font-bold">Laporan Penerimaan Masuk</span>
+              </div>
+              <h3 className="text-xl font-black mt-1">1. Rincian Sumber Penerimaan Kosan</h3>
             </div>
-            <h3 className="text-xl font-black mt-1">Rincian Lengkap Sumber Penerimaan Kosan</h3>
+
+            <div className="flex items-center gap-2 neu-inset p-1 rounded-2xl text-xs font-bold">
+              <button
+                onClick={() => setRevenueFilter('all')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'all' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
+              >
+                Semua ({revenues.length})
+              </button>
+              <button
+                onClick={() => setRevenueFilter('SEWA')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'SEWA' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
+              >
+                Sewa Kamar
+              </button>
+              <button
+                onClick={() => setRevenueFilter('DEPOSIT')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
+              >
+                Deposit &amp; Fee
+              </button>
+              <button
+                onClick={() => setRevenueFilter('VENDOR_ADDON')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'VENDOR_ADDON' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
+              >
+                Add-On Vendor
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 neu-inset p-1 rounded-2xl text-xs font-bold">
-            <button
-              onClick={() => setRevenueFilter('all')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'all' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
-            >
-              Semua ({revenues.length})
-            </button>
-            <button
-              onClick={() => setRevenueFilter('SEWA')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'SEWA' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
-            >
-              Sewa Kamar
-            </button>
-            <button
-              onClick={() => setRevenueFilter('DEPOSIT')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
-            >
-              Deposit &amp; Fee
-            </button>
-            <button
-              onClick={() => setRevenueFilter('VENDOR_ADDON')}
-              className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${revenueFilter === 'VENDOR_ADDON' ? 'bg-emerald-600 text-white' : 'text-slate-500'}`}
-            >
-              Add-On Vendor
-            </button>
-          </div>
-        </div>
-
-        {/* Categories Summary Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Sewa Kamar Base</span>
-            <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{formatIDR(sewaTotal)}</p>
-            <span className="text-[9px] text-slate-400">82.6% Inflow Utama</span>
-          </div>
-
-          <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Deposit Garansi</span>
-            <p className="text-lg font-black text-amber-600 dark:text-amber-400">{formatIDR(depositTotal)}</p>
-            <span className="text-[9px] text-slate-400">9.3% Retainage</span>
-          </div>
-
-          <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Komisi Add-On Vendor</span>
-            <p className="text-lg font-black text-purple-600 dark:text-purple-400">{formatIDR(addonTotal)}</p>
-            <span className="text-[9px] text-slate-400">5.2% Aqua &amp; Laundry</span>
-          </div>
-
-          <div className="neu-card-sm p-4 rounded-2xl space-y-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Parkir &amp; Late Fee</span>
-            <p className="text-lg font-black text-blue-600 dark:text-blue-400">{formatIDR(parkirTotal)}</p>
-            <span className="text-[9px] text-slate-400">2.9% Extra Charges</span>
-          </div>
-        </div>
-
-        {/* Detailed Inflow Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
-                <th className="py-3 px-4">REF &amp; TANGGAL</th>
-                <th className="py-3 px-4">PENGHUNI &amp; KAMAR</th>
-                <th className="py-3 px-4">SUMBER PENERIMAAN</th>
-                <th className="py-3 px-4">METODE PEMBAYARAN</th>
-                <th className="py-3 px-4 text-right">NOMINAL (IDR)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
-              {filteredRevenues.map((rev) => (
-                <tr key={rev.id} className="hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <span className="font-mono font-bold text-slate-900 dark:text-white block">{rev.id}</span>
-                    <span className="text-[10px] text-slate-500">{rev.date}</span>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <span className="font-bold text-slate-900 dark:text-white block">{rev.tenantName}</span>
-                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">Kamar {rev.roomNumber}</span>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <span className="font-bold text-slate-800 dark:text-slate-200 block">{rev.source}</span>
-                    <span className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400">{rev.category}</span>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-1 rounded-full bg-slate-200 dark:bg-white/10 font-bold text-[10px]">
-                      <i className="fa-solid fa-credit-card mr-1 text-emerald-500" />
-                      {rev.method}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">+{formatIDR(rev.amount)}</span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-4">REF &amp; TANGGAL</th>
+                  <th className="py-3 px-4">PENGHUNI &amp; KAMAR</th>
+                  <th className="py-3 px-4">SUMBER PENERIMAAN</th>
+                  <th className="py-3 px-4">METODE PEMBAYARAN</th>
+                  <th className="py-3 px-4 text-right">NOMINAL (IDR)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
+                {filteredRevenues.map((rev) => (
+                  <tr key={rev.id} className="hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <span className="font-mono font-bold text-slate-900 dark:text-white block">{rev.id}</span>
+                      <span className="text-[10px] text-slate-500">{rev.date}</span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="font-bold text-slate-900 dark:text-white block">{rev.tenantName}</span>
+                      <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">Kamar {rev.roomNumber}</span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="font-bold text-slate-800 dark:text-slate-200 block">{rev.source}</span>
+                      <span className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400">{rev.category}</span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-1 rounded-full bg-slate-200 dark:bg-white/10 font-bold text-[10px]">
+                        <i className="fa-solid fa-credit-card mr-1 text-emerald-500" />
+                        {rev.method}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">+{formatIDR(rev.amount)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* 2. RINCIAN TERKINI PENGELUARAN (EXPENSE OUTFLOWS) */}
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-[10px]">
+                  💸 Expense Outflow Breakdown
+                </span>
+                <span className="text-xs text-slate-500 font-bold">Laporan Pengeluaran Operasional</span>
+              </div>
+              <h3 className="text-xl font-black mt-1">2. Rincian Lengkap Pengeluaran Kosan</h3>
+            </div>
+
+            <div className="flex items-center gap-2 neu-inset p-1 rounded-2xl text-xs font-bold">
+              <button
+                onClick={() => setFilterCategory('all')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${filterCategory === 'all' ? 'bg-rose-600 text-white' : 'text-slate-500'}`}
+              >
+                Semua ({expenses.length})
+              </button>
+              <button
+                onClick={() => setFilterCategory('listrik')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${filterCategory === 'listrik' ? 'bg-rose-600 text-white' : 'text-slate-500'}`}
+              >
+                Listrik
+              </button>
+              <button
+                onClick={() => setFilterCategory('air')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${filterCategory === 'air' ? 'bg-rose-600 text-white' : 'text-slate-500'}`}
+              >
+                Air
+              </button>
+              <button
+                onClick={() => setFilterCategory('internet')}
+                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${filterCategory === 'internet' ? 'bg-rose-600 text-white' : 'text-slate-500'}`}
+              >
+                Wi-Fi
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-4">NO. REF</th>
+                  <th className="py-3 px-4">KATEGORI</th>
+                  <th className="py-3 px-4">DESKRIPSI PENGELUARAN</th>
+                  <th className="py-3 px-4">TANGGAL TRANSAKSI</th>
+                  <th className="py-3 px-4 text-right">NOMINAL (IDR)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
+                {filteredExpenses.map((exp, idx) => (
+                  <tr key={exp.id || idx} className="hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">EXP-00{idx + 1}</td>
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold text-[10px] uppercase">
+                        {CATEGORY_LABELS[exp.category] || exp.category}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">{exp.description}</td>
+                    <td className="py-3.5 px-4 font-mono text-slate-500">{exp.date.slice(0, 10)}</td>
+                    <td className="py-3.5 px-4 text-right">
+                      <span className="font-mono font-black text-rose-600 dark:text-rose-400 text-sm">-{formatIDR(exp.amount)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   );
