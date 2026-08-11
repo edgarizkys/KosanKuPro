@@ -1,43 +1,46 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Create admin user
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@kosanku.com' },
-    update: { passwordHash: 'admin123' },
-    create: {
-      name: 'Admin KosanKu',
-      email: 'admin@kosanku.com',
-      phone: '081234567890',
-      passwordHash: 'admin123',
-      role: 'ADMIN',
-    },
-  });
-  console.log(`✅ Admin: ${admin.email} (password: admin123)`);
-
-  // Create tenant users
-  const tenants = await Promise.all([
+  // Create Multi-Role Demo Accounts
+  const multiRoleUsers = await Promise.all([
     prisma.user.upsert({
-      where: { email: 'budi@kosanku.com' },
-      update: { passwordHash: 'tenant123' },
-      create: { name: 'Budi Santoso', email: 'budi@kosanku.com', phone: '081234567891', passwordHash: 'tenant123', role: 'TENANT' },
+      where: { email: 'superadmin@kosanku.pro' },
+      update: { passwordHash: 'demo123', role: Role.SUPERADMIN },
+      create: { name: 'Super Admin KosanKu', email: 'superadmin@kosanku.pro', phone: '081200000001', passwordHash: 'demo123', role: Role.SUPERADMIN },
     }),
     prisma.user.upsert({
-      where: { email: 'siti@kosanku.com' },
-      update: { passwordHash: 'tenant123' },
-      create: { name: 'Siti Rahma', email: 'siti@kosanku.com', phone: '081234567892', passwordHash: 'tenant123', role: 'TENANT' },
+      where: { email: 'admin@kosanku.pro' },
+      update: { passwordHash: 'demo123', role: Role.ADMIN },
+      create: { name: 'Admin Pengelola Kost', email: 'admin@kosanku.pro', phone: '081200000002', passwordHash: 'demo123', role: Role.ADMIN },
     }),
     prisma.user.upsert({
-      where: { email: 'rian@kosanku.com' },
-      update: { passwordHash: 'tenant123' },
-      create: { name: 'Rian Pratama', email: 'rian@kosanku.com', phone: '081234567893', passwordHash: 'tenant123', role: 'TENANT' },
+      where: { email: 'owner@kosanku.pro' },
+      update: { passwordHash: 'demo123', role: Role.OWNER },
+      create: { name: 'Owner / Investor Kosan', email: 'owner@kosanku.pro', phone: '081200000003', passwordHash: 'demo123', role: Role.OWNER },
+    }),
+    prisma.user.upsert({
+      where: { email: 'staf@kosanku.pro' },
+      update: { passwordHash: 'demo123', role: Role.EMPLOYEE },
+      create: { name: 'Staf Kebersihan & Maintenance', email: 'staf@kosanku.pro', phone: '081200000004', passwordHash: 'demo123', role: Role.EMPLOYEE },
+    }),
+    prisma.user.upsert({
+      where: { email: 'vendor@kosanku.pro' },
+      update: { passwordHash: 'demo123', role: Role.VENDOR },
+      create: { name: 'Vendor Mitra Laundry & Catering', email: 'vendor@kosanku.pro', phone: '081200000005', passwordHash: 'demo123', role: Role.VENDOR },
+    }),
+    prisma.user.upsert({
+      where: { email: 'tenant@kosanku.pro' },
+      update: { passwordHash: 'demo123', role: Role.TENANT },
+      create: { name: 'Rian Pratama (Penghuni A-101)', email: 'tenant@kosanku.pro', phone: '081200000006', passwordHash: 'demo123', role: Role.TENANT },
     }),
   ]);
-  console.log(`✅ Tenants: ${tenants.map((t) => t.name).join(', ')} (password: tenant123)`);
+  console.log(`✅ Multi-Role Accounts: ${multiRoleUsers.map((u) => u.email).join(', ')} (password: demo123)`);
+
+  const tenants = [multiRoleUsers[5]];
 
   // Create property
   const property = await prisma.property.upsert({
@@ -142,7 +145,7 @@ async function main() {
     update: {},
     create: {
       invoiceNumber: 'INV-20260601-0001',
-      userId: tenants[1].id,
+      userId: tenants[0].id,
       roomId: roomB201.id,
       amount: 2000000,
       penaltyAmount: 0,
@@ -157,7 +160,7 @@ async function main() {
     update: {},
     create: {
       invoiceNumber: 'INV-20260602-0001',
-      userId: tenants[2].id,
+      userId: tenants[0].id,
       roomId: roomC302.id,
       amount: 1200000,
       penaltyAmount: 0,

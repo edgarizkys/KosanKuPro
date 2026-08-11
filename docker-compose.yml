@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Database PostgreSQL Terisolasi Khusus KosanKu Pro (Port 5433 agar tidak bentrok)
+  kosanku-db:
+    image: postgres:16-alpine
+    container_name: kosanku-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: kosanku_admin
+      POSTGRES_PASSWORD: KosanKuPro2026SecurePass!
+      POSTGRES_DB: kosanku_pro_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - kosanku_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kosanku_admin -d kosanku_pro_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Web App Container KosanKu Pro (Port 4000)
+  kosanku-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kosanku-pro-app
+    restart: always
+    ports:
+      - "4000:3000"
+    environment:
+      DATABASE_URL: "postgresql://kosanku_admin:KosanKuPro2026SecurePass!@kosanku-db:5432/kosanku_pro_db?schema=public"
+      NODE_ENV: "production"
+      PORT: "3000"
+    depends_on:
+      kosanku-db:
+        condition: service_healthy
+
+volumes:
+  kosanku_postgres_data:
+    driver: local
