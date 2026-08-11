@@ -24,12 +24,12 @@ export default function AmenitiesSection() {
         {AMENITIES.map((a, idx) => (
           <div 
             key={a.title} 
-            className={`reveal delay-${(idx % 4) + 1} bg-white dark:bg-slate-900/90 rounded-2xl p-4 sm:p-6 text-center space-y-2 sm:space-y-3 card-premium shadow-sm hover:shadow-xl hover:-translate-y-2 border border-black/5 dark:border-white/10 group cursor-default transition-all duration-500`}
+            className={`reveal delay-${(idx % 4) + 1} neu-card-sm rounded-2xl p-4 sm:p-6 text-center space-y-2 sm:space-y-3 group cursor-default transition-all duration-300 hover:scale-[1.03]`}
           >
-            <div className={`amenity-icon w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl sm:rounded-2xl ${a.bg} ${a.color} flex items-center justify-center text-lg sm:text-2xl group-hover:scale-115 group-hover:rotate-3 transition-transform duration-300 shadow-xs`}>
+            <div className={`amenity-icon w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-xl sm:rounded-2xl neu-inset ${a.color} flex items-center justify-center text-lg sm:text-2xl group-hover:scale-110 transition-transform duration-300`}>
               <i className={a.icon} />
             </div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">{a.title}</h4>
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#047857] dark:group-hover:text-emerald-400 transition-colors">{a.title}</h4>
             <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{a.desc}</p>
           </div>
         ))}

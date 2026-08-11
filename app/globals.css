@@ -25,7 +25,9 @@ body {
   overflow-x: hidden;
 }
 
-html[data-theme="dark"] body {
+html[data-theme="dark"] body,
+html.dark body,
+.dark body {
   background: #0a0710;
   color: #f1edf4;
 }
@@ -196,6 +198,96 @@ html[data-theme="dark"] body {
 /* ===== PARTICLES ===== */
 .particles-container { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 .particle { position: absolute; bottom: -20px; border-radius: 50%; animation: particleFloat linear infinite; }
+
+/* ===== NEUMORPHISM (SOFT UI 2026 DESIGN SYSTEM) ===== */
+:root {
+  --neu-bg: #f2f5fa;
+  --neu-surface: #f8fafc;
+  --neu-shadow-dark: rgba(166, 178, 196, 0.42);
+  --neu-shadow-light: rgba(255, 255, 255, 0.95);
+  --neu-inset-dark: rgba(166, 178, 196, 0.48);
+  --neu-inset-light: rgba(255, 255, 255, 0.9);
+  --neu-border: rgba(255, 255, 255, 0.65);
+}
+
+html[data-theme="dark"],
+html.dark,
+.dark {
+  --neu-bg: #141122;
+  --neu-surface: #19152b;
+  --neu-shadow-dark: rgba(0, 0, 0, 0.55);
+  --neu-shadow-light: rgba(255, 255, 255, 0.035);
+  --neu-inset-dark: rgba(0, 0, 0, 0.65);
+  --neu-inset-light: rgba(255, 255, 255, 0.04);
+  --neu-border: rgba(255, 255, 255, 0.05);
+}
+
+.neu-bg {
+  background-color: var(--neu-bg);
+}
+
+.neu-flat, .neu-card {
+  background-color: var(--neu-bg);
+  box-shadow: 6px 6px 16px var(--neu-shadow-dark), -6px -6px 16px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+}
+
+.neu-card-sm {
+  background-color: var(--neu-bg);
+  box-shadow: 3px 3px 8px var(--neu-shadow-dark), -3px -3px 8px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+}
+
+.neu-card-lg {
+  background-color: var(--neu-bg);
+  box-shadow: 10px 10px 24px var(--neu-shadow-dark), -10px -10px 24px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+}
+
+.neu-inset, .neu-pressed {
+  background-color: var(--neu-bg);
+  box-shadow: inset 3px 3px 6px var(--neu-inset-dark), inset -3px -3px 6px var(--neu-inset-light);
+  border: 1px solid var(--neu-border);
+}
+
+.neu-btn {
+  background-color: var(--neu-bg);
+  box-shadow: 4px 4px 10px var(--neu-shadow-dark), -4px -4px 10px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neu-btn:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
+}
+
+.neu-btn:active, .neu-btn.active {
+  transform: translateY(0);
+  box-shadow: inset 3px 3px 6px var(--neu-inset-dark), inset -3px -3px 6px var(--neu-inset-light);
+}
+
+.neu-input {
+  background-color: var(--neu-bg);
+  box-shadow: inset 2.5px 2.5px 5px var(--neu-inset-dark), inset -2.5px -2.5px 5px var(--neu-inset-light);
+  border: 1px solid var(--neu-border);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.neu-input:focus {
+  outline: none;
+  border-color: rgba(4, 120, 87, 0.4);
+  box-shadow: inset 3px 3px 6px var(--neu-inset-dark), inset -3px -3px 6px var(--neu-inset-light), 0 0 0 2px rgba(4, 120, 87, 0.15);
+}
+
+.neu-badge {
+  box-shadow: 2px 2px 5px var(--neu-shadow-dark), -2px -2px 5px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+}
+
+.neu-icon {
+  box-shadow: inset 2px 2px 4px var(--neu-inset-dark), inset -2px -2px 4px var(--neu-inset-light);
+}
 
 /* ===== GLASS MORPHISM ===== */
 .glass-panel {

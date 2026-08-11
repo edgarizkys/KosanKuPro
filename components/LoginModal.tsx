@@ -45,14 +45,14 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#181224] max-w-lg w-full p-6 sm:p-8 rounded-3xl space-y-5 border border-black/10 dark:border-white/10 shadow-2xl relative animate-scale-in text-slate-900 dark:text-white">
-        <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
-          <i className="fa-solid fa-xmark text-lg" />
+    <div className="fixed inset-0 z-[999] bg-black/5 dark:bg-black/20 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+      <div className="neu-card max-w-lg w-full p-6 sm:p-8 rounded-3xl space-y-5 shadow-2xl relative animate-scale-in text-slate-900 dark:text-white border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-5 right-5 w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+          <i className="fa-solid fa-xmark text-sm" />
         </button>
         
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mx-auto shadow-sm">
+          <div className="w-12 h-12 rounded-2xl neu-inset text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mx-auto shadow-xs">
             <i className="fa-solid fa-lock" />
           </div>
           <h3 className="text-xl font-black text-slate-900 dark:text-white">Login Multi-Role KosanKu Pro</h3>
@@ -72,10 +72,10 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
             <button
               type="button"
               onClick={() => selectPreset('owner@kosanku.com')}
-              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                 email === 'owner@kosanku.com'
-                  ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-400 dark:border-amber-500/50 shadow-xs'
-                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                  ? 'neu-inset border-amber-400/40 bg-amber-50/50 dark:bg-amber-950/20'
+                  : 'neu-card-sm hover:scale-[1.02]'
               }`}
             >
               <span className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
@@ -88,10 +88,10 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
             <button
               type="button"
               onClick={() => selectPreset('admin@kosanku.com')}
-              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                 email === 'admin@kosanku.com'
-                  ? 'bg-purple-100 dark:bg-purple-500/20 border-purple-400 dark:border-purple-500/50 shadow-xs'
-                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                  ? 'neu-inset border-purple-400/40 bg-purple-50/50 dark:bg-purple-950/20'
+                  : 'neu-card-sm hover:scale-[1.02]'
               }`}
             >
               <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
@@ -104,10 +104,10 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
             <button
               type="button"
               onClick={() => selectPreset('staf@kosanku.com')}
-              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                 email === 'staf@kosanku.com'
-                  ? 'bg-blue-100 dark:bg-blue-500/20 border-blue-400 dark:border-blue-500/50 shadow-xs'
-                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                  ? 'neu-inset border-blue-400/40 bg-blue-50/50 dark:bg-blue-950/20'
+                  : 'neu-card-sm hover:scale-[1.02]'
               }`}
             >
               <span className="text-xs font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
@@ -120,10 +120,10 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
             <button
               type="button"
               onClick={() => selectPreset('vendor@kosanku.com')}
-              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer ${
+              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                 email === 'vendor@kosanku.com'
-                  ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-400 dark:border-emerald-500/50 shadow-xs'
-                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                  ? 'neu-inset border-emerald-400/40 bg-emerald-50/50 dark:bg-emerald-950/20'
+                  : 'neu-card-sm hover:scale-[1.02]'
               }`}
             >
               <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
@@ -136,10 +136,10 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
             <button
               type="button"
               onClick={() => selectPreset('budi@kosanku.com')}
-              className={`p-2.5 rounded-2xl border transition-all text-left cursor-pointer col-span-2 ${
+              className={`p-3 rounded-2xl transition-all text-left cursor-pointer col-span-2 ${
                 email === 'budi@kosanku.com'
-                  ? 'bg-purple-100 dark:bg-purple-500/20 border-purple-400 dark:border-purple-500/50 shadow-xs'
-                  : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                  ? 'neu-inset border-purple-400/40 bg-purple-50/50 dark:bg-purple-950/20'
+                  : 'neu-card-sm hover:scale-[1.02]'
               }`}
             >
               <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
@@ -159,7 +159,7 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
-              className="w-full p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors font-mono"
+              className="w-full p-3.5 neu-input rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors font-mono"
             />
           </div>
           <div>
@@ -170,13 +170,13 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors font-mono"
+              className="w-full p-3.5 neu-input rounded-xl text-slate-900 dark:text-white outline-none focus:border-amber-500 transition-colors font-mono"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl shadow-md hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs"
+            className="w-full py-3.5 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-xl shadow-lg hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs"
           >
             {loading ? <i className="fa-solid fa-spinner fa-spin mr-2" /> : <i className="fa-solid fa-right-to-bracket mr-2" />}
             Masuk ke Portal Dashboard

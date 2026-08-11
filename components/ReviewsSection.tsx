@@ -39,15 +39,15 @@ export default function ReviewsSection() {
       </div>
       <div className="swiper swiperReviews">
         <div className="swiper-wrapper py-4">
-          {REVIEWS.map((rev, i) => (
+          {REVIEWS.map((rev) => (
             <div key={rev.id} className="swiper-slide h-auto">
-              <div className="bg-white dark:bg-slate-900/90 border border-black/5 dark:border-white/10 p-5 sm:p-7 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 h-full flex flex-col shadow-sm hover:shadow-xl hover:-translate-y-2 card-premium transition-all duration-500 group">
+              <div className="neu-card-sm p-5 sm:p-7 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 h-full flex flex-col transition-all duration-300 hover:scale-[1.02] group">
                 <div className="flex gap-1 text-amber-400 text-xs group-hover:scale-105 transition-transform origin-left">
                   <i className="fa-solid fa-star" /><i className="fa-solid fa-star" /><i className="fa-solid fa-star" /><i className="fa-solid fa-star" /><i className="fa-solid fa-star" />
                 </div>
                 <p className="text-xs sm:text-[13px] text-slate-700 dark:text-slate-300 italic leading-relaxed flex-1 font-light">&ldquo;{rev.text}&rdquo;</p>
-                <div className="flex items-center gap-3 pt-3 border-t border-black/5 dark:border-white/10">
-                  <img src={rev.avatar} alt={rev.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-amber-400/40 group-hover:scale-110 transition-transform duration-300" />
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-200/60 dark:border-white/10">
+                  <img src={rev.avatar} alt={rev.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-400/40 group-hover:scale-110 transition-transform duration-300" />
                   <div>
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{rev.name}</h4>
                     <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">Kamar {rev.room} • {rev.role}</p>

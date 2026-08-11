@@ -49,8 +49,8 @@ export default function SecurityDepositEscrow() {
     .reduce((s, d) => s + d.depositAmount, 0);
 
   return (
-    <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs text-slate-900 dark:text-white">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+    <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 text-slate-900 dark:text-white">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-500/30">
@@ -65,7 +65,7 @@ export default function SecurityDepositEscrow() {
             Penguncian dana jaminan kerusakan deposit saat cek-in &amp; kalkulasi denda keterlambatan Rp 50.000/hari otomatis
           </p>
         </div>
-        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl text-center">
+        <div className="p-3 neu-card-sm rounded-2xl text-center">
           <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">Total Dana Escrow Terkunci</span>
           <span className="text-base font-black text-emerald-800 dark:text-emerald-300">{formatIDR(totalEscrowLocked)}</span>
         </div>
@@ -77,7 +77,7 @@ export default function SecurityDepositEscrow() {
           return (
             <div
               key={dep.id}
-              className="bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 space-y-3 transition-all hover:border-purple-500/30"
+              className="neu-card-sm rounded-2xl p-5 space-y-3 transition-all hover:scale-[1.01]"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
@@ -101,7 +101,7 @@ export default function SecurityDepositEscrow() {
                 </span>
               </div>
 
-              <div className="p-3.5 bg-white dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="p-3.5 neu-inset rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
                   <span className="text-slate-600 dark:text-slate-400 block">
                     Deposit Jaminan Cek-In: <strong className="text-slate-900 dark:text-white font-bold">{formatIDR(dep.depositAmount)}</strong>
@@ -117,7 +117,7 @@ export default function SecurityDepositEscrow() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleDeductDamage(dep.id, 150000, 'Kerusakan Kran & Remote AC')}
-                      className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 font-bold rounded-xl text-[11px] transition-all cursor-pointer"
+                      className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 font-bold rounded-xl text-[11px] transition-all cursor-pointer shadow-xs"
                     >
                       Potong Kerusakan
                     </button>
@@ -136,9 +136,10 @@ export default function SecurityDepositEscrow() {
         })}
       </div>
 
+      {/* Toast Notification (Bottom Right) */}
       {toast && (
-        <div className="fixed top-6 right-6 z-[100] px-5 py-3 rounded-2xl text-xs font-bold bg-emerald-600 text-white shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check" />
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
+          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
           <span>{toast}</span>
         </div>
       )}

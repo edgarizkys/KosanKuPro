@@ -290,8 +290,8 @@ export default function OwnerDashboard({
 
         {/* Tab: Laporan Stock Opname (SO) Audit Fisik Barang */}
         {activeTab === 'inventory' && (
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-boxes-packing text-amber-500" />
@@ -357,8 +357,8 @@ export default function OwnerDashboard({
 
         {/* Tab: ⚡ Auto-Pilot Plotting Engine */}
         {activeTab === 'autopilot' && (
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-wand-magic-sparkles text-amber-500" />
@@ -370,20 +370,20 @@ export default function OwnerDashboard({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {autoRules.map((rule) => (
                 <div
                   key={rule.id}
-                  className="p-5 bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-3 transition-all hover:border-amber-500/30 shadow-2xs"
+                  className="p-5 neu-card-sm rounded-2xl space-y-3 transition-all hover:scale-[1.01]"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 text-[10px] font-bold">
+                    <span className="px-2.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200/60 dark:border-purple-500/20 text-[10px] font-bold">
                       {rule.category}
                     </span>
                     <button
                       onClick={() => toggleRule(rule.id)}
                       className={`w-11 h-6 rounded-full transition-colors p-0.5 cursor-pointer flex items-center ${
-                        rule.enabled ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-white/20 justify-start'
+                        rule.enabled ? 'bg-emerald-500 justify-end shadow-inner' : 'bg-slate-300 dark:bg-white/20 justify-start'
                       }`}
                     >
                       <div className="w-5 h-5 rounded-full bg-white shadow-md" />
@@ -407,8 +407,8 @@ export default function OwnerDashboard({
 
         {/* Tab: Permintaan Tenant & Plotting ke Karyawan/Vendor */}
         {activeTab === 'tenant_requests' && (
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-route text-purple-600 dark:text-purple-400" />
@@ -427,11 +427,11 @@ export default function OwnerDashboard({
               {supplyRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 space-y-3 transition-all hover:border-purple-500/30 shadow-2xs"
+                  className="neu-card-sm rounded-2xl p-5 space-y-3 transition-all hover:scale-[1.01]"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-bold text-xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200/60 dark:border-purple-500/20 font-bold text-xs">
                         Kamar {req.roomNumber} ({req.tenantName})
                       </span>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">{req.requestItem}</h4>
@@ -448,7 +448,7 @@ export default function OwnerDashboard({
                   </div>
 
                   {req.status === 'PLOTTED' ? (
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200 dark:border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <div className="p-3 neu-inset rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <span>Staf Ditugaskan: <strong>{req.assignedStaff}</strong></span>
                       <span>Vendor Terhubung: <strong>{req.connectedVendor}</strong></span>
                     </div>
@@ -457,7 +457,7 @@ export default function OwnerDashboard({
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">Masuk: {req.requestDate}</span>
                       <button
                         onClick={() => setSelectedReq(req)}
-                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                        className="px-4 py-2 neu-btn text-slate-900 dark:text-white font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         <i className="fa-solid fa-paper-plane" />
                         <span>Plotting Manual ke Karyawan &amp; Vendor</span>
@@ -472,8 +472,8 @@ export default function OwnerDashboard({
 
         {/* Tab: Approval Dana */}
         {activeTab === 'approval' && (
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-file-signature text-purple-600 dark:text-purple-400" />
@@ -489,11 +489,11 @@ export default function OwnerDashboard({
               {approvals.map((req) => (
                 <div
                   key={req.id}
-                  className="bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 space-y-4 transition-all hover:border-purple-500/30"
+                  className="neu-card-sm rounded-2xl p-5 sm:p-6 space-y-4 transition-all"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <span className="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 font-mono text-[10px] font-bold">
+                      <span className="px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200/60 dark:border-purple-500/20 font-mono text-[10px] font-bold">
                         {req.id}
                       </span>
                       <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{req.title}</h4>
@@ -511,11 +511,11 @@ export default function OwnerDashboard({
                     </span>
                   </div>
 
-                  <div className="p-4 bg-white dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 space-y-2 text-xs">
+                  <div className="p-4 neu-inset rounded-xl space-y-2 text-xs">
                     <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
                       &quot;{req.reason}&quot;
                     </p>
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-white/5 text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-white/5 text-[11px] text-slate-500 dark:text-slate-400">
                       <span>Pemohon: <strong className="text-slate-900 dark:text-white">{req.requestedBy}</strong> • {req.date}</span>
                       <span>Kategori: <strong className="text-purple-700 dark:text-purple-300">{req.category}</strong></span>
                     </div>
@@ -531,7 +531,7 @@ export default function OwnerDashboard({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleApproval(req.id, 'REJECTED')}
-                          className="px-4 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                          className="px-4 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
                         >
                           Tolak Pengajuan
                         </button>
@@ -551,8 +551,8 @@ export default function OwnerDashboard({
         )}
         {/* Tab: Kamar & Pricing AI */}
         {activeTab === 'rooms_ai' && (
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-door-open text-[#047857]" />
@@ -571,13 +571,13 @@ export default function OwnerDashboard({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {[
                 { number: 'A-101', type: 'Deluxe AC Inverter', price: 1650000, tenant: 'Budi Santoso', status: 'OCCUPIED' },
                 { number: 'B-201', type: 'Executive VIP Balcony', price: 2100000, tenant: 'Siti Rahma', status: 'OCCUPIED' },
                 { number: 'C-302', type: 'Standard Clean AC', price: 1350000, tenant: null, status: 'AVAILABLE' },
               ].map((rm) => (
-                <div key={rm.number} className="p-5 bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-3">
+                <div key={rm.number} className="p-5 neu-card-sm rounded-2xl space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-sm text-slate-900 dark:text-white">Kamar {rm.number}</span>
                     <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold ${
@@ -586,9 +586,9 @@ export default function OwnerDashboard({
                       {rm.status}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500">{rm.type}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{rm.type}</p>
                   <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between">
-                    <span className="text-xs font-black text-[#047857]">{formatIDR(rm.price)}/bln</span>
+                    <span className="text-xs font-black text-[#047857] dark:text-emerald-400">{formatIDR(rm.price)}/bln</span>
                     <span className="text-[10px] text-slate-400 font-bold">{rm.tenant ? `Penghuni: ${rm.tenant}` : 'Kosong'}</span>
                   </div>
                 </div>
@@ -599,8 +599,8 @@ export default function OwnerDashboard({
 
         {/* Tab: Invoice & Midtrans */}
         {activeTab === 'invoices' && (
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-file-invoice-dollar text-[#047857]" />
@@ -624,7 +624,7 @@ export default function OwnerDashboard({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                   <tr className="hover:bg-slate-50 dark:hover:bg-white/5">
-                    <td className="py-3.5 px-3 font-mono font-bold text-[#047857]">INV-2026-0801</td>
+                    <td className="py-3.5 px-3 font-mono font-bold text-[#047857] dark:text-emerald-400">INV-2026-0801</td>
                     <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">Budi Santoso (Kamar A-101)</td>
                     <td className="py-3.5 px-3 font-black text-slate-900 dark:text-white">Rp 1.624.500</td>
                     <td className="py-3.5 px-3 text-right">
@@ -632,7 +632,7 @@ export default function OwnerDashboard({
                     </td>
                   </tr>
                   <tr className="hover:bg-slate-50 dark:hover:bg-white/5">
-                    <td className="py-3.5 px-3 font-mono font-bold text-purple-600">INV-2026-0802</td>
+                    <td className="py-3.5 px-3 font-mono font-bold text-purple-600 dark:text-purple-400">INV-2026-0802</td>
                     <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">Siti Rahma (Kamar B-201)</td>
                     <td className="py-3.5 px-3 font-black text-slate-900 dark:text-white">Rp 2.150.000</td>
                     <td className="py-3.5 px-3 text-right">
@@ -647,8 +647,8 @@ export default function OwnerDashboard({
 
         {/* Tab: Tiket Keluhan Tenant */}
         {activeTab === 'complaints' && (
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-headset text-[#047857]" />
@@ -661,7 +661,7 @@ export default function OwnerDashboard({
             </div>
 
             <div className="space-y-3">
-              <div className="p-4 bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-2">
+              <div className="p-4 neu-card-sm rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-xs text-slate-900 dark:text-white">AC Kurang Dingin - Kamar A-101</span>
                   <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold">OPEN</span>
@@ -678,53 +678,53 @@ export default function OwnerDashboard({
 
         {/* Plotting Modal Dialog */}
         {selectedReq && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedReq(null)}>
-            <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedReq(null)}>
+            <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
                 <h3 className="text-base font-black text-slate-900 dark:text-white">Plotting Karyawan &amp; Hubungkan Vendor</h3>
-                <button onClick={() => setSelectedReq(null)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+                <button onClick={() => setSelectedReq(null)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
               </div>
 
-              <div className="p-3.5 bg-purple-50 dark:bg-purple-950/30 rounded-2xl border border-purple-200 dark:border-purple-500/20 text-xs">
-                <span className="font-bold block text-purple-900 dark:text-purple-300 mb-1">Permintaan dari Tenant:</span>
+              <div className="p-3.5 neu-inset rounded-2xl text-xs">
+                <span className="font-bold block text-[#047857] dark:text-emerald-400 mb-1">Permintaan dari Tenant:</span>
                 <p className="text-slate-900 dark:text-white font-black text-sm">Kamar {selectedReq.roomNumber} - {selectedReq.tenantName}</p>
-                <p className="text-purple-800 dark:text-purple-300 mt-1 font-medium">&quot;{selectedReq.requestItem}&quot;</p>
+                <p className="text-slate-600 dark:text-slate-300 mt-1 font-medium">&quot;{selectedReq.requestItem}&quot;</p>
               </div>
 
               <form onSubmit={handlePlottingTask} className="space-y-4 text-xs">
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Tugaskan Karyawan Kos *</label>
-                  <select value={assignedStaff} onChange={(e) => setAssignedStaff(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl outline-none text-slate-900 dark:text-white">
+                  <select value={assignedStaff} onChange={(e) => setAssignedStaff(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white font-bold cursor-pointer">
                     {STAFF_LIST.map((s) => (
-                      <option key={s} value={s} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">{s}</option>
+                      <option key={s} value={s} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{s}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Hubungkan ke Vendor Mitra Kos *</label>
-                  <select value={selectedVendor} onChange={(e) => setSelectedVendor(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl outline-none text-slate-900 dark:text-white">
+                  <select value={selectedVendor} onChange={(e) => setSelectedVendor(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white font-bold cursor-pointer">
                     {VENDOR_LIST.map((v) => (
-                      <option key={v} value={v} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">{v}</option>
+                      <option key={v} value={v} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{v}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setSelectedReq(null)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
-                  <button type="submit" className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl shadow-md transition-all cursor-pointer">Kirim Plotting</button>
+                  <button type="button" onClick={() => setSelectedReq(null)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer">Batal</button>
+                  <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-xl shadow-md transition-all cursor-pointer">Kirim Plotting</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* Toast Notification */}
+        {/* Toast Notification (Bottom Right) */}
         {toast && (
-          <div className={`fixed top-6 right-6 z-[100] px-5 py-3 rounded-2xl text-xs font-bold shadow-2xl animate-scale-in flex items-center gap-2 ${
-            toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+          <div className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card border shadow-2xl animate-scale-in flex items-center gap-2 ${
+            toast.type === 'success' ? 'text-emerald-800 dark:text-emerald-300 border-emerald-500/30' : 'text-rose-800 dark:text-rose-300 border-rose-500/30'
           }`}>
-            <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}`} />
+            <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-rose-600 dark:text-rose-400'}`} />
             <span>{toast.msg}</span>
           </div>
         )}

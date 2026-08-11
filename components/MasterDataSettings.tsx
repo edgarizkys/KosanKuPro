@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from '@/lib/userProfiles';
+import UserManagementView from './UserManagementView';
 
 interface PropertySettings {
   propertyName: string;
@@ -133,7 +135,12 @@ export default function MasterDataSettings() {
   const [owners, setOwners] = useState<OwnerMaster[]>(INITIAL_OWNERS);
   
   const [facilities, setFacilities] = useState<FacilityMaster[]>(INITIAL_FACILITIES);
-  const [activeSubTab, setActiveSubTab] = useState<'property' | 'employees' | 'owners' | 'inventory' | 'vendors' | 'categories' | 'facilities'>('property');
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
+  const [activeSubTab, setActiveSubTab] = useState<'users' | 'property' | 'employees' | 'owners' | 'inventory' | 'vendors' | 'categories' | 'facilities'>('users');
+
+  useEffect(() => {
+    setUserProfiles(getStoredUserProfiles());
+  }, []);
 
   // Facility form states
   const [showAddFacModal, setShowAddFacModal] = useState(false);
@@ -271,9 +278,9 @@ export default function MasterDataSettings() {
   };
 
   return (
-    <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs text-slate-900 dark:text-white">
+    <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-500/30">
@@ -290,14 +297,25 @@ export default function MasterDataSettings() {
         </div>
       </div>
 
-      {/* Sub Tabs */}
-      <div className="flex gap-2 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10 w-full sm:w-fit overflow-x-auto text-xs font-bold">
+      {/* Sub Tabs (Spacious Neumorphic Inset Dock) */}
+      <div className="my-6 p-2.5 neu-inset rounded-2xl w-full sm:w-fit flex items-center gap-3 overflow-x-auto scrollbar-none text-xs font-bold shadow-inner">
+        <button
+          onClick={() => setActiveSubTab('users')}
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer font-black whitespace-nowrap ${
+            activeSubTab === 'users'
+              ? 'bg-[#047857] text-white shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          👤 Profil &amp; Akun Pengguna ({userProfiles.length})
+        </button>
+
         <button
           onClick={() => setActiveSubTab('property')}
-          className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
             activeSubTab === 'property'
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           🏨 Identitas &amp; Bank Kosan
@@ -305,10 +323,10 @@ export default function MasterDataSettings() {
 
         <button
           onClick={() => setActiveSubTab('employees')}
-          className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
             activeSubTab === 'employees'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           🪪 Master Karyawan ({employees.length})
@@ -316,10 +334,10 @@ export default function MasterDataSettings() {
 
         <button
           onClick={() => setActiveSubTab('owners')}
-          className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
             activeSubTab === 'owners'
-              ? 'bg-amber-500 text-slate-900 shadow-sm font-extrabold'
-              : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           👑 Master Owner ({owners.length})
@@ -327,10 +345,10 @@ export default function MasterDataSettings() {
 
         <button
           onClick={() => setActiveSubTab('inventory')}
-          className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
             activeSubTab === 'inventory'
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           📦 Master Inventori ({inventoryMaster.length})
@@ -338,10 +356,10 @@ export default function MasterDataSettings() {
 
         <button
           onClick={() => setActiveSubTab('vendors')}
-          className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
             activeSubTab === 'vendors'
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           🏪 Master Vendor ({vendors.length})
@@ -349,10 +367,10 @@ export default function MasterDataSettings() {
 
         <button
           onClick={() => setActiveSubTab('categories')}
-          className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
             activeSubTab === 'categories'
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-              : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           🏷️ Kategori Pengeluaran
@@ -360,15 +378,40 @@ export default function MasterDataSettings() {
 
         <button
           onClick={() => setActiveSubTab('facilities')}
-          className={`px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
             activeSubTab === 'facilities'
-              ? 'bg-emerald-600 text-white shadow-sm font-extrabold'
-              : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
+              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           🏨 Master Fasilitas ({facilities.length})
         </button>
       </div>
+
+      {/* SubTab 0: Manajemen Pengguna & Profil */}
+      {activeSubTab === 'users' && (
+        <UserManagementView
+          users={userProfiles}
+          onAddUser={(newUser) => {
+            const upd = [newUser, ...userProfiles];
+            setUserProfiles(upd);
+            saveStoredUserProfiles(upd);
+            setToast(`✓ User ${newUser.name} berhasil ditambahkan!`);
+          }}
+          onUpdateUser={(updatedUser) => {
+            const upd = userProfiles.map((u) => (u.id === updatedUser.id ? updatedUser : u));
+            setUserProfiles(upd);
+            saveStoredUserProfiles(upd);
+            setToast(`✓ User ${updatedUser.name} berhasil diperbarui!`);
+          }}
+          onDeleteUser={(userId) => {
+            const upd = userProfiles.filter((u) => u.id !== userId);
+            setUserProfiles(upd);
+            saveStoredUserProfiles(upd);
+            setToast('✓ User berhasil dihapus.');
+          }}
+        />
+      )}
 
       {/* SubTab 1: Identitas Properti */}
       {activeSubTab === 'property' && (
@@ -380,7 +423,7 @@ export default function MasterDataSettings() {
                 required
                 value={property.propertyName}
                 onChange={(e) => setProperty({ ...property, propertyName: e.target.value })}
-                className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none focus:border-amber-500 font-bold"
+                className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white"
               />
             </div>
             <div>
@@ -389,7 +432,7 @@ export default function MasterDataSettings() {
                 required
                 value={property.propertyPhone}
                 onChange={(e) => setProperty({ ...property, propertyPhone: e.target.value })}
-                className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none focus:border-amber-500 font-mono"
+                className="w-full p-3 neu-input rounded-xl outline-none font-mono font-bold text-slate-900 dark:text-white"
               />
             </div>
           </div>
@@ -400,19 +443,19 @@ export default function MasterDataSettings() {
               required
               value={property.propertyAddress}
               onChange={(e) => setProperty({ ...property, propertyAddress: e.target.value })}
-              className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none focus:border-amber-500"
+              className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white"
             />
           </div>
 
-          <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-2xl border border-purple-200 dark:border-purple-500/20 space-y-3">
-            <span className="font-extrabold text-purple-900 dark:text-purple-300 block">💳 Rekening Bank Pencairan Owner &amp; Midtrans Payout</span>
+          <div className="p-5 neu-card-sm rounded-2xl space-y-3">
+            <span className="font-black text-[#047857] dark:text-emerald-400 block">💳 Rekening Bank Pencairan Owner &amp; Midtrans Payout</span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Nama Bank</label>
                 <input
                   value={property.bankName}
                   onChange={(e) => setProperty({ ...property, bankName: e.target.value })}
-                  className="w-full p-2.5 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-bold text-slate-900 dark:text-white"
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white"
                 />
               </div>
               <div>
@@ -420,7 +463,7 @@ export default function MasterDataSettings() {
                 <input
                   value={property.bankAccount}
                   onChange={(e) => setProperty({ ...property, bankAccount: e.target.value })}
-                  className="w-full p-2.5 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-mono font-bold text-slate-900 dark:text-white"
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-mono font-bold text-slate-900 dark:text-white"
                 />
               </div>
               <div>
@@ -428,7 +471,7 @@ export default function MasterDataSettings() {
                 <input
                   value={property.bankHolder}
                   onChange={(e) => setProperty({ ...property, bankHolder: e.target.value })}
-                  className="w-full p-2.5 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-bold text-slate-900 dark:text-white"
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -436,7 +479,7 @@ export default function MasterDataSettings() {
 
           <button
             type="submit"
-            className="px-6 py-3 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+            className="px-6 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
           >
             <i className="fa-solid fa-floppy-disk" />
             <span>Simpan Master Pengaturan Properti</span>
@@ -507,9 +550,9 @@ export default function MasterDataSettings() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {owners.map((own) => (
-              <div key={own.id} className="p-5 bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-3">
+              <div key={own.id} className="p-5 neu-card-sm rounded-2xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300">
+                  <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded neu-inset text-amber-600 dark:text-amber-300">
                     {own.id}
                   </span>
                   <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
@@ -536,17 +579,17 @@ export default function MasterDataSettings() {
             <span className="text-xs text-slate-500 font-medium">Daftar item inventori yang dapat di-audit fisik oleh karyawan</span>
             <button
               onClick={() => setShowAddInvModal(true)}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
             >
               <i className="fa-solid fa-plus" />
               <span>+ Tambah Master Barang</span>
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto neu-inset rounded-2xl p-2">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
+                <tr className="border-b border-slate-200/60 dark:border-white/10 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px]">
                   <th className="py-3 px-3">Kode Master</th>
                   <th className="py-3 px-3">Nama Barang</th>
                   <th className="py-3 px-3">Kategori</th>
@@ -554,14 +597,14 @@ export default function MasterDataSettings() {
                   <th className="py-3 px-3 text-right">Min. Stok Warning</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-200">
+              <tbody className="divide-y divide-slate-200/40 dark:divide-white/5 text-slate-700 dark:text-slate-200">
                 {inventoryMaster.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                    <td className="py-3.5 px-3 font-mono font-bold text-purple-700 dark:text-purple-400">{inv.id}</td>
+                  <tr key={inv.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                    <td className="py-3.5 px-3 font-mono font-bold text-emerald-700 dark:text-emerald-400">{inv.id}</td>
                     <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">{inv.name}</td>
                     <td className="py-3.5 px-3 text-slate-500 dark:text-slate-400">{inv.category}</td>
                     <td className="py-3.5 px-3 font-bold">{inv.unit}</td>
-                    <td className="py-3.5 px-3 text-right font-black text-rose-600 dark:text-rose-400">{inv.minStock} {inv.unit}</td>
+                    <td className="py-3.5 px-3 text-right font-black text-rose-600 dark:text-rose-400 font-mono">{inv.minStock} {inv.unit}</td>
                   </tr>
                 ))}
               </tbody>
@@ -577,7 +620,7 @@ export default function MasterDataSettings() {
             <span className="text-xs text-slate-500 font-medium">Daftar vendor penyedia galon, gas, laundry, dan toko teknik mitra kos</span>
             <button
               onClick={() => setShowAddVendorModal(true)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
             >
               <i className="fa-solid fa-plus" />
               <span>+ Tambah Vendor Mitra</span>
@@ -586,9 +629,9 @@ export default function MasterDataSettings() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {vendors.map((v) => (
-              <div key={v.id} className="p-4 bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-2">
+              <div key={v.id} className="p-4 neu-card-sm rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  <span className="font-mono text-[10px] font-black px-2 py-0.5 rounded neu-inset text-emerald-800 dark:text-emerald-300">
                     {v.id}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500">{v.type}</span>
@@ -607,10 +650,10 @@ export default function MasterDataSettings() {
           <span className="text-xs text-slate-500 font-medium block mb-2">Master kategori pengeluaran kas kosan</span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {expenseCategories.map((c) => (
-              <div key={c.id} className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-1">
+              <div key={c.id} className="p-4 neu-card-sm rounded-2xl space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-900 dark:text-white">{c.name}</span>
-                  <span className="font-mono text-[10px] text-purple-600 font-bold">code: &apos;{c.code}&apos;</span>
+                  <span className="font-mono text-[10px] text-emerald-600 font-bold">code: &apos;{c.code}&apos;</span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">{c.description}</p>
               </div>
@@ -621,30 +664,30 @@ export default function MasterDataSettings() {
 
       {/* Modal Add Employee */}
       {showAddEmpModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddEmpModal(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowAddEmpModal(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Karyawan / Staf Baru</h3>
-              <button onClick={() => setShowAddEmpModal(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddEmpModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={handleAddEmployee} className="space-y-3 text-xs">
               <div>
                 <label className="font-bold block mb-1">Nama Lengkap Karyawan *</label>
-                <input required value={newEmpName} onChange={(e) => setNewEmpName(e.target.value)} placeholder="cth: Bambang Prasetyo" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input required value={newEmpName} onChange={(e) => setNewEmpName(e.target.value)} placeholder="cth: Bambang Prasetyo" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold block mb-1">Email Login *</label>
-                  <input required type="email" value={newEmpEmail} onChange={(e) => setNewEmpEmail(e.target.value)} placeholder="staf@kosanku.com" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-mono" />
+                  <input required type="email" value={newEmpEmail} onChange={(e) => setNewEmpEmail(e.target.value)} placeholder="staf@kosanku.com" className="w-full p-3 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white" />
                 </div>
                 <div>
                   <label className="font-bold block mb-1">No. WhatsApp</label>
-                  <input value={newEmpPhone} onChange={(e) => setNewEmpPhone(e.target.value)} placeholder="0812-3456-7890" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-mono" />
+                  <input value={newEmpPhone} onChange={(e) => setNewEmpPhone(e.target.value)} placeholder="0812-3456-7890" className="w-full p-3 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white" />
                 </div>
               </div>
               <div>
                 <label className="font-bold block mb-1">Jabatan / Role *</label>
-                <select value={newEmpPos} onChange={(e) => setNewEmpPos(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl outline-none">
+                <select value={newEmpPos} onChange={(e) => setNewEmpPos(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white font-bold cursor-pointer">
                   <option value="Teknisi Maintenance">Teknisi Maintenance</option>
                   <option value="Admin Operasional">Admin Operasional</option>
                   <option value="Staf Kebersihan & Kurir">Staf Kebersihan &amp; Kurir</option>
@@ -653,11 +696,11 @@ export default function MasterDataSettings() {
               </div>
               <div>
                 <label className="font-bold block mb-1">Gaji Pokok Bulanan (IDR)</label>
-                <input type="number" value={newEmpSalary} onChange={(e) => setNewEmpSalary(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input type="number" value={newEmpSalary} onChange={(e) => setNewEmpSalary(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white font-mono" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddEmpModal(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 font-bold rounded-xl">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md">Simpan Karyawan</button>
+                <button type="button" onClick={() => setShowAddEmpModal(false)} className="flex-1 py-3 neu-btn font-bold rounded-xl cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-xl shadow-md cursor-pointer">Simpan Karyawan</button>
               </div>
             </form>
           </div>
@@ -666,30 +709,30 @@ export default function MasterDataSettings() {
 
       {/* Modal Add Owner */}
       {showAddOwnerModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddOwnerModal(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowAddOwnerModal(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Owner / Investor Baru</h3>
-              <button onClick={() => setShowAddOwnerModal(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddOwnerModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={handleAddOwner} className="space-y-3 text-xs">
               <div>
                 <label className="font-bold block mb-1">Nama Lengkap Pemilik / Investor *</label>
-                <input required value={newOwnName} onChange={(e) => setNewOwnName(e.target.value)} placeholder="cth: Ibu Rina (Investor)" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input required value={newOwnName} onChange={(e) => setNewOwnName(e.target.value)} placeholder="cth: Ibu Rina (Investor)" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold block mb-1">Email Login *</label>
-                  <input required type="email" value={newOwnEmail} onChange={(e) => setNewOwnEmail(e.target.value)} placeholder="owner@kosanku.com" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-mono" />
+                  <input required type="email" value={newOwnEmail} onChange={(e) => setNewOwnEmail(e.target.value)} placeholder="owner@kosanku.com" className="w-full p-3 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white" />
                 </div>
                 <div>
                   <label className="font-bold block mb-1">Persentase Saham (%)</label>
-                  <input type="number" value={newOwnShare} onChange={(e) => setNewOwnShare(e.target.value)} placeholder="50" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-mono" />
+                  <input type="number" value={newOwnShare} onChange={(e) => setNewOwnShare(e.target.value)} placeholder="50" className="w-full p-3 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white" />
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddOwnerModal(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 font-bold rounded-xl">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-amber-500 text-slate-900 font-extrabold rounded-xl shadow-md">Simpan Owner</button>
+                <button type="button" onClick={() => setShowAddOwnerModal(false)} className="flex-1 py-3 neu-btn font-bold rounded-xl cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl shadow-md cursor-pointer">Simpan Owner</button>
               </div>
             </form>
           </div>
@@ -698,34 +741,34 @@ export default function MasterDataSettings() {
 
       {/* Modal Add Master Inventory */}
       {showAddInvModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddInvModal(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowAddInvModal(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Master Barang Inventori</h3>
-              <button onClick={() => setShowAddInvModal(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddInvModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={handleAddInventoryMaster} className="space-y-3.5 text-xs">
               <div>
                 <label className="font-bold block mb-1">Nama Barang *</label>
-                <input required value={newInvName} onChange={(e) => setNewInvName(e.target.value)} placeholder="cth: Tabung Gas LPG 5.5kg Bright Gas" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input required value={newInvName} onChange={(e) => setNewInvName(e.target.value)} placeholder="cth: Tabung Gas LPG 5.5kg Bright Gas" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold block mb-1">Kategori</label>
-                  <input value={newInvCat} onChange={(e) => setNewInvCat(e.target.value)} placeholder="Utilitas Gas" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                  <input value={newInvCat} onChange={(e) => setNewInvCat(e.target.value)} placeholder="Utilitas Gas" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
                 </div>
                 <div>
                   <label className="font-bold block mb-1">Satuan</label>
-                  <input value={newInvUnit} onChange={(e) => setNewInvUnit(e.target.value)} placeholder="Tabung" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                  <input value={newInvUnit} onChange={(e) => setNewInvUnit(e.target.value)} placeholder="Tabung" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
                 </div>
               </div>
               <div>
                 <label className="font-bold block mb-1">Batas Minimal Stok (Warning Reorder)</label>
-                <input type="number" value={newInvMinStock} onChange={(e) => setNewInvMinStock(e.target.value)} className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input type="number" value={newInvMinStock} onChange={(e) => setNewInvMinStock(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddInvModal(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 font-bold rounded-xl">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-amber-500 text-slate-900 font-extrabold rounded-xl shadow-md">Simpan Barang</button>
+                <button type="button" onClick={() => setShowAddInvModal(false)} className="flex-1 py-3 neu-btn font-bold rounded-xl cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl shadow-md cursor-pointer">Simpan Barang</button>
               </div>
             </form>
           </div>
@@ -734,28 +777,28 @@ export default function MasterDataSettings() {
 
       {/* Modal Add Vendor Master */}
       {showAddVendorModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddVendorModal(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowAddVendorModal(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-8 w-full max-w-md space-y-4 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">Tambah Vendor Mitra Baru</h3>
-              <button onClick={() => setShowAddVendorModal(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddVendorModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={handleAddVendorMaster} className="space-y-3.5 text-xs">
               <div>
                 <label className="font-bold block mb-1">Nama Vendor / Toko Mitra *</label>
-                <input required value={newVndName} onChange={(e) => setNewVndName(e.target.value)} placeholder="cth: Depot Air Berkah Suci" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input required value={newVndName} onChange={(e) => setNewVndName(e.target.value)} placeholder="cth: Depot Air Berkah Suci" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
               <div>
                 <label className="font-bold block mb-1">Jenis Layanan / Produk</label>
-                <input value={newVndType} onChange={(e) => setNewVndType(e.target.value)} placeholder="Refill Galon & Gas LPG" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input value={newVndType} onChange={(e) => setNewVndType(e.target.value)} placeholder="Refill Galon & Gas LPG" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
               <div>
                 <label className="font-bold block mb-1">No. WhatsApp / Telp Vendor</label>
-                <input value={newVndPhone} onChange={(e) => setNewVndPhone(e.target.value)} placeholder="0812-9988-7700" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-mono" />
+                <input value={newVndPhone} onChange={(e) => setNewVndPhone(e.target.value)} placeholder="0812-9988-7700" className="w-full p-3 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white" />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowAddVendorModal(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 font-bold rounded-xl">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-md">Simpan Vendor</button>
+                <button type="button" onClick={() => setShowAddVendorModal(false)} className="flex-1 py-3 neu-btn font-bold rounded-xl cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-xl shadow-md cursor-pointer">Simpan Vendor</button>
               </div>
             </form>
           </div>
@@ -801,11 +844,11 @@ export default function MasterDataSettings() {
           {/* Summary Stats */}
           <div className="grid grid-cols-3 gap-3 text-xs">
             {[
-              { label: 'Termasuk Sewa', val: facilities.filter(f => f.isIncludedInRent).length, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20' },
-              { label: 'Layanan Add-On', val: facilities.filter(f => !f.isIncludedInRent).length, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' },
-              { label: 'Total Fasilitas', val: facilities.length, color: 'text-slate-900 dark:text-white', bg: 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10' },
+              { label: 'Termasuk Sewa', val: facilities.filter(f => f.isIncludedInRent).length, color: 'text-emerald-600', bg: 'neu-inset' },
+              { label: 'Layanan Add-On', val: facilities.filter(f => !f.isIncludedInRent).length, color: 'text-amber-600', bg: 'neu-inset' },
+              { label: 'Total Fasilitas', val: facilities.length, color: 'text-slate-900 dark:text-white', bg: 'neu-inset' },
             ].map(s => (
-              <div key={s.label} className={`${s.bg} border rounded-2xl p-3 text-center`}>
+              <div key={s.label} className={`${s.bg} rounded-2xl p-3 text-center`}>
                 <div className={`text-2xl font-black ${s.color}`}>{s.val}</div>
                 <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</div>
               </div>
@@ -825,11 +868,7 @@ export default function MasterDataSettings() {
               return (
                 <div
                   key={fac.id}
-                  className={`bg-slate-50 dark:bg-black/20 rounded-2xl border p-4 space-y-2.5 transition-all ${
-                    fac.isIncludedInRent
-                      ? 'border-emerald-200 dark:border-emerald-500/20'
-                      : 'border-amber-200 dark:border-amber-500/20'
-                  }`}
+                  className="neu-card-sm rounded-2xl p-4 space-y-2.5 transition-all"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
@@ -858,8 +897,8 @@ export default function MasterDataSettings() {
                       onClick={() => setFacilities(prev => prev.map(f => f.id === fac.id ? { ...f, isIncludedInRent: !f.isIncludedInRent } : f))}
                       className={`text-[9px] font-extrabold px-2.5 py-1 rounded-full cursor-pointer transition-all ${
                         fac.isIncludedInRent
-                          ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-300'
-                          : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300'
+                          ? 'neu-btn text-amber-800 dark:text-amber-300'
+                          : 'neu-btn text-emerald-800 dark:text-emerald-300'
                       }`}
                     >
                       {fac.isIncludedInRent ? '→ Ubah ke Add-On' : '→ Masukkan ke Sewa'}
@@ -877,7 +916,7 @@ export default function MasterDataSettings() {
               setToast('✅ MASTER FASILITAS KOSAN BERHASIL DISIMPAN!');
               setTimeout(() => setToast(null), 3500);
             }}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer hover:opacity-90 flex items-center gap-2"
+            className="px-6 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
           >
             <i className="fa-solid fa-floppy-disk" /> Simpan Master Fasilitas
           </button>
@@ -886,11 +925,11 @@ export default function MasterDataSettings() {
 
       {/* Modal: Tambah Fasilitas Baru */}
       {showAddFacModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1a1535] rounded-3xl p-6 sm:p-8 shadow-2xl w-full max-w-md space-y-5 border border-white/10">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-[999] bg-black/5 dark:bg-black/20 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowAddFacModal(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-8 shadow-2xl w-full max-w-md space-y-5 text-slate-900 dark:text-white border border-white/80 dark:border-white/10 animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black">🏨 Tambah Fasilitas Baru</h3>
-              <button onClick={() => setShowAddFacModal(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddFacModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form
               onSubmit={(e) => {
@@ -916,11 +955,11 @@ export default function MasterDataSettings() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold block mb-1">Ikon Fasilitas (Emoji)</label>
-                  <input value={newFacIcon} onChange={e => setNewFacIcon(e.target.value)} placeholder="🏠" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none text-center text-2xl" />
+                  <input value={newFacIcon} onChange={e => setNewFacIcon(e.target.value)} placeholder="🏠" className="w-full p-3 neu-input rounded-xl outline-none text-center text-2xl text-slate-900 dark:text-white" />
                 </div>
                 <div>
                   <label className="font-bold block mb-1">Kategori *</label>
-                  <select value={newFacCategory} onChange={e => setNewFacCategory(e.target.value as any)} className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-bold">
+                  <select value={newFacCategory} onChange={e => setNewFacCategory(e.target.value as any)} className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white">
                     <option value="KAMAR">🛏️ Fasilitas Kamar</option>
                     <option value="BANGUNAN">🏢 Fasilitas Bangunan</option>
                     <option value="LAYANAN_ADDON">➕ Layanan Add-On</option>
@@ -929,18 +968,18 @@ export default function MasterDataSettings() {
               </div>
               <div>
                 <label className="font-bold block mb-1">Nama Fasilitas *</label>
-                <input required value={newFacName} onChange={e => setNewFacName(e.target.value)} placeholder="cth: AC 1 PK Inverter, Smart Lock NFC..." className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none" />
+                <input required value={newFacName} onChange={e => setNewFacName(e.target.value)} placeholder="cth: AC 1 PK Inverter, Smart Lock NFC..." className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
               <div>
                 <label className="font-bold block mb-1">Deskripsi Fasilitas</label>
-                <textarea value={newFacDesc} onChange={e => setNewFacDesc(e.target.value)} rows={2} placeholder="Detail fasilitas, merk, spesifikasi, atau aturan pemakaian..." className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none resize-none" />
+                <textarea value={newFacDesc} onChange={e => setNewFacDesc(e.target.value)} rows={2} placeholder="Detail fasilitas, merk, spesifikasi, atau aturan pemakaian..." className="w-full p-3 neu-input rounded-xl outline-none resize-none text-slate-900 dark:text-white" />
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
+              <div className="flex items-center justify-between p-3 neu-card-sm rounded-xl">
                 <span className="font-bold text-slate-700 dark:text-slate-300">Termasuk dalam Harga Sewa?</span>
                 <button
                   type="button"
                   onClick={() => setNewFacIncluded(prev => !prev)}
-                  className={`w-12 h-6 rounded-full transition-colors cursor-pointer flex items-center px-0.5 ${newFacIncluded ? 'bg-emerald-500 justify-end' : 'bg-slate-300 justify-start'}`}
+                  className={`w-12 h-6 rounded-full transition-colors cursor-pointer flex items-center px-0.5 ${newFacIncluded ? 'bg-emerald-500 justify-end' : 'neu-inset justify-start'}`}
                 >
                   <div className="w-5 h-5 rounded-full bg-white shadow" />
                 </button>
@@ -948,22 +987,22 @@ export default function MasterDataSettings() {
               {!newFacIncluded && (
                 <div>
                   <label className="font-bold block mb-1">Biaya Add-On Bulanan (Rp) — 0 = Per Unit/Pakai</label>
-                  <input type="number" value={newFacFee} onChange={e => setNewFacFee(e.target.value)} placeholder="0" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none font-mono" />
+                  <input type="number" value={newFacFee} onChange={e => setNewFacFee(e.target.value)} placeholder="0" className="w-full p-3 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white" />
                 </div>
               )}
               <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowAddFacModal(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 font-bold rounded-xl">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-emerald-600 text-white font-extrabold rounded-xl shadow-md">+ Tambahkan</button>
+                <button type="button" onClick={() => setShowAddFacModal(false)} className="flex-1 py-3 neu-btn font-bold rounded-xl cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl shadow-md cursor-pointer">+ Tambahkan</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Toast Notification */}
+      {/* Toast Notification (Bottom Right) */}
       {toast && (
-        <div className="fixed top-6 right-6 z-[100] px-5 py-3 rounded-2xl text-xs font-bold bg-amber-500 text-slate-900 shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check" />
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
+          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
           <span>{toast}</span>
         </div>
       )}

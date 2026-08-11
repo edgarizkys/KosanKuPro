@@ -43,7 +43,7 @@ export default function KosanKuLogo({
     >
       {/* Full-Frame Squircle Emblem Container */}
       <div
-        className={`${currentSize.icon} rounded-2xl bg-[#120e20] p-1 flex items-center justify-center shadow-lg shadow-purple-900/30 group-hover:scale-105 group-hover:shadow-purple-500/30 transition-all duration-300 relative overflow-hidden border border-white/20 dark:border-white/15`}
+        className={`${currentSize.icon} rounded-2xl bg-[#120e20] p-1 flex items-center justify-center neu-card-sm group-hover:scale-105 transition-all duration-300 relative overflow-hidden border border-white/20 dark:border-white/15`}
       >
         <img
           src="/images/logo.png"

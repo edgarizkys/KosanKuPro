@@ -45,15 +45,18 @@ export default function NotificationDrawer({ open, onClose }: NotificationDrawer
   return (
     <div
       id="drawerNotif"
-      className={`fixed right-0 top-0 bottom-0 w-full sm:w-80 md:w-96 bg-white dark:bg-[#150f20] z-50 border-l border-slate-200 dark:border-white/10 shadow-2xl p-5 sm:p-6 transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col text-slate-900 dark:text-white ${open ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`fixed right-0 top-0 bottom-0 w-full sm:w-80 md:w-96 neu-card z-50 p-5 sm:p-6 transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col text-slate-900 dark:text-white ${open ? 'translate-x-0' : 'translate-x-full'}`}
     >
-      <div className="flex items-center justify-between pb-4 border-b border-black/5 dark:border-white/10">
-        <h3 className="font-bold text-slate-900 dark:text-white text-sm">Notifikasi</h3>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><i className="fa-solid fa-xmark" /></button>
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200/60 dark:border-white/10">
+        <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+          <i className="fa-solid fa-bell text-[#047857] dark:text-emerald-400" />
+          <span>Notifikasi</span>
+        </h3>
+        <button onClick={onClose} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"><i className="fa-solid fa-xmark text-xs" /></button>
       </div>
       <div className="flex-1 overflow-y-auto py-4 space-y-3">
         {notifs.map((n) => (
-          <div key={n.id} className="p-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl space-y-1">
+          <div key={n.id} className="p-3.5 neu-card-sm rounded-xl space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-900 dark:text-white">{n.title}</span>
               <span className="text-[9px] text-slate-500">{timeAgo(n.createdAt)}</span>
@@ -65,7 +68,7 @@ export default function NotificationDrawer({ open, onClose }: NotificationDrawer
           <p className="text-center text-xs text-slate-500 py-8">Belum ada notifikasi.</p>
         )}
       </div>
-      <button onClick={onClose} className="w-full py-2.5 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl text-xs font-bold text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-white/20 transition-all">
+      <button onClick={onClose} className="w-full py-2.5 neu-btn rounded-xl text-xs font-bold text-slate-700 dark:text-white transition-all cursor-pointer">
         Tutup
       </button>
     </div>

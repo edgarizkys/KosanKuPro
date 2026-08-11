@@ -238,8 +238,8 @@ export default function TenantDashboard({
       activeTab="invoices"
     >
       <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors">
-      {/* Welcome Banner */}
-      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
+      {/* Welcome Banner (Soft Raised Neumorphic Card) */}
+      <div className="neu-card p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300 text-[10px] font-bold border border-purple-300 dark:border-purple-500/30">
@@ -257,14 +257,14 @@ export default function TenantDashboard({
       </div>
 
       {/* ===== PERATURAN KOSAN BANNER ===== */}
-      <div className={`rounded-3xl border overflow-hidden shadow-xs transition-all ${rulesRead ? 'border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/80 dark:bg-emerald-900/10' : 'border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-900/10'}`}>
+      <div className={`neu-card rounded-3xl overflow-hidden transition-all ${rulesRead ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-amber-300 dark:border-amber-500/30'}`}>
         {/* Banner Header */}
         <div
-          className={`flex items-center justify-between p-4 cursor-pointer ${rulesRead ? 'bg-emerald-100/60 dark:bg-emerald-500/10' : 'bg-amber-100 dark:bg-amber-500/15'}`}
+          className={`flex items-center justify-between p-4 cursor-pointer ${rulesRead ? 'bg-emerald-100/40 dark:bg-emerald-500/10' : 'bg-amber-100/40 dark:bg-amber-500/15'}`}
           onClick={() => setRulesExpanded((p) => !p)}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${rulesRead ? 'bg-emerald-200 dark:bg-emerald-500/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-200 dark:bg-amber-500/30 text-amber-800 dark:text-amber-400'}`}>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 neu-btn ${rulesRead ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-800 dark:text-amber-400'}`}>
               <i className="fa-solid fa-book-open" />
             </div>
             <div>
@@ -289,7 +289,7 @@ export default function TenantDashboard({
         {/* Rules Content (collapsible) */}
         {rulesExpanded && (
           <div className="p-5 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {[
                 { no: 1, rule: 'Jam malam mulai pukul 23.00 — harap menjaga ketenangan dan tidak membuat keributan.', icon: '🌙' },
                 { no: 2, rule: 'Dilarang membawa tamu menginap tanpa izin tertulis dari manajemen kosan.', icon: '🚷' },
@@ -302,7 +302,7 @@ export default function TenantDashboard({
                 { no: 9, rule: 'Tidak diperkenankan memasak makanan berbau menyengat di kamar. Gunakan dapur bersama.', icon: '🍳' },
                 { no: 10, rule: 'Penghuni yang melanggar peraturan 3x berturut-turut dapat dikenai surat peringatan hingga pemutusan kontrak.', icon: '📝' },
               ].map((item) => (
-                <div key={item.no} className="flex items-start gap-2.5 bg-white dark:bg-black/20 border border-slate-200/80 dark:border-white/10 rounded-xl p-3">
+                <div key={item.no} className="flex items-start gap-2.5 neu-card-sm rounded-xl p-3">
                   <span className="text-base shrink-0">{item.icon}</span>
                   <div>
                     <span className={`text-[9px] font-extrabold uppercase tracking-wide block mb-0.5 ${rulesRead ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>Peraturan #{item.no}</span>
@@ -314,7 +314,7 @@ export default function TenantDashboard({
 
             {/* Confirm Checkbox */}
             {!rulesRead ? (
-              <div className="flex items-start gap-3 bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4">
+              <div className="flex items-start gap-3 neu-inset rounded-2xl p-4">
                 <input
                   type="checkbox"
                   id="rulesConfirm"
@@ -331,8 +331,8 @@ export default function TenantDashboard({
                 </label>
               </div>
             ) : (
-              <div className="flex items-center gap-3 bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-4">
-                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3 neu-inset rounded-2xl p-4">
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <i className="fa-solid fa-check text-sm" />
                 </div>
                 <div>
@@ -356,8 +356,8 @@ export default function TenantDashboard({
         
         {/* Left Column: Rent Payment & Add-On Breakdown */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-            <div className="flex items-center justify-between border-b border-black/5 dark:border-white/10 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <i className="fa-solid fa-credit-card text-purple-600 dark:text-purple-400" />
@@ -372,7 +372,7 @@ export default function TenantDashboard({
 
             {/* Rincian Tagihan Termasuk Add-On */}
             <div className="space-y-3">
-              <div className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 flex items-center justify-between text-xs">
+              <div className="p-4 neu-card-sm rounded-2xl flex items-center justify-between text-xs">
                 <div>
                   <span className="font-bold text-slate-900 dark:text-white block">Sewa Kamar + Utilitas Base (Air/Listrik)</span>
                   <span className="text-[10px] text-slate-500">Kamar {roomInfo?.number || 'A-101'} • Kuota Laundry 5.0 kg</span>
@@ -382,7 +382,7 @@ export default function TenantDashboard({
 
               {/* Add-On Services Billed by Vendor/Staff */}
               {addOns.length > 0 && (
-                <div className="p-4 bg-purple-50/70 dark:bg-purple-950/30 rounded-2xl border border-purple-200 dark:border-purple-500/20 space-y-2.5 text-xs">
+                <div className="p-4 neu-inset rounded-2xl space-y-2.5 text-xs">
                   <span className="text-[10px] font-extrabold text-purple-900 dark:text-purple-300 uppercase tracking-wider block">
                     ⚡ Biaya Kelebihan / Add-On Vendor Terakumulasi:
                   </span>
@@ -408,7 +408,7 @@ export default function TenantDashboard({
                 disabled={paying}
                 className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs shadow-lg hover:scale-105 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
               >
-                {paying ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-[#fa-bolt]" />}
+                {paying ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-bolt" />}
                 <span>Bayar 1-Klik via Midtrans Snap</span>
               </button>
             </div>
@@ -419,12 +419,12 @@ export default function TenantDashboard({
           </div>
 
           {/* Past Payment Receipts History */}
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-4 shadow-xs">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-4">
             <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <i className="fa-solid fa-receipt text-emerald-500" /> Riwayat Pembayaran Terakhir
             </h3>
             <div className="space-y-2 text-xs">
-              <div className="p-3.5 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-200/60 dark:border-white/5 flex items-center justify-between">
+              <div className="p-3.5 neu-card-sm rounded-xl flex items-center justify-between">
                 <div>
                   <span className="font-bold text-slate-900 dark:text-white block">Sewa Juli 2026 + Add-On Refill Aqua</span>
                   <span className="text-[10px] text-slate-500">Lunas via Midtrans QRIS • 28 Juli 2026</span>
@@ -439,7 +439,7 @@ export default function TenantDashboard({
 
         {/* Right Column: Complaint Ticket Submission */}
         <div className="space-y-6">
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-3xl space-y-5 shadow-xs">
+          <div className="neu-card p-6 rounded-3xl space-y-5">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <i className="fa-solid fa-headset text-rose-500" /> Form Lapor Kendala Kamar
             </h3>
@@ -451,7 +451,7 @@ export default function TenantDashboard({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="cth: Kran Air Bocor / AC Berisik"
-                  className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors"
+                  className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors"
                 />
               </div>
               <div>
@@ -462,7 +462,7 @@ export default function TenantDashboard({
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
                   placeholder="Jelaskan kendala fasilitas di kamar Anda..."
-                  className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors resize-none"
+                  className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors resize-none"
                 />
               </div>
               <button
@@ -476,13 +476,13 @@ export default function TenantDashboard({
           </div>
 
           {/* Ticket Status Tracker */}
-          <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 rounded-3xl space-y-4 shadow-xs">
+          <div className="neu-card p-6 rounded-3xl space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <i className="fa-solid fa-ticket text-amber-500" /> Status Tiket Kendala Anda
             </h3>
             <div className="space-y-2 text-xs">
               {tickets.map((t) => (
-                <div key={t.id} className="p-3 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-200/60 dark:border-white/5 space-y-1">
+                <div key={t.id} className="p-3 neu-card-sm rounded-xl space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-900 dark:text-white">{t.title}</span>
                     <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold ${t.status === 'OPEN' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>

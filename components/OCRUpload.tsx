@@ -116,7 +116,7 @@ export default function OCRUpload() {
   };
 
   return (
-    <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs text-slate-900 dark:text-white transition-colors">
+    <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 text-slate-900 dark:text-white transition-colors">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function OCRUpload() {
         {(imagePreview || saved) && (
           <button
             onClick={reset}
-            className="px-3.5 py-1.5 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-xl text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/20 transition-all cursor-pointer"
+            className="px-3.5 py-1.5 neu-btn rounded-xl text-[10px] font-bold text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
           >
             <i className="fa-solid fa-rotate-left mr-1" /> Reset
           </button>
@@ -150,8 +150,8 @@ export default function OCRUpload() {
       {!imagePreview && !saved && (
         <label className="block cursor-pointer">
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-          <div className="border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-purple-500 rounded-3xl p-10 text-center transition-all bg-slate-50 dark:bg-black/20 hover:bg-slate-100 dark:hover:bg-black/30">
-            <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl mx-auto mb-4 shadow-xs">
+          <div className="neu-card-sm border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-purple-500 rounded-3xl p-10 text-center transition-all">
+            <div className="w-14 h-14 rounded-2xl neu-inset text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl mx-auto mb-4 shadow-xs">
               <i className="fa-solid fa-cloud-arrow-up" />
             </div>
             <p className="text-xs font-bold text-slate-900 dark:text-white mb-1">Klik untuk upload struk / nota pengeluaran</p>
@@ -165,8 +165,8 @@ export default function OCRUpload() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Image preview */}
           <div className="space-y-3">
-            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/30">
-              <img src={imagePreview} alt="Receipt preview" className="w-full h-56 object-contain" />
+            <div className="rounded-2xl overflow-hidden neu-inset p-2">
+              <img src={imagePreview} alt="Receipt preview" className="w-full h-56 object-contain rounded-xl" />
             </div>
             <button
               onClick={runOCR}
@@ -195,26 +195,26 @@ export default function OCRUpload() {
               <div className="space-y-3 animate-scale-in">
                 <h4 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hasil Extract Otomatis</h4>
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between p-3.5 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-200/80 dark:border-white/10">
+                  <div className="flex justify-between p-3.5 neu-card-sm rounded-xl">
                     <span className="text-slate-500 dark:text-slate-400 font-medium">Vendor</span>
                     <span className="font-bold text-slate-900 dark:text-white">{ocrResult.vendor || '-'}</span>
                   </div>
-                  <div className="flex justify-between p-3.5 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-200/80 dark:border-white/10">
+                  <div className="flex justify-between p-3.5 neu-card-sm rounded-xl">
                     <span className="text-slate-500 dark:text-slate-400 font-medium">Tanggal</span>
                     <span className="font-bold text-slate-900 dark:text-white">{ocrResult.date || '-'}</span>
                   </div>
-                  <div className="flex justify-between p-3.5 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-200/80 dark:border-white/10">
+                  <div className="flex justify-between p-3.5 neu-card-sm rounded-xl">
                     <span className="text-slate-500 dark:text-slate-400 font-medium">Kategori</span>
                     <span className="font-bold text-purple-700 dark:text-purple-300">{CATEGORY_LABELS[ocrResult.category || ''] || ocrResult.category || '-'}</span>
                   </div>
-                  <div className="flex justify-between p-3.5 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-500/30">
+                  <div className="flex justify-between p-3.5 neu-inset rounded-xl">
                     <span className="text-purple-800 dark:text-purple-300 font-bold">Total Tagihan</span>
                     <span className="font-black text-purple-900 dark:text-purple-200 text-sm">
                       {ocrResult.totalAmount ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(ocrResult.totalAmount) : '-'}
                     </span>
                   </div>
                   {ocrResult.items && ocrResult.items.length > 0 && (
-                    <div className="p-3.5 bg-slate-50 dark:bg-black/20 rounded-xl border border-slate-200/80 dark:border-white/10 space-y-1.5">
+                    <div className="p-3.5 neu-card-sm rounded-xl space-y-1.5">
                       <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Rincian Item:</span>
                       {ocrResult.items.map((item, i) => (
                         <div key={i} className="flex justify-between text-[11px]">
@@ -228,7 +228,7 @@ export default function OCRUpload() {
                 <button
                   onClick={saveExpense}
                   disabled={saving}
-                  className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3.5 neu-btn text-slate-900 dark:text-white font-bold text-xs rounded-xl transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {saving ? <i className="fa-solid fa-spinner fa-spin mr-2" /> : <i className="fa-solid fa-floppy-disk mr-2" />}
                   Simpan sebagai Pengeluaran Resmi

@@ -299,15 +299,15 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mt-1.5 sm:mt-2 tracking-tight">Pilihan Unit Terbaik</h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1.5 sm:mt-2">{rooms.length} unit kamar siap huni dengan video tour, fasilitas hotel, &amp; smart system di Dago</p>
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 self-start overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1.5 sm:gap-2 self-start overflow-x-auto scrollbar-none p-1 neu-inset rounded-2xl">
           {['all', 'AVAILABLE', 'OCCUPIED'].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-300 border whitespace-nowrap flex-shrink-0 active:scale-95 cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition-all duration-300 whitespace-nowrap flex-shrink-0 cursor-pointer ${
                 filter === f
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-md'
-                  : 'bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[#047857] text-white shadow-[inset_2px_2px_4px_rgba(0,0,0,0.3)]'
+                  : 'neu-btn text-slate-600 dark:text-slate-300'
               }`}
             >
               {f === 'all' ? 'Semua Unit' : f === 'AVAILABLE' ? '🟢 Tersedia' : '🔴 Terisi'}
@@ -322,7 +322,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
           {top3.map((room, idx) => (
             <div
               key={room.id}
-              className={`reveal delay-${idx + 1} bg-white dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl overflow-hidden group card-premium shadow-md hover:shadow-2xl hover:-translate-y-2 border border-black/5 dark:border-white/10 transition-all duration-500 flex flex-col justify-between`}
+              className={`reveal delay-${idx + 1} neu-card-sm rounded-2xl sm:rounded-3xl overflow-hidden group transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between`}
             >
               <div>
                 <div className="relative h-48 sm:h-56 overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -371,11 +371,11 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                 <div className="p-5 space-y-3.5">
                   {/* Specification Quick Chips */}
                   <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600 dark:text-slate-300 font-medium">
-                    <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 p-1.5 rounded-lg">
+                    <div className="flex items-center gap-1.5 neu-inset p-2 rounded-xl">
                       <i className="fa-solid fa-bed text-amber-500" />
                       <span className="truncate">{room.bedType || 'Queen Bed'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 p-1.5 rounded-lg">
+                    <div className="flex items-center gap-1.5 neu-inset p-2 rounded-xl">
                       <i className="fa-solid fa-bolt text-amber-500" />
                       <span className="truncate">{room.electricity || 'Token 1300W'}</span>
                     </div>
@@ -385,11 +385,11 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                   {room.facilities && room.facilities.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {room.facilities.slice(0, 4).map((f) => (
-                        <span key={f} className="px-2 py-0.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md text-[9px] text-slate-700 dark:text-slate-300 font-medium">
+                        <span key={f} className="px-2.5 py-1 neu-card-sm rounded-lg text-[9px] text-slate-700 dark:text-slate-300 font-medium">
                           {f}
                         </span>
                       ))}
-                      {room.facilities.length > 4 && <span className="text-[9px] text-slate-400 font-semibold">+{room.facilities.length - 4} fasilitas</span>}
+                      {room.facilities.length > 4 && <span className="text-[9px] text-slate-400 font-semibold self-center">+{room.facilities.length - 4} fasilitas</span>}
                     </div>
                   )}
                 </div>
@@ -397,7 +397,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
 
               {/* Card Footer */}
               <div className="p-5 pt-0">
-                <div className="flex items-center justify-between pt-3 border-t border-black/5 dark:border-white/10">
+                <div className="flex items-center justify-between pt-3 border-t border-slate-200/60 dark:border-white/10">
                   <div>
                     <span className="text-xl font-black text-slate-900 dark:text-white">
                       Rp {(room.price / 1000000).toFixed(1)}
@@ -412,7 +412,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                       e.stopPropagation();
                       openRoomDetail(room);
                     }}
-                    className="relative z-20 cursor-pointer px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-1.5"
+                    className="relative z-20 cursor-pointer px-5 py-2.5 neu-btn text-[#047857] dark:text-emerald-300 text-xs font-bold rounded-xl transition-all duration-300 flex items-center gap-1.5"
                   >
                     <span>Lihat Detail</span>
                     <i className="fa-solid fa-arrow-right text-[10px]" />
@@ -430,7 +430,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
           <div className="swiper-wrapper py-2">
             {filtered.map((room) => (
               <div key={room.id} className="swiper-slide h-auto">
-                <div className="bg-white dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl overflow-hidden group h-full border border-black/5 dark:border-white/10 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 flex flex-col justify-between">
+                <div className="neu-card-sm rounded-2xl sm:rounded-3xl overflow-hidden group h-full transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between">
                   <div>
                     <div className="relative h-44 sm:h-52 overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <img
@@ -465,7 +465,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                       {room.facilities && room.facilities.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                           {room.facilities.slice(0, 3).map((f) => (
-                            <span key={f} className="px-2 py-0.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md text-[9px] text-slate-700 dark:text-slate-300 font-medium">
+                            <span key={f} className="px-2.5 py-1 neu-card-sm rounded-lg text-[9px] text-slate-700 dark:text-slate-300 font-medium">
                               {f}
                             </span>
                           ))}
@@ -475,7 +475,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                   </div>
 
                   <div className="p-4 sm:p-5 pt-0">
-                    <div className="flex items-center justify-between pt-2.5 border-t border-black/5 dark:border-white/10">
+                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/60 dark:border-white/10">
                       <div>
                         <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{formatPrice(room.price)}</span>
                         <span className="text-[9px] text-slate-500 dark:text-slate-400 block">/bulan</span>
@@ -487,7 +487,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                           e.stopPropagation();
                           openRoomDetail(room);
                         }}
-                        className="relative z-20 cursor-pointer px-4 py-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 rounded-xl text-[11px] font-bold text-slate-900 dark:text-white active:scale-95 transition-all duration-200"
+                        className="relative z-20 cursor-pointer px-4 py-2 neu-btn rounded-xl text-[11px] font-bold text-slate-900 dark:text-white transition-all duration-200"
                       >
                         Detail &amp; Video
                       </button>
@@ -505,7 +505,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
           <button
             type="button"
             onClick={() => swiperInstance.current?.slidePrev()}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer border border-black/5 dark:border-white/10 shrink-0"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full neu-btn text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer shrink-0"
             title="Unit Sebelumnya"
             aria-label="Previous Slide"
           >
@@ -516,7 +516,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
           <button
             type="button"
             onClick={() => swiperInstance.current?.slideTo(0)}
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center text-sm sm:text-base shadow-lg shadow-slate-900/25 dark:shadow-white/20 hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer group shrink-0"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full neu-btn text-[#047857] dark:text-emerald-400 flex items-center justify-center text-sm sm:text-base transition-all duration-300 cursor-pointer group shrink-0"
             title="Kembali ke Unit Pertama"
             aria-label="Reset to First Slide"
           >
@@ -527,7 +527,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
           <button
             type="button"
             onClick={() => swiperInstance.current?.slideNext()}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm shadow-xs hover:scale-110 active:scale-90 transition-all duration-200 cursor-pointer border border-black/5 dark:border-white/10 shrink-0"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full neu-btn text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer shrink-0"
             title="Unit Selanjutnya"
             aria-label="Next Slide"
           >
@@ -539,11 +539,11 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
       {/* Comprehensive Luxury Room Detail Modal (Photo Gallery + Video Tour + Categorized Facilities) */}
       {mounted && detailRoom && createPortal(
         <div
-          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-5 animate-fade-in overflow-y-auto"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-5 animate-fade-in overflow-y-auto"
           onClick={() => setDetailRoom(null)}
         >
           <div
-            className="bg-white dark:bg-[#151224] border border-black/10 dark:border-white/15 rounded-3xl w-full max-w-2xl overflow-hidden animate-scale-in max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-white my-auto"
+            className="neu-card rounded-3xl w-full max-w-2xl overflow-hidden animate-scale-in max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-white my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header Media (Photo Gallery vs Video Tour Switcher) */}
@@ -582,7 +582,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
               <button
                 type="button"
                 onClick={() => setDetailRoom(null)}
-                className="absolute top-4 right-4 z-20 w-9 h-9 bg-black/60 hover:bg-black text-white rounded-full flex items-center justify-center transition-all shadow-md cursor-pointer border border-white/15"
+                className="absolute top-4 right-4 z-20 w-9 h-9 neu-btn flex items-center justify-center text-white rounded-full transition-all shadow-md cursor-pointer"
                 title="Tutup"
               >
                 <i className="fa-solid fa-xmark text-sm" />
@@ -650,7 +650,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
             {/* Scrollable Content Body */}
             <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
               {/* Pricing & Key Specs Banner */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl neu-inset">
                 <div>
                   <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
                     {formatPrice(detailRoom.price)}
@@ -660,7 +660,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                   </span>
                 </div>
                 <div className="text-right sm:text-right">
-                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-3 py-1 rounded-full">
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 neu-card-sm px-3 py-1.5 rounded-full inline-block">
                     ✓ Garansi Unit Bersih &amp; Siap Huni
                   </span>
                 </div>
@@ -672,36 +672,36 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                   Spesifikasi Kamar
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                  <div className="p-3.5 rounded-2xl neu-card-sm space-y-1">
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <i className="fa-solid fa-ruler-combined text-amber-500" />
                       <span>Luas Kamar</span>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">{detailRoom.size || '20 m²'}</div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white">{detailRoom.size || '20 m²'}</div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                  <div className="p-3.5 rounded-2xl neu-card-sm space-y-1">
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <i className="fa-solid fa-bed text-amber-500" />
                       <span>Tipe Ranjang</span>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{detailRoom.bedType || 'Queen Bed'}</div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white truncate">{detailRoom.bedType || 'Queen Bed'}</div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                  <div className="p-3.5 rounded-2xl neu-card-sm space-y-1">
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <i className="fa-solid fa-bolt text-amber-500" />
                       <span>Listrik</span>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{detailRoom.electricity || 'Token 1300W'}</div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white truncate">{detailRoom.electricity || 'Token 1300W'}</div>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 space-y-1">
+                  <div className="p-3.5 rounded-2xl neu-card-sm space-y-1">
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <i className="fa-solid fa-user-group text-amber-500" />
                       <span>Kapasitas</span>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">{detailRoom.capacity || '1-2 Orang'}</div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white">{detailRoom.capacity || '1-2 Orang'}</div>
                   </div>
                 </div>
               </div>
@@ -712,7 +712,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                   <h4 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     Fasilitas Lengkap
                   </h4>
-                  <div className="flex gap-1 overflow-x-auto scrollbar-none">
+                  <div className="flex gap-1 overflow-x-auto scrollbar-none neu-inset p-1 rounded-xl">
                     {[
                       { key: 'all', label: 'Semua' },
                       { key: 'kamar', label: '🛏️ Kamar' },
@@ -724,10 +724,10 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                         key={tab.key}
                         type="button"
                         onClick={() => setActiveFacilityCategory(tab.key as any)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                           activeFacilityCategory === tab.key
-                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                            : 'bg-black/5 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-black/10 dark:hover:bg-white/10'
+                            ? 'neu-btn text-[#047857] dark:text-emerald-400'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                         }`}
                       >
                         {tab.label}
@@ -743,7 +743,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                     <>
                       {(activeFacilityCategory === 'all' || activeFacilityCategory === 'kamar') &&
                         detailRoom.categorizedFacilities.kamar?.map((f) => (
-                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                          <div key={f} className="flex items-center gap-2.5 p-2.5 rounded-xl neu-card-sm text-xs font-bold text-slate-800 dark:text-slate-200">
                             <i className="fa-solid fa-bed text-amber-500 text-[11px]" />
                             <span>{f}</span>
                           </div>
@@ -751,7 +751,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
 
                       {(activeFacilityCategory === 'all' || activeFacilityCategory === 'kamarMandi') &&
                         detailRoom.categorizedFacilities.kamarMandi?.map((f) => (
-                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                          <div key={f} className="flex items-center gap-2.5 p-2.5 rounded-xl neu-card-sm text-xs font-bold text-slate-800 dark:text-slate-200">
                             <i className="fa-solid fa-shower text-cyan-500 text-[11px]" />
                             <span>{f}</span>
                           </div>
@@ -759,7 +759,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
 
                       {(activeFacilityCategory === 'all' || activeFacilityCategory === 'smart') &&
                         detailRoom.categorizedFacilities.smart?.map((f) => (
-                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                          <div key={f} className="flex items-center gap-2.5 p-2.5 rounded-xl neu-card-sm text-xs font-bold text-slate-800 dark:text-slate-200">
                             <i className="fa-solid fa-fingerprint text-purple-500 text-[11px]" />
                             <span>{f}</span>
                           </div>
@@ -767,7 +767,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
 
                       {(activeFacilityCategory === 'all' || activeFacilityCategory === 'bersama') &&
                         detailRoom.categorizedFacilities.bersama?.map((f) => (
-                          <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                          <div key={f} className="flex items-center gap-2.5 p-2.5 rounded-xl neu-card-sm text-xs font-bold text-slate-800 dark:text-slate-200">
                             <i className="fa-solid fa-house-chimney-user text-emerald-500 text-[11px]" />
                             <span>{f}</span>
                           </div>
@@ -775,7 +775,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                     </>
                   ) : (
                     detailRoom.facilities?.map((f) => (
-                      <div key={f} className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs font-medium text-slate-800 dark:text-slate-200">
+                      <div key={f} className="flex items-center gap-2.5 p-2.5 rounded-xl neu-card-sm text-xs font-bold text-slate-800 dark:text-slate-200">
                         <i className="fa-solid fa-check text-emerald-500 text-[11px]" />
                         <span>{f}</span>
                       </div>
@@ -786,7 +786,7 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
             </div>
 
             {/* Modal Bottom Fixed CTA Actions */}
-            <div className="p-4 sm:p-5 border-t border-black/5 dark:border-white/10 bg-slate-50/80 dark:bg-[#110d1c]/80 backdrop-blur-md flex-shrink-0">
+            <div className="p-4 sm:p-5 border-t border-slate-200/60 dark:border-white/10 neu-card flex-shrink-0">
               {detailRoom.status === 'AVAILABLE' ? (
                 bookingSent ? (
                   <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl p-4 text-center space-y-1">

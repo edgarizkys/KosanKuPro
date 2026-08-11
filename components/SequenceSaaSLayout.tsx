@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import type { RoleType } from '@/app/page';
+import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from '@/lib/userProfiles';
+import UserProfileModal from './UserProfileModal';
+import UserManagementView from './UserManagementView';
 
 interface SequenceSaaSLayoutProps {
   role: RoleType;
@@ -36,8 +39,103 @@ export default function SequenceSaaSLayout({
   pendingApprovalsCount = 2,
 }: SequenceSaaSLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [proMode, setProMode] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+
+  // Theme Sync on Mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('kosanku_theme');
+      const isDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches) || document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+      setTheme(isDark ? 'dark' : 'light');
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    }
+  }, []);
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    if (nextTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('kosanku_theme', 'dark');
+      showToast('🌙 Mode Gelap (Dark Mode) Diaktifkan');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('kosanku_theme', 'light');
+      showToast('☀️ Mode Terang (Light Mode) Diaktifkan');
+    }
+  };
+
+  // User Profiles Persistent State
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  useEffect(() => {
+    setUsers(getStoredUserProfiles());
+  }, []);
+
+  const handleAddUser = (newUser: UserProfile) => {
+    const updated = [newUser, ...users];
+    setUsers(updated);
+    saveStoredUserProfiles(updated);
+    showToast(`✓ User ${newUser.name} (${newUser.role.toUpperCase()}) berhasil ditambahkan!`);
+  };
+
+  const handleUpdateUser = (updatedUser: UserProfile) => {
+    const updated = users.map((u) => (u.id === updatedUser.id ? updatedUser : u));
+    setUsers(updated);
+    saveStoredUserProfiles(updated);
+    showToast(`✓ Profil ${updatedUser.name} berhasil diperbarui!`);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    const userToDelete = users.find((u) => u.id === userId);
+    if (userToDelete?.role === 'owner' && users.filter((u) => u.role === 'owner').length <= 1) {
+      showToast('⚠️ Tidak dapat menghapus satu-satunya akun Owner!');
+      return;
+    }
+    const updated = users.filter((u) => u.id !== userId);
+    setUsers(updated);
+    saveStoredUserProfiles(updated);
+    showToast('✓ Akun pengguna berhasil dihapus.');
+  };
+
+  // Find active user profile or fallback
+  const currentUser: UserProfile =
+    users.find((u) => u.role === role) ||
+    users[0] || {
+      id: 'USR-ACT-01',
+      name: 'Bapak Hendra Gunawan',
+      email: 'owner@kosanku.com',
+      phone: '0811-9988-7766',
+      role: role,
+      title: 'Pemilik Properti KosanKu',
+      avatar: '👑',
+      avatarBg: 'bg-amber-500',
+      branchId: activeBranch,
+      branchName: 'Konsolidasi Semua Cabang',
+      status: 'ACTIVE',
+      joinDate: '01 Jan 2024',
+    };
+
+  const handleSwitchUserProfile = (targetUser: UserProfile) => {
+    onSwitchRole(targetUser.role);
+    if (targetUser.branchId && targetUser.branchId !== 'all') {
+      onBranchChange(targetUser.branchId);
+    }
+    showToast(`🔄 Beralih ke profil: ${targetUser.name} (${targetUser.role.toUpperCase()})`);
+  };
 
   // Live Chart Animation Pulse State
   const [chartBars, setChartBars] = useState([
@@ -87,58 +185,164 @@ export default function SequenceSaaSLayout({
     return 'Selamat Malam 🌙';
   };
 
-  const userProfileName =
-    role === 'owner'
-      ? 'Bapak Hendra'
-      : role === 'admin'
-      ? 'Pak Admin Properti'
-      : role === 'employee'
-      ? 'Bambang (Staf Lapangan)'
-      : role === 'vendor'
-      ? 'Depot Suci (Mitra Vendor)'
-      : 'Budi Santoso (Tenant A-101)';
+  // Navigation sections generator based on user role
+  const getNavSections = () => {
+    if (role === 'owner') {
+      return [
+        {
+          title: 'KosanKu Executive Hub',
+          items: [
+            { id: 'financial', label: 'Laporan Laba Rugi', icon: 'fa-solid fa-chart-pie' },
+            { id: 'deposit', label: 'Deposit Escrow & Late Fee', icon: 'fa-solid fa-vault' },
+            { id: 'users', label: 'Manajemen User & Profil', icon: 'fa-solid fa-users-gear', highlight: true },
+            { id: 'master_data', label: 'Master Data & Setting Kosan', icon: 'fa-solid fa-sliders' },
+            { id: 'inventory', label: 'Audit Stock Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'autopilot', label: 'Auto-Pilot AI Engine', icon: 'fa-solid fa-wand-magic-sparkles' },
+            { id: 'tenant_requests', label: 'Permintaan Tenant', icon: 'fa-solid fa-route', badge: pendingRequestsCount },
+            { id: 'approval', label: 'Approval Dana', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
+          ],
+        },
+        {
+          title: 'Operasional & Properti',
+          items: [
+            { id: 'rooms_ai', label: 'Kamar & Pricing AI', icon: 'fa-solid fa-door-open' },
+            { id: 'invoices', label: 'Invoice & Midtrans', icon: 'fa-solid fa-file-invoice-dollar' },
+            { id: 'complaints', label: 'Tiket Keluhan Tenant', icon: 'fa-solid fa-headset' },
+          ],
+        },
+      ];
+    }
 
-  const userEmail =
-    role === 'owner'
-      ? 'owner@kosanku.com'
-      : role === 'admin'
-      ? 'admin@kosanku.com'
-      : role === 'employee'
-      ? 'staf@kosanku.com'
-      : role === 'vendor'
-      ? 'vendor@kosanku.com'
-      : 'budi@kosanku.com';
+    if (role === 'superadmin' || role === 'admin') {
+      return [
+        {
+          title: 'Super Admin Control Hub',
+          items: [
+            { id: 'users', label: 'Manajemen User & Profil', icon: 'fa-solid fa-users-gear', highlight: true },
+            { id: 'master_data', label: 'Setting Master Data Kosan', icon: 'fa-solid fa-sliders' },
+            { id: 'overview', label: 'Overview System Control', icon: 'fa-solid fa-gauge-high' },
+            { id: 'financial', label: 'Laporan Laba Rugi (P&L)', icon: 'fa-solid fa-chart-pie' },
+            { id: 'deposit', label: 'Deposit Escrow & Fee', icon: 'fa-solid fa-vault' },
+            { id: 'inventory', label: 'Audit Stock Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'autopilot', label: 'Auto-Pilot AI Engine', icon: 'fa-solid fa-wand-magic-sparkles' },
+          ],
+        },
+        {
+          title: 'Modul Properti & Transaksi',
+          items: [
+            { id: 'rooms_ai', label: 'Kamar & Pricing AI', icon: 'fa-solid fa-door-open' },
+            { id: 'invoices', label: 'Invoice & Midtrans QRIS', icon: 'fa-solid fa-file-invoice-dollar' },
+            { id: 'tenant_requests', label: 'Permintaan Tenant', icon: 'fa-solid fa-route', badge: pendingRequestsCount },
+            { id: 'approval', label: 'Approval Dana', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
+            { id: 'complaints', label: 'Pusat Keluhan System', icon: 'fa-solid fa-headset', badge: 1 },
+          ],
+        },
+      ];
+    }
+
+    if (role === 'employee') {
+      return [
+        {
+          title: 'Portal Karyawan Staf',
+          items: [
+            { id: 'tenant_requests', label: 'Tugas & Plotting Owner', icon: 'fa-solid fa-list-check' },
+            { id: 'inventory', label: 'Audit Stock Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'approval', label: 'Checklist Kamar & Cek-In', icon: 'fa-solid fa-clipboard-check' },
+          ],
+        },
+      ];
+    }
+
+    if (role === 'vendor') {
+      return [
+        {
+          title: 'Portal Mitra Vendor',
+          items: [
+            { id: 'tenant_requests', label: 'Order Pesanan Masuk', icon: 'fa-solid fa-store' },
+            { id: 'inventory', label: 'Status Pengantaran Kurir', icon: 'fa-solid fa-truck-fast' },
+            { id: 'invoices', label: 'Add-On Billing Tenant', icon: 'fa-solid fa-receipt' },
+          ],
+        },
+      ];
+    }
+
+    // Tenant
+    return [
+      {
+        title: 'Portal Penghuni Tenant',
+        items: [
+          { id: 'invoices', label: 'Tagihan & QRIS Midtrans', icon: 'fa-solid fa-credit-card' },
+          { id: 'rooms_ai', label: 'Kamar Saya & Akses Kunci', icon: 'fa-solid fa-door-open' },
+          { id: 'tenant_requests', label: 'Add-On Galon/Laundry', icon: 'fa-solid fa-bottle-water' },
+          { id: 'complaints', label: 'Tiket Perbaikan Kamar', icon: 'fa-solid fa-headset' },
+        ],
+      },
+    ];
+  };
+
+  const navSections = getNavSections();
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8] text-[#0f172a] font-sans flex flex-col lg:flex-row antialiased selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-[#f2f5fa] dark:bg-[#0f0c1a] text-[#0f172a] dark:text-[#f1edf4] font-sans flex flex-col lg:flex-row antialiased selection:bg-emerald-500 selection:text-white transition-colors">
       
       {/* 📱 MOBILE TOP HEADER BAR (lg:hidden) */}
-      <div className="lg:hidden bg-white border-b border-[#e2e8f0] px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-2xs">
-        <div className="flex items-center gap-2">
+      <div className="lg:hidden bg-[#f2f5fa] dark:bg-[#141122] border-b border-[#d1d9e6]/70 dark:border-white/5 px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-[0_4px_16px_rgba(166,178,196,0.3)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl bg-slate-100 text-slate-800 font-bold cursor-pointer"
+            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold cursor-pointer"
+            title="Buka Menu Navigasi"
           >
-            <i className={`fa-solid ${mobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-sm`} />
+            <i className={`fa-solid ${mobileMenuOpen ? 'fa-xmark' : 'fa-bars-staggered'} text-sm`} />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#047857] flex items-center justify-center text-white font-black text-xs">
+            <div className="w-8 h-8 rounded-xl bg-[#047857] flex items-center justify-center text-white font-black text-xs neu-card-sm">
               <i className="fa-solid fa-cubes-stacked" />
             </div>
-            <span className="font-black text-base text-[#047857]">KosanKu<span className="text-slate-900">Pro</span></span>
+            <span className="font-black text-base text-[#047857]">KosanKu<span className="text-slate-900 dark:text-white">Pro</span></span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded-full bg-[#047857] text-white text-[9px] font-black uppercase">
-            {role}
-          </span>
+          {/* Mobile Theme Toggle */}
           <button
-            onClick={() => showToast('🔔 3 Notifikasi Kosan Baru')}
-            className="p-2 rounded-xl bg-slate-100 text-slate-700 font-bold relative"
+            onClick={handleToggleTheme}
+            className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-amber-500 dark:text-amber-400 cursor-pointer text-xs"
+            title="Toggle Dark/Light Mode"
+          >
+            <i className={`fa-solid ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
+          </button>
+
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="px-2.5 py-1 rounded-full neu-btn flex items-center gap-1.5 cursor-pointer"
+            title="Buka Profil"
+          >
+            <span className="text-xs">{currentUser.avatar}</span>
+            <span className="text-[9px] font-black uppercase text-slate-800 dark:text-slate-200">{role}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if ((window as any).__toggleNotifDrawer) {
+                (window as any).__toggleNotifDrawer();
+              } else {
+                showToast('🔔 3 Notifikasi Kosan Baru');
+              }
+            }}
+            className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold relative cursor-pointer"
+            title="Buka Panel Rincian Notifikasi"
           >
             <i className="fa-solid fa-bell text-xs" />
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center">3</span>
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-sm">3</span>
+          </button>
+
+          <button
+            onClick={onLogout}
+            className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-rose-500 hover:text-rose-700 cursor-pointer text-xs"
+            title="Keluar"
+          >
+            <i className="fa-solid fa-arrow-right-from-bracket" />
           </button>
         </div>
       </div>
@@ -151,288 +355,375 @@ export default function SequenceSaaSLayout({
         />
       )}
 
-      {/* 🟢 LEFT SIDEBAR (Desktop Permanent Sidebar + Mobile Drawer Overlay) */}
+      {/* 🟢 LEFT SIDEBAR (Desktop Minimize/Maximize + Mobile Drawer) */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-[#e2e8f0] flex flex-col justify-between shrink-0 p-5 space-y-6 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0
-        ${mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+        fixed inset-y-0 left-0 z-50 bg-[#f2f5fa] dark:bg-[#141122] border-r border-[#d1d9e6]/70 dark:border-white/10 flex flex-col justify-between shrink-0 transition-all duration-300 ease-in-out lg:static lg:translate-x-0 shadow-[4px_0_20px_rgba(163,177,198,0.25)] dark:shadow-[4px_0_20px_rgba(0,0,0,0.6)]
+        ${sidebarCollapsed ? 'lg:w-24 p-3' : 'lg:w-72 p-4'}
+        ${mobileMenuOpen ? 'translate-x-0 shadow-2xl w-72 p-4' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="space-y-6">
-          {/* Top Brand Logo & Mobile Close */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#047857] flex items-center justify-center text-white font-black shadow-sm text-sm">
+          {/* Top Brand Logo & Single 3-Bars Minimize / Maximize Trigger */}
+          {!sidebarCollapsed ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-9 h-9 rounded-2xl bg-[#047857] flex items-center justify-center text-white font-black neu-card-sm text-sm shrink-0">
+                  <i className="fa-solid fa-cubes-stacked" />
+                </div>
+                <div className="truncate">
+                  <span className="font-black text-lg text-[#047857] tracking-tight block leading-none">
+                    KosanKu<span className="text-[#0f172a] dark:text-white">Pro</span>
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase mt-0.5 block">
+                    Enterprise v2.5
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="hidden lg:flex w-9 h-9 rounded-2xl neu-btn items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+                  title="Perkecil Menu Navigasi (Minimize Sidebar)"
+                >
+                  <i className="fa-solid fa-bars-staggered text-xs" />
+                </button>
+
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="lg:hidden w-8 h-8 rounded-xl neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                >
+                  <i className="fa-solid fa-xmark text-sm" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2.5 py-1">
+              <div className="w-11 h-11 rounded-2xl bg-[#047857] flex items-center justify-center text-white font-black neu-card-sm text-base shadow-sm" title="KosanKu Pro Enterprise">
                 <i className="fa-solid fa-cubes-stacked" />
               </div>
-              <span className="font-black text-lg text-[#047857] tracking-tight">KosanKu<span className="text-[#0f172a]">Pro</span></span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#047857] text-[9px] font-extrabold border border-emerald-300">
-                v2.5 Enterprise
-              </span>
               <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-900"
+                onClick={() => setSidebarCollapsed(false)}
+                className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+                title="Perbesar Menu Navigasi (Maximize Sidebar)"
               >
-                <i className="fa-solid fa-xmark text-base" />
+                <i className="fa-solid fa-bars text-xs" />
               </button>
             </div>
-          </div>
+          )}
 
           {/* Dynamic Time-Based Greeting Card for All Roles */}
-          <div className="p-3.5 bg-gradient-to-br from-[#047857]/10 via-[#10b981]/5 to-transparent rounded-2xl border border-[#047857]/20 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold text-[#047857] uppercase tracking-wider block">
-                {getDynamicGreeting()}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-[#047857] text-white text-[9px] font-black uppercase">
-                {role === 'owner' ? '👑 Owner' : role === 'admin' ? '🛡️ Admin' : role === 'employee' ? '👷 Staf' : role === 'vendor' ? '🏪 Vendor' : '👤 Tenant'}
-              </span>
-            </div>
-            <span className="text-sm font-black text-slate-900 block truncate">
-              {userProfileName}
-            </span>
-          </div>
-
-          {/* 🌟 DYNAMIC ROLE-BASED SIDEBAR NAVIGATION */}
-          {role === 'owner' && (
-            <div className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-2">KosanKu Executive Hub</span>
-                <nav className="space-y-1">
-                  <button onClick={() => handleTabClick('financial')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'financial' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-chart-pie text-sm" /> <span>Laporan Laba Rugi</span>
-                  </button>
-                  <button onClick={() => handleTabClick('deposit')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'deposit' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-vault text-sm" /> <span>Deposit Escrow &amp; Late Fee</span>
-                  </button>
-                  <button onClick={() => handleTabClick('master_data')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'master_data' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-sliders text-sm" /> <span>Master Data &amp; Setting Kosan</span>
-                  </button>
-                  <button onClick={() => handleTabClick('inventory')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'inventory' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-boxes-packing text-sm" /> <span>Audit Stock Opname (SO)</span>
-                  </button>
-                  <button onClick={() => handleTabClick('autopilot')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'autopilot' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-wand-magic-sparkles text-sm text-amber-300" /> <span>Auto-Pilot AI Engine</span>
-                  </button>
-                  <button onClick={() => handleTabClick('tenant_requests')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'tenant_requests' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <div className="flex items-center gap-2.5"><i className="fa-solid fa-route text-sm" /> <span>Permintaan Tenant</span></div>
-                    {pendingRequestsCount > 0 && <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold animate-pulse">{pendingRequestsCount}</span>}
-                  </button>
-                  <button onClick={() => handleTabClick('approval')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'approval' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <div className="flex items-center gap-2.5"><i className="fa-solid fa-signature text-sm" /> <span>Approval Dana</span></div>
-                    {pendingApprovalsCount > 0 && <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-900 text-[10px] font-extrabold">{pendingApprovalsCount}</span>}
-                  </button>
-                </nav>
-              </div>
-
-              <div className="pt-3 border-t border-[#e2e8f0]">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-2 mb-1">Operasional &amp; Properti</span>
-                <nav className="space-y-1">
-                  <button onClick={() => handleTabClick('rooms_ai')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'rooms_ai' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-door-open text-sm" /> <span>Kamar &amp; Pricing AI</span>
-                  </button>
-                  <button onClick={() => handleTabClick('invoices')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'invoices' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-file-invoice-dollar text-sm" /> <span>Invoice &amp; Midtrans</span>
-                  </button>
-                  <button onClick={() => handleTabClick('complaints')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'complaints' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-headset text-sm" /> <span>Tiket Keluhan Tenant</span>
-                  </button>
-                </nav>
-              </div>
-            </div>
-          )}
-
-          {(role === 'superadmin' || role === 'admin') && (
-            <div className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <span className="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider block px-2 flex items-center gap-1">
-                  <i className="fa-solid fa-bolt text-amber-400" /> Super Admin Control Hub
+          {!sidebarCollapsed ? (
+            <div className="p-3.5 neu-card-sm rounded-2xl space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-[#047857] dark:text-emerald-400 uppercase tracking-wider block">
+                  {getDynamicGreeting()}
                 </span>
-                <nav className="space-y-1">
-                  <button onClick={() => handleTabClick('master_data')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'master_data' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-sliders text-sm text-amber-400" /> <span>Setting Master Data Kosan</span>
-                  </button>
-                  <button onClick={() => handleTabClick('overview')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'overview' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-gauge-high text-sm" /> <span>Overview System Control</span>
-                  </button>
-                  <button onClick={() => handleTabClick('financial')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'financial' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-chart-pie text-sm" /> <span>Laporan Laba Rugi (P&amp;L)</span>
-                  </button>
-                  <button onClick={() => handleTabClick('deposit')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'deposit' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-vault text-sm" /> <span>Deposit Escrow &amp; Fee</span>
-                  </button>
-                  <button onClick={() => handleTabClick('inventory')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'inventory' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-boxes-packing text-sm" /> <span>Audit Stock Opname (SO)</span>
-                  </button>
-                  <button onClick={() => handleTabClick('autopilot')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'autopilot' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-wand-magic-sparkles text-sm text-amber-300" /> <span>Auto-Pilot AI Engine</span>
-                  </button>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#047857] text-white text-[9px] font-black uppercase shadow-xs">
+                  {role === 'owner' ? '👑 Owner' : role === 'admin' ? '🛡️ Admin' : role === 'employee' ? '👷 Staf' : role === 'vendor' ? '🏪 Vendor' : '👤 Tenant'}
+                </span>
+              </div>
+              <span className="text-xs font-black text-slate-900 dark:text-white block truncate">
+                {currentUser.name}
+              </span>
+            </div>
+          ) : (
+            <div className="w-11 h-11 mx-auto rounded-2xl neu-card-sm flex items-center justify-center text-lg shadow-sm" title={`${getDynamicGreeting()} • ${currentUser.name}`}>
+              <span>{currentUser.avatar}</span>
+            </div>
+          )}
+
+          {/* 🌟 ACCENTUATED NEUMORPHIC SIDEBAR NAVIGATION (100% UNIFORM & HARMONIOUS) */}
+          <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-none px-0.5">
+            {navSections.map((sec, sIdx) => (
+              <div key={sIdx} className="space-y-2">
+                {sec.title && !sidebarCollapsed && (
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block px-2 mb-1">
+                    {sec.title}
+                  </span>
+                )}
+                {sec.title && sidebarCollapsed && (
+                  <div className="w-8 mx-auto border-t border-slate-300/60 dark:border-white/10 my-3" />
+                )}
+
+                <nav className={sidebarCollapsed ? 'space-y-3.5 flex flex-col items-center' : 'space-y-2'}>
+                  {sec.items.map((item) => {
+                    const isActive = activeTab === item.id;
+
+                    if (sidebarCollapsed) {
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleTabClick(item.id)}
+                          className={`w-11 h-11 rounded-2xl flex items-center justify-center relative cursor-pointer transition-all ${
+                            isActive
+                              ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 bg-emerald-500/10 font-black shadow-md scale-105'
+                              : 'neu-btn text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                          title={item.label}
+                        >
+                          <i className={`${item.icon} text-sm ${isActive ? 'scale-110 text-[#047857] dark:text-emerald-400' : ''}`} />
+                          {item.badge && item.badge > 0 ? (
+                            <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[8px] font-black flex items-center justify-center shadow-sm ${item.badgeColor || 'bg-rose-500 text-white animate-pulse'}`}>
+                              {item.badge}
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => handleTabClick(item.id)}
+                        className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-extrabold text-xs cursor-pointer transition-all ${
+                          isActive
+                            ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 bg-emerald-500/10 font-black shadow-xs'
+                            : 'neu-btn text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 truncate">
+                          <i className={`${item.icon} text-sm ${isActive ? 'text-[#047857] dark:text-emerald-400' : 'text-slate-400'}`} />
+                          <span className="truncate">{item.label}</span>
+                        </div>
+
+                        {item.badge && item.badge > 0 ? (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 shadow-xs ${item.badgeColor || 'bg-rose-500 text-white animate-pulse'}`}>
+                            {item.badge}
+                          </span>
+                        ) : (
+                          isActive && (
+                            <span className="w-2 h-2 rounded-full bg-[#047857] dark:bg-emerald-400 shadow-sm shrink-0" />
+                          )
+                        )}
+                      </button>
+                    );
+                  })}
                 </nav>
               </div>
-
-              <div className="pt-3 border-t border-[#e2e8f0]">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-2 mb-1">Modul Properti &amp; Transaksi</span>
-                <nav className="space-y-1">
-                  <button onClick={() => handleTabClick('rooms_ai')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'rooms_ai' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-door-open text-sm" /> <span>Kamar &amp; Pricing AI</span>
-                  </button>
-                  <button onClick={() => handleTabClick('invoices')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'invoices' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <i className="fa-solid fa-file-invoice-dollar text-sm" /> <span>Invoice &amp; Midtrans QRIS</span>
-                  </button>
-                  <button onClick={() => handleTabClick('tenant_requests')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'tenant_requests' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <div className="flex items-center gap-2.5"><i className="fa-solid fa-route text-sm" /> <span>Permintaan Tenant</span></div>
-                    <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold">{pendingRequestsCount}</span>
-                  </button>
-                  <button onClick={() => handleTabClick('approval')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'approval' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <div className="flex items-center gap-2.5"><i className="fa-solid fa-signature text-sm" /> <span>Approval Dana</span></div>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-900 text-[10px] font-extrabold">{pendingApprovalsCount}</span>
-                  </button>
-                  <button onClick={() => handleTabClick('complaints')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'complaints' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                    <div className="flex items-center gap-2.5"><i className="fa-solid fa-headset text-sm" /> <span>Pusat Keluhan System</span></div>
-                    <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold">1</span>
-                  </button>
-                </nav>
-              </div>
-            </div>
-          )}
-
-          {role === 'employee' && (
-            <div className="space-y-4 text-xs">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-2">Portal Karyawan Staf</span>
-              <nav className="space-y-1">
-                <button onClick={() => handleTabClick('tenant_requests')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'tenant_requests' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-list-check text-sm" /> <span>Tugas &amp; Plotting Owner</span>
-                </button>
-                <button onClick={() => handleTabClick('inventory')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'inventory' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-boxes-packing text-sm" /> <span>Audit Stock Opname (SO)</span>
-                </button>
-                <button onClick={() => handleTabClick('approval')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'approval' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-clipboard-check text-sm" /> <span>Checklist Kamar &amp; Cek-In</span>
-                </button>
-              </nav>
-            </div>
-          )}
-
-          {role === 'vendor' && (
-            <div className="space-y-4 text-xs">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-2">Portal Mitra Vendor</span>
-              <nav className="space-y-1">
-                <button onClick={() => handleTabClick('tenant_requests')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'tenant_requests' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-store text-sm" /> <span>Order Pesanan Masuk</span>
-                </button>
-                <button onClick={() => handleTabClick('inventory')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'inventory' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-[#fa-truck-fast] text-sm" /> <span>Status Pengantaran Kurir</span>
-                </button>
-                <button onClick={() => handleTabClick('invoices')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'invoices' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-receipt text-sm" /> <span>Add-On Billing Tenant</span>
-                </button>
-              </nav>
-            </div>
-          )}
-
-          {role === 'tenant' && (
-            <div className="space-y-4 text-xs">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block px-2">Portal Penghuni Tenant</span>
-              <nav className="space-y-1">
-                <button onClick={() => handleTabClick('invoices')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'invoices' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-credit-card text-sm" /> <span>Tagihan &amp; QRIS Midtrans</span>
-                </button>
-                <button onClick={() => handleTabClick('rooms_ai')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'rooms_ai' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-[#fa-door-open] text-sm" /> <span>Kamar Saya &amp; Akses Kunci</span>
-                </button>
-                <button onClick={() => handleTabClick('tenant_requests')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'tenant_requests' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-[#fa-bottle-water] text-sm" /> <span>Add-On Galon/Laundry</span>
-                </button>
-                <button onClick={() => handleTabClick('complaints')} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold cursor-pointer transition-all ${activeTab === 'complaints' ? 'bg-[#047857] text-white shadow-xs' : 'text-slate-600 hover:bg-[#f1f5f9]'}`}>
-                  <i className="fa-solid fa-headset text-sm" /> <span>Tiket Perbaikan Kamar</span>
-                </button>
-              </nav>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
 
         {/* Bottom Profile & Pro Mode Controls */}
-        <div className="space-y-3 pt-4 border-t border-[#e2e8f0] text-xs">
+        <div className="space-y-3 pt-3 border-t border-slate-200/60 dark:border-white/5 text-xs">
           {/* Pro Mode Toggle Switch */}
-          <div className="flex items-center justify-between px-3 py-2 bg-[#f8fafc] rounded-xl border border-[#e2e8f0]">
-            <span className="font-bold text-slate-700 text-[11px]">Dynamic Live Graphs</span>
-            <button
-              onClick={() => setProMode(!proMode)}
-              className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
-                proMode ? 'bg-[#047857] justify-end' : 'bg-slate-300 justify-start'
-              }`}
-            >
-              <div className="w-4 h-4 rounded-full bg-white shadow-xs" />
-            </button>
-          </div>
-
-          {/* User Profile Card */}
-          <div className="p-3 bg-[#f8fafc] rounded-2xl border border-[#e2e8f0] flex items-center justify-between">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-[#047857] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                {userProfileName.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="truncate">
-                <span className="font-bold text-slate-900 block truncate text-xs">{userProfileName}</span>
-                <span className="text-[10px] text-slate-500 block truncate">{userEmail}</span>
-              </div>
+          {!sidebarCollapsed ? (
+            <div className="flex items-center justify-between px-3 py-2 neu-inset rounded-2xl">
+              <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">Live Graph Stream</span>
+              <button
+                onClick={() => setProMode(!proMode)}
+                className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
+                  proMode ? 'bg-[#047857] justify-end shadow-inner' : 'neu-inset justify-start'
+                }`}
+              >
+                <div className="w-4 h-4 rounded-full bg-white shadow-xs" />
+              </button>
             </div>
-            <button onClick={onLogout} title="Logout" className="text-slate-400 hover:text-rose-600 cursor-pointer p-1">
-              <i className="fa-solid fa-[#fa-arrow-right-from-bracket]" />
-            </button>
-          </div>
+          ) : (
+            <div className="flex justify-center" title="Toggle Live Graph">
+              <button
+                onClick={() => setProMode(!proMode)}
+                className={`w-8 h-8 rounded-xl neu-btn flex items-center justify-center text-xs cursor-pointer ${
+                  proMode ? 'text-[#047857] dark:text-emerald-400 font-black' : 'text-slate-400'
+                }`}
+              >
+                <i className="fa-solid fa-chart-simple" />
+              </button>
+            </div>
+          )}
+
+          {/* User Profile Card (Clickable to open full profile & switcher) */}
+          {!sidebarCollapsed ? (
+            <div 
+              onClick={() => setShowProfileModal(true)}
+              className="p-3 neu-card-sm rounded-2xl flex items-center justify-between cursor-pointer hover:scale-[1.01] transition-all"
+              title="Buka Profil Akun & Beralih Pengguna"
+            >
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className={`w-8 h-8 rounded-2xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center font-bold text-xs shrink-0 neu-card-sm`}>
+                  {currentUser.avatar}
+                </div>
+                <div className="truncate">
+                  <span className="font-black text-slate-900 dark:text-white block truncate text-xs">{currentUser.name}</span>
+                  <span className="text-[10px] font-bold text-[#047857] dark:text-emerald-400 block truncate">{currentUser.title}</span>
+                </div>
+              </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLogout();
+                }} 
+                title="Keluar dari Sesi" 
+                className="w-8 h-8 rounded-xl neu-btn text-rose-500 hover:text-rose-700 flex items-center justify-center cursor-pointer"
+              >
+                <i className="fa-solid fa-arrow-right-from-bracket text-xs" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div 
+                onClick={() => setShowProfileModal(true)}
+                className={`w-9 h-9 rounded-2xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center font-bold text-xs neu-card-sm cursor-pointer hover:scale-105 transition-all`} 
+                title={`${currentUser.name} (${currentUser.title}) - Klik untuk buka profil`}
+              >
+                {currentUser.avatar}
+              </div>
+              <button onClick={onLogout} title="Keluar dari Sesi" className="w-9 h-9 rounded-2xl neu-btn text-rose-500 hover:text-rose-700 flex items-center justify-center cursor-pointer">
+                <i className="fa-solid fa-arrow-right-from-bracket text-xs" />
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
       {/* ⚪ MAIN CONTENT AREA (Sequence.io Layout Engine) */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 overflow-x-hidden">
 
-        {/* 1. TOP HEADER BAR (Search + Branch Selector + Date Range + Export) */}
+        {/* 1. TOP HEADER BAR (Search + Active User Profile Capsule + Branch Selector + Date Range + Export) */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Left Search Bar */}
+          {/* Left: Search Bar */}
           <div className="relative flex-1 max-w-md">
             <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs" />
             <input
               type="text"
               placeholder="Search kamar, tenant, transaksi, inventori..."
-              className="w-full bg-white border border-[#e2e8f0] rounded-xl pl-9 pr-16 py-2 text-xs outline-none focus:border-[#047857] shadow-2xs font-medium text-slate-800"
+              className="w-full neu-input rounded-2xl pl-9 pr-16 py-2.5 text-xs outline-none focus:border-[#047857] font-medium text-slate-800 dark:text-slate-100"
             />
-            <span className="absolute right-3 top-2.5 text-[10px] font-mono text-slate-400 bg-[#f1f5f9] px-1.5 py-0.5 rounded border border-slate-200">⌘+F</span>
+            <span className="absolute right-3 top-2.5 text-[10px] font-mono text-slate-400 bg-[#e8ecf4] dark:bg-black/30 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-white/5">⌘+F</span>
           </div>
 
-          {/* Right Controls: Branch Selector + Date Range + Export */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {/* Multi-Branch Selector Dropdown */}
+          {/* Right Controls: Desktop Only (Hidden on mobile to eliminate double header) */}
+          <div className="hidden lg:flex flex-wrap items-center gap-2 text-xs">
+            {/* Active User Profile Capsule Button */}
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 neu-btn rounded-2xl cursor-pointer hover:scale-[1.02] transition-all"
+              title="Buka Profil Pengguna & Beralih Akun"
+            >
+              <div className={`w-7 h-7 rounded-xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center text-xs font-black shadow-xs`}>
+                {currentUser.avatar}
+              </div>
+              <div className="text-left hidden sm:block">
+                <span className="text-xs font-black text-slate-900 dark:text-white block leading-tight">{currentUser.name}</span>
+                <span className="text-[9px] text-[#047857] dark:text-emerald-400 font-bold block leading-none">{currentUser.title}</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-[#047857] text-white text-[8px] font-black uppercase shadow-2xs">
+                {currentUser.role}
+              </span>
+            </button>
+
+            {/* Custom Neumorphic Multi-Branch Dropdown Selector */}
             <div className="relative">
-              <select
-                value={activeBranch}
-                onChange={(e) => onBranchChange(e.target.value)}
-                className="bg-white text-slate-900 font-bold py-2 px-3 pr-8 rounded-xl border border-[#e2e8f0] outline-none cursor-pointer hover:border-slate-400 transition-all text-xs appearance-none shadow-2xs"
+              <button
+                type="button"
+                onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-black cursor-pointer transition-all ${
+                  branchDropdownOpen
+                    ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 bg-emerald-500/10'
+                    : 'neu-btn text-slate-800 dark:text-white hover:text-[#047857]'
+                }`}
+                title="Pilih Cabang Properti Kosan"
               >
-                {BRANCHES.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-              <i className="fa-solid fa-chevron-down absolute right-3 top-3 text-[10px] text-slate-400 pointer-events-none" />
+                <i className="fa-solid fa-building-user text-[#047857] dark:text-emerald-400" />
+                <span className="truncate max-w-[150px] sm:max-w-[200px]">{selectedBranch.name.split('(')[0].trim()}</span>
+                <i className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ${branchDropdownOpen ? 'rotate-180 text-[#047857]' : 'text-slate-400'}`} />
+              </button>
+
+              {/* Custom Neumorphic Floating Menu */}
+              {branchDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setBranchDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-80 neu-card rounded-3xl p-3 z-50 shadow-2xl border border-white/80 dark:border-white/10 space-y-2 animate-scale-in">
+                    <div className="px-3 py-1 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PILIH CABANG KOSAN</span>
+                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">4 Cabang Aktif</span>
+                    </div>
+
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto scrollbar-none">
+                      {BRANCHES.map((b) => {
+                        const isSelected = activeBranch === b.id;
+                        return (
+                          <div
+                            key={b.id}
+                            onClick={() => {
+                              onBranchChange(b.id);
+                              setBranchDropdownOpen(false);
+                              showToast(`🏢 Beralih ke: ${b.name}`);
+                            }}
+                            className={`p-2.5 rounded-2xl flex items-center justify-between cursor-pointer transition-all ${
+                              isSelected
+                                ? 'neu-card-sm border-2 border-[#047857] bg-emerald-500/10 text-[#047857] dark:text-emerald-400 font-black'
+                                : 'neu-btn text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 overflow-hidden">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                                isSelected ? 'bg-[#047857] text-white shadow-xs' : 'neu-inset text-slate-500'
+                              }`}>
+                                <i className="fa-solid fa-location-dot" />
+                              </div>
+                              <div className="truncate text-left">
+                                <span className="text-xs font-bold block truncate">{b.name}</span>
+                                <span className="text-[10px] font-medium text-slate-400 block">{b.totalRooms} Kamar &bull; {b.occupancy}% Okupansi</span>
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <i className="fa-solid fa-circle-check text-sm text-[#047857] dark:text-emerald-400 shrink-0 ml-2" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Date Range Selector */}
-            <div className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#e2e8f0] rounded-xl text-slate-700 font-semibold shadow-2xs">
-              <i className="fa-regular fa-calendar text-slate-400 text-xs" />
-              <span>18 Oct 2026 - 18 Nov 2026</span>
-              <span className="text-slate-400 px-1">|</span>
-              <span className="font-bold text-slate-900">Last 30 days v</span>
-            </div>
+            {/* Dark/Light Mode Theme Toggle Button */}
+            <button
+              onClick={handleToggleTheme}
+              className="w-9 h-9 rounded-xl neu-btn flex items-center justify-center text-amber-500 dark:text-amber-400 hover:scale-105 transition-all cursor-pointer text-xs"
+              title={theme === 'dark' ? 'Ganti ke Mode Terang (Light Mode)' : 'Ganti ke Mode Gelap (Dark Mode)'}
+            >
+              <i className={`fa-solid ${theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'}`} />
+            </button>
+
+            {/* Executive Notification Bell Trigger */}
+            <button
+              onClick={() => {
+                if ((window as any).__toggleNotifDrawer) {
+                  (window as any).__toggleNotifDrawer();
+                } else {
+                  showToast('🔔 3 Notifikasi Kosan Baru');
+                }
+              }}
+              className="w-9 h-9 rounded-xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all relative cursor-pointer text-xs"
+              title="Buka Panel Rincian Notifikasi"
+            >
+              <i className="fa-solid fa-bell text-slate-600 dark:text-slate-300" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-xs animate-pulse">
+                3
+              </span>
+            </button>
 
             {/* Export Button */}
             <button
               onClick={() => showToast('📥 Laporan Keuangan & Audit Fisik Berhasil Diekspor!')}
-              className="px-3.5 py-2 bg-white border border-[#e2e8f0] hover:bg-slate-50 text-slate-800 font-bold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-2 neu-btn text-slate-800 dark:text-slate-200 font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Export Laporan Excel & PDF"
             >
-              <i className="fa-solid fa-download text-xs text-[#047857]" />
-              <span>Export Excel &amp; PDF</span>
+              <i className="fa-solid fa-download text-xs text-[#047857] dark:text-emerald-400" />
+              <span className="hidden xl:inline">Export</span>
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className="px-3 py-2 neu-btn text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl transition-all font-bold flex items-center gap-1.5 cursor-pointer"
+              title="Keluar dari Akun"
+            >
+              <i className="fa-solid fa-arrow-right-from-bracket text-xs" />
+              <span className="hidden sm:inline">Keluar</span>
             </button>
           </div>
         </header>
@@ -440,116 +731,93 @@ export default function SequenceSaaSLayout({
         {/* Conditional Layout: Overview Dashboard per Role if activeTab is overview, else render module view directly at top */}
         {(activeTab === 'financial' || activeTab === 'overview' || activeTab === 'tasks' || activeTab === 'orders' || activeTab === 'my_room') ? (
           <>
-            {/* 2. DYNAMIC HERO CARD (Role-Scoped Content) */}
-            <section className="bg-gradient-to-r from-[#047857] via-[#065f46] to-[#047857] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden space-y-6">
-              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+            {/* 2. DYNAMIC HERO CARD (100% Signature Neumorphic Master Card) */}
+            <section className="neu-card rounded-3xl p-6 sm:p-8 relative space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/50 dark:border-white/5 pb-3">
+                <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  <i className="fa-solid fa-wallet text-[#047857] dark:text-emerald-400" />
+                  {role === 'owner' && 'TOTAL BALANCE (AGGREGATED KOSAN REVENUE)'}
+                  {role === 'admin' && 'TINGKAT OKUPANSI PROPERTI (ADMIN CONTROL)'}
+                  {role === 'employee' && 'PORTAL OPERASIONAL STAF LAPANGAN & AUDIT SO'}
+                  {role === 'vendor' && 'SALDO PAYOUT MITRA VENDOR KOSAN'}
+                  {role === 'tenant' && 'PORTAL PENGHUNI • KAMAR A-101 (BUDI SANTOSO)'}
+                </span>
+                <span className="px-3 py-1 neu-inset rounded-full text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 w-fit">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Moving Realtime</span>
+                </span>
+              </div>
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-                <div>
-                  <span className="text-xs font-bold text-emerald-200 block uppercase tracking-wider">
-                    {role === 'owner' && 'Total Balance (Aggregated Kosan Revenue)'}
-                    {role === 'admin' && 'Tingkat Okupansi Properti (Admin Control Center)'}
-                    {role === 'employee' && 'Portal Operasional Staf Lapangan & Audit SO'}
-                    {role === 'vendor' && 'Saldo Payout Mitra Vendor Kosan (Siap Cair)'}
-                    {role === 'tenant' && 'Portal Penghuni • Kamar A-101 (Budi Santoso)'}
+              <div className="flex items-baseline gap-3.5 flex-wrap pt-1">
+                <span className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {role === 'owner' && `Rp ${(selectedBranch.revenue * 3.16).toLocaleString('id-ID')}`}
+                  {role === 'admin' && '85.7% (24 / 28 Kamar)'}
+                  {role === 'employee' && '3 Tugas Plotting Aktif'}
+                  {role === 'vendor' && 'Rp 2.450.000'}
+                  {role === 'tenant' && 'Rp 1.624.500'}
+                </span>
+                <span className="px-3 py-1.5 neu-inset rounded-2xl text-emerald-600 dark:text-emerald-400 text-xs font-black flex items-center gap-1.5 shadow-inner">
+                  <i className="fa-solid fa-arrow-trend-up" />
+                  {role === 'owner' && '15.8% vs bulan lalu'}
+                  {role === 'admin' && 'Okupansi Optimal ⚡'}
+                  {role === 'employee' && 'Shift Pagi Standby'}
+                  {role === 'vendor' && '3 Order Selesai 💳'}
+                  {role === 'tenant' && 'Lunas (Midtrans QRIS) ✅'}
+                </span>
+              </div>
+
+              {/* Sub-Metric Tactile Inset Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div className="p-3.5 neu-inset rounded-2xl space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    {role === 'owner' ? 'Pendapatan Bulan Berjalan' : role === 'admin' ? 'Total Kamar Tersewa' : 'Status Terverifikasi'}
                   </span>
-                  <div className="flex items-baseline gap-3 mt-1">
-                    <span className="text-3xl sm:text-5xl font-black tracking-tight animate-pulse">
-                      {role === 'owner' && `Rp ${(selectedBranch.revenue * 3.16).toLocaleString('id-ID')}`}
-                      {role === 'admin' && '85.7% (24 / 28 Kamar Terisi)'}
-                      {role === 'employee' && '3 Tugas Plotting Aktif Hari Ini'}
-                      {role === 'vendor' && 'Rp 2.450.000 (3 Order Selesai)'}
-                      {role === 'tenant' && 'Tagihan Sewa: Rp 1.624.500 (SETTLED)'}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-[#10b981]/20 text-[#34d399] border border-[#10b981]/40 text-xs font-black flex items-center gap-1">
-                      {role === 'owner' && '15.8% ↗'}
-                      {role === 'admin' && 'Okupansi Tinggi ⚡'}
-                      {role === 'employee' && 'Bambang (Staf Maintenance)'}
-                      {role === 'vendor' && 'Add-On Auto-Billed 💳'}
-                      {role === 'tenant' && 'Lunas (Midtrans QRIS) ✅'}
-                    </span>
-                  </div>
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
+                    {role === 'owner' ? `Rp ${(selectedBranch.revenue).toLocaleString('id-ID')}` : role === 'admin' ? '24 Unit Kamar' : 'Semua Berjalan Normal'}
+                  </span>
                 </div>
-
-                {/* Right Hero Action Buttons (Role Specific) */}
-                <div className="flex flex-wrap items-center gap-2">
-                  {role === 'owner' && (
-                    <>
-                      <button onClick={() => showToast('➕ Modal Tambah Transaksi / Invoice Baru Ditampilkan')} className="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                        <i className="fa-solid fa-plus" /> + Add Transaction
-                      </button>
-                      <button onClick={() => showToast('💸 Dispatched Payout to Owner Bank Account')} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer border border-white/10">
-                        <i className="fa-solid fa-arrow-up" /> Send Payout
-                      </button>
-                    </>
-                  )}
-                  {role === 'admin' && (
-                    <>
-                      <button onClick={() => showToast('➕ Modal Tambah Kamar Baru Ditampilkan')} className="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                        <i className="fa-solid fa-plus" /> + Tambah Kamar
-                      </button>
-                      <button onClick={() => showToast('🧾 Penerbitan Invoice Midtrans Snap QRIS')} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer border border-white/10">
-                        <i className="fa-solid fa-receipt" /> Buat Invoice
-                      </button>
-                    </>
-                  )}
-                  {role === 'employee' && (
-                    <>
-                      <button onClick={() => showToast('📦 Form Audit Stock Opname (SO) Ditampilkan')} className="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                        <i className="fa-solid fa-boxes-packing" /> Input Stock Opname (SO)
-                      </button>
-                      <button onClick={() => showToast('💸 Form Pengajuan Dana ke Owner Ditampilkan')} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer border border-white/10">
-                        <i className="fa-solid fa-file-signature" /> Ajukan Dana
-                      </button>
-                    </>
-                  )}
-                  {role === 'vendor' && (
-                    <>
-                      <button onClick={() => showToast('💳 Modal Add-On Billing Tenant Ditampilkan')} className="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                        <i className="fa-solid fa-credit-card" /> + Tagih Add-On Tenant
-                      </button>
-                      <button onClick={() => showToast('💰 Permohonan Payout ke Bank Vendor Terkirim')} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer border border-white/10">
-                        <i className="fa-solid fa-[#fa-money-bill-transfer]" /> Request Payout
-                      </button>
-                    </>
-                  )}
-                  {role === 'tenant' && (
-                    <>
-                      <button onClick={() => showToast('💳 Membuka Payment Gateway QRIS Midtrans Snap...')} className="px-4 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
-                        <i className="fa-solid fa-qrcode" /> Bayar Sewa QRIS
-                      </button>
-                      <button onClick={() => showToast('🎧 Modal Buat Tiket Perbaikan Ditampilkan')} className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs backdrop-blur-md transition-all flex items-center gap-1.5 cursor-pointer border border-white/10">
-                        <i className="fa-solid fa-headset" /> Lapor Keluhan AC/Air
-                      </button>
-                    </>
-                  )}
+                <div className="p-3.5 neu-inset rounded-2xl space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    {role === 'owner' ? 'Rata-Rata Okupansi' : role === 'admin' ? 'Kamar Tersedia' : 'Audit Fisik SO'}
+                  </span>
+                  <span className="text-sm font-black text-[#047857] dark:text-emerald-400 block">
+                    {role === 'owner' ? `${selectedBranch.occupancy}% Okupansi` : role === 'admin' ? '4 Unit Kosong' : 'Sesuai Standar'}
+                  </span>
+                </div>
+                <div className="p-3.5 neu-inset rounded-2xl space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    {role === 'owner' ? 'Arus Kas Masuk (Gross)' : role === 'admin' ? 'Pending Invoice' : 'Koneksi Gateway'}
+                  </span>
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-100 block">
+                    {role === 'owner' ? '+100% On-Track' : role === 'admin' ? '2 Tagihan Menunggu' : 'Midtrans Terhubung'}
+                  </span>
                 </div>
               </div>
             </section>
 
-            {/* 3. ROLE-SCOPED METRIC WIDGETS & CHARTS */}
+            {/* 3. ROLE-SCOPED METRIC WIDGETS & CHARTS (Soft Neumorphic Cards) */}
             {(role === 'owner' || role === 'admin') && (
               <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-6">
+                <div className="lg:col-span-2 neu-card rounded-3xl p-6 space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-ping" />
-                      <i className="fa-solid fa-arrow-up-right-dots text-[#047857]" />
-                      <h3 className="text-sm font-black text-slate-900">Grafik Cash Flow Moving Realtime (Pendapatan vs Beban)</h3>
+                      <i className="fa-solid fa-arrow-up-right-dots text-[#047857] dark:text-emerald-400" />
+                      <h3 className="text-sm font-black text-slate-900 dark:text-white">Grafik Cash Flow Moving Realtime (Pendapatan vs Beban)</h3>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="bg-[#f1f5f9] p-1 rounded-xl flex text-xs font-bold border border-slate-200">
-                        <button className="px-3 py-1 bg-white text-slate-900 rounded-lg shadow-2xs">Weekly</button>
-                        <button className="px-3 py-1 text-slate-500 hover:text-slate-900">Daily</button>
+                      <div className="neu-inset p-1 rounded-xl flex text-xs font-bold">
+                        <button className="px-3 py-1 neu-btn text-slate-900 dark:text-white rounded-lg font-bold">Weekly</button>
+                        <button className="px-3 py-1 text-slate-500 hover:text-slate-900 dark:hover:text-white">Daily</button>
                       </div>
-                      <button className="px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
+                      <button className="px-3 py-1.5 neu-btn rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
                         <i className="fa-solid fa-sliders text-[10px]" /> Live Graph ⚡
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-end justify-between gap-2 sm:gap-4 h-48 pt-6 border-b border-slate-200 pb-2 px-2">
+                    <div className="flex items-end justify-between gap-2 sm:gap-4 h-48 pt-6 border-b border-slate-200/60 dark:border-white/5 pb-2 px-2">
                       {chartBars.map((bar, idx) => {
                         const incomeHeight = Math.max(18, Math.round((bar.in / 100) * 115));
                         const expenseHeight = Math.max(12, Math.round((bar.out / 100) * 65));
@@ -582,7 +850,7 @@ export default function SequenceSaaSLayout({
                       })}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-slate-500 font-bold">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold">
                       <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-xs bg-[#047857] animate-pulse" /> Total Income (Pemasukan Sewa &amp; Add-on)</span>
                       <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-xs bg-[#10b981] animate-pulse" /> Total Expense (Pengeluaran Operasional)</span>
                     </div>
@@ -591,30 +859,30 @@ export default function SequenceSaaSLayout({
 
                 <div className="space-y-4 flex flex-col justify-between">
                   {/* Total Income Card */}
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs flex items-center justify-between hover:border-[#047857]/50 transition-all">
+                  <div className="neu-card rounded-3xl p-6 flex items-center justify-between transition-all hover:scale-[1.01]">
                     <div className="space-y-1">
-                      <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#047857]" /> Total Income (Sewa Kos)
                       </span>
-                      <span className="text-2xl font-black text-slate-900 block">Rp 34.500.000</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[#047857] text-[10px] font-extrabold inline-block">45.0% ↗ Pemasukan Arus Kas</span>
+                      <span className="text-2xl font-black text-slate-900 dark:text-white block">Rp 34.500.000</span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-[#047857] dark:text-emerald-300 text-[10px] font-extrabold inline-block border border-emerald-300/60 dark:border-emerald-500/30">45.0% ↗ Pemasukan Arus Kas</span>
                     </div>
-                    {/* Inflow Icon Badge (Emerald Green with Down-Left Inflow Arrow) */}
+                    {/* Inflow Icon Badge */}
                     <div className="w-12 h-12 rounded-2xl bg-[#047857] text-white flex items-center justify-center text-xl shadow-md shrink-0" title="Cash Inflow (Uang Masuk)">
                       <i className="fa-solid fa-arrow-down-left" />
                     </div>
                   </div>
 
                   {/* Total Expense Card */}
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs flex items-center justify-between hover:border-rose-300 transition-all">
+                  <div className="neu-card rounded-3xl p-6 flex items-center justify-between transition-all hover:scale-[1.01]">
                     <div className="space-y-1">
-                      <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-rose-500" /> Total Expense (Operasional)
                       </span>
-                      <span className="text-2xl font-black text-slate-900 block">Rp 8.900.000</span>
-                      <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-extrabold inline-block">12.5% ↘ Pengeluaran Operasional</span>
+                      <span className="text-2xl font-black text-slate-900 dark:text-white block">Rp 8.900.000</span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-[10px] font-extrabold inline-block border border-rose-300/60 dark:border-rose-500/30">12.5% ↘ Pengeluaran Operasional</span>
                     </div>
-                    {/* Outflow Icon Badge (Rose Red with Up-Right Outflow Arrow) */}
+                    {/* Outflow Icon Badge */}
                     <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl shadow-md shrink-0" title="Cash Outflow (Uang Keluar)">
                       <i className="fa-solid fa-arrow-up-right" />
                     </div>
@@ -623,204 +891,228 @@ export default function SequenceSaaSLayout({
               </section>
             )}
 
-            {/* 4. METRIC CARDS ROW (Owner: Business Accounts, Tenant: Key & Addons, Employee: SO Stats) */}
+            {/* 4. METRIC CARDS ROW (Soft Raised Neumorphic Cards) */}
             <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {role === 'owner' && (
                 <>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-building-columns text-[#047857]" /> Rekening Operasional BCA</span>
-                    <div className="text-2xl font-black text-slate-900">Rp 8.672.200</div>
-                    <div className="text-[11px] font-bold text-emerald-600">16.0% ↗ <span className="text-slate-400 font-normal">vs Last Period</span></div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-building-columns text-[#047857] dark:text-emerald-400" /> Rekening Operasional BCA</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">Rp 8.672.200</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">16.0% ↗ <span className="text-slate-400 font-normal">vs Last Period</span></div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-piggy-bank text-[#047857]" /> Escrow Deposit Jaminan</span>
-                    <div className="text-2xl font-black text-slate-900">Rp 3.765.350</div>
-                    <div className="text-[11px] font-bold text-rose-600">8.2% ↘ <span className="text-slate-400 font-normal">vs Last Period</span></div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-piggy-bank text-[#047857] dark:text-emerald-400" /> Escrow Deposit Jaminan</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">Rp 3.765.350</div>
+                    <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">8.2% ↘ <span className="text-slate-400 font-normal">vs Last Period</span></div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-receipt text-[#047857]" /> Cadangan Pajak &amp; Maint</span>
-                    <div className="text-2xl font-black text-slate-900">Rp 14.376.160</div>
-                    <div className="text-[11px] font-bold text-emerald-600">35.2% ↗ <span className="text-slate-400 font-normal">vs Last Period</span></div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-receipt text-[#047857] dark:text-emerald-400" /> Cadangan Pajak &amp; Maint</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">Rp 14.376.160</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">35.2% ↗ <span className="text-slate-400 font-normal">vs Last Period</span></div>
                   </div>
                 </>
               )}
 
               {role === 'admin' && (
                 <>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-door-open text-[#047857]" /> Total Kamar Terisi</span>
-                    <div className="text-2xl font-black text-slate-900">24 / 28 Kamar</div>
-                    <div className="text-[11px] font-bold text-emerald-600">85.7% Okupansi</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-door-open text-[#047857] dark:text-emerald-400" /> Total Kamar Terisi</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">24 / 28 Kamar</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">85.7% Okupansi</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-file-invoice-dollar] text-[#047857]" /> Invoice Pending</span>
-                    <div className="text-2xl font-black text-amber-600">2 Tagihan</div>
-                    <div className="text-[11px] font-bold text-amber-600">Total Rp 3.774.500</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-file-invoice-dollar text-[#047857] dark:text-emerald-400" /> Invoice Pending</span>
+                    <div className="text-2xl font-black text-amber-600 dark:text-amber-400">2 Tagihan</div>
+                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">Total Rp 3.774.500</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-headset] text-[#047857]" /> Keluhan Aktif</span>
-                    <div className="text-2xl font-black text-rose-600">1 Tiket</div>
-                    <div className="text-[11px] font-bold text-rose-600">Kamar A-101 (AC)</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-headset text-[#047857] dark:text-emerald-400" /> Keluhan Aktif</span>
+                    <div className="text-2xl font-black text-rose-600 dark:text-rose-400">1 Tiket</div>
+                    <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">Kamar A-101 (AC)</div>
                   </div>
                 </>
               )}
 
               {role === 'employee' && (
                 <>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-list-check] text-[#047857]" /> Tugas Plotting Owner</span>
-                    <div className="text-2xl font-black text-slate-900">3 Tugas</div>
-                    <div className="text-[11px] font-bold text-emerald-600">1 Selesai Hari Ini</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-list-check text-[#047857] dark:text-emerald-400" /> Tugas Plotting Owner</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">3 Tugas</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">1 Selesai Hari Ini</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-boxes-packing] text-[#047857]" /> Status Audit SO</span>
-                    <div className="text-2xl font-black text-emerald-600">Terverifikasi</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-boxes-packing text-[#047857] dark:text-emerald-400" /> Status Audit SO</span>
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">Terverifikasi</div>
                     <div className="text-[11px] font-bold text-slate-400">Terakhir: Hari ini 09:30</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-id-badge] text-[#047857]" /> Petugas Piket</span>
-                    <div className="text-2xl font-black text-slate-900">Bambang</div>
-                    <div className="text-[11px] font-bold text-emerald-600">Shift Pagi • Standby</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-id-badge text-[#047857] dark:text-emerald-400" /> Petugas Piket</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">Bambang</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Shift Pagi • Standby</div>
                   </div>
                 </>
               )}
 
               {role === 'vendor' && (
                 <>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-store] text-[#047857]" /> Order Pesanan Hari Ini</span>
-                    <div className="text-2xl font-black text-slate-900">3 Order</div>
-                    <div className="text-[11px] font-bold text-amber-600">1 Baru • 1 Diproses</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-store text-[#047857] dark:text-emerald-400" /> Order Pesanan Hari Ini</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">3 Order</div>
+                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">1 Baru • 1 Diproses</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-receipt] text-[#047857]" /> Add-On Billed Tenant</span>
-                    <div className="text-2xl font-black text-purple-600">Rp 20.000</div>
-                    <div className="text-[11px] font-bold text-purple-600">Laundry Exceed 2.5kg</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-receipt text-[#047857] dark:text-emerald-400" /> Add-On Billed Tenant</span>
+                    <div className="text-2xl font-black text-purple-600 dark:text-purple-400">Rp 20.000</div>
+                    <div className="text-[11px] font-bold text-purple-600 dark:text-purple-400">Laundry Exceed 2.5kg</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-money-bill-wave] text-[#047857]" /> Saldo Siap Cair</span>
-                    <div className="text-2xl font-black text-emerald-600">Rp 2.450.000</div>
-                    <div className="text-[11px] font-bold text-emerald-600">Transfer Mandiri **** 8821</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-money-bill-wave text-[#047857] dark:text-emerald-400" /> Saldo Siap Cair</span>
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">Rp 2.450.000</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Transfer Mandiri **** 8821</div>
                   </div>
                 </>
               )}
 
               {role === 'tenant' && (
                 <>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-door-open] text-[#047857]" /> Kamar Tersewa</span>
-                    <div className="text-2xl font-black text-[#047857]">Kamar A-101</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-door-open text-[#047857] dark:text-emerald-400" /> Kamar Tersewa</span>
+                    <div className="text-2xl font-black text-[#047857] dark:text-emerald-400">Kamar A-101</div>
                     <div className="text-[11px] font-bold text-slate-400">Deluxe Studio Smart</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-key] text-[#047857]" /> Kode Akses Kunci Digital</span>
-                    <div className="text-2xl font-mono font-black text-purple-600">#9920</div>
-                    <div className="text-[11px] font-bold text-emerald-600">Aktif • Tap NFC / PIN</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-key text-[#047857] dark:text-emerald-400" /> Kode Akses Kunci Digital</span>
+                    <div className="text-2xl font-mono font-black text-purple-600 dark:text-purple-400">#9920</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Aktif • Tap NFC / PIN</div>
                   </div>
-                  <div className="bg-white rounded-3xl p-6 border border-[#e2e8f0] shadow-xs space-y-3">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><i className="fa-solid fa-[#fa-[#fa-shirt]] text-[#047857]" /> Sisa Kuota Laundry</span>
-                    <div className="text-2xl font-black text-slate-900">2.5 Kg Sisa</div>
-                    <div className="text-[11px] font-bold text-amber-600">Terpakai 7.5 Kg (Exceed 2.5kg)</div>
+                  <div className="neu-card rounded-3xl p-6 space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-shirt text-[#047857] dark:text-emerald-400" /> Sisa Kuota Laundry</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">2.5 Kg Sisa</div>
+                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">Terpakai 7.5 Kg (Exceed 2.5kg)</div>
                   </div>
                 </>
               )}
             </section>
 
             {/* Dynamic Children Content (Active Selected Tab Module) */}
-            <section className="pt-4 border-t border-[#e2e8f0]">{children}</section>
+            <section className="pt-4 border-t border-[#e2e8f0]">
+              {children}
+            </section>
           </>
         ) : (
           /* Render Active Selected Module Content Directly At Top */
-          <section className="pt-2 animate-scale-in">{children}</section>
+          <section className="pt-2">
+            {activeTab === 'users' ? (
+              <UserManagementView
+                users={users}
+                onAddUser={handleAddUser}
+                onUpdateUser={handleUpdateUser}
+                onDeleteUser={handleDeleteUser}
+                onSwitchUser={handleSwitchUserProfile}
+              />
+            ) : (
+              children
+            )}
+          </section>
         )}
       </main>
 
-      {/* 📱 MOBILE FLOATING DOCK BAR (Tailored Dynamically per Active User Role) */}
-      <div className="lg:hidden fixed bottom-3 left-3 right-3 z-40 bg-slate-900/90 backdrop-blur-xl border border-white/20 text-white rounded-2xl p-2 shadow-2xl flex items-center justify-around text-[10px] font-bold">
+      {/* 📱 MOBILE FLOATING DOCK BAR (100% Signature Neumorphic Card Dock) */}
+      <div className="lg:hidden fixed bottom-3 left-3 right-3 z-40 neu-card rounded-3xl p-2 shadow-2xl flex items-center justify-around text-[10px] font-bold border border-white/80 dark:border-white/10 text-slate-800 dark:text-slate-100">
         {role === 'owner' && (
           <>
-            <button onClick={() => handleTabClick('financial')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'financial' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-chart-pie text-sm" /> <span>P&amp;L</span>
+            <button onClick={() => handleTabClick('financial')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'financial' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-chart-pie text-xs" /> <span>P&amp;L</span>
             </button>
-            <button onClick={() => handleTabClick('deposit')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'deposit' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-vault text-sm" /> <span>Deposit</span>
+            <button onClick={() => handleTabClick('deposit')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'deposit' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-vault text-xs" /> <span>Deposit</span>
             </button>
-            <button onClick={() => handleTabClick('inventory')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'inventory' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-boxes-packing text-sm" /> <span>SO Audit</span>
+            <button onClick={() => handleTabClick('users')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'users' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-users-gear text-xs" /> <span>Users</span>
             </button>
-            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'tenant_requests' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-route text-sm" /> <span>Requests</span>
+            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'tenant_requests' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-route text-xs" /> <span>Requests</span>
             </button>
           </>
         )}
 
         {role === 'admin' && (
           <>
-            <button onClick={() => handleTabClick('overview')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'overview' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-gauge-high text-sm" /> <span>Overview</span>
+            <button onClick={() => handleTabClick('overview')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'overview' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-gauge-high text-xs" /> <span>Overview</span>
             </button>
-            <button onClick={() => handleTabClick('master_data')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'master_data' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-users text-sm" /> <span>Penyewa</span>
+            <button onClick={() => handleTabClick('users')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'users' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-users-gear text-xs" /> <span>Users</span>
             </button>
-            <button onClick={() => handleTabClick('rooms_ai')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'rooms_ai' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-door-open text-sm" /> <span>Kamar AI</span>
+            <button onClick={() => handleTabClick('rooms_ai')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'rooms_ai' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-door-open text-xs" /> <span>Kamar AI</span>
             </button>
-            <button onClick={() => handleTabClick('complaints')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'complaints' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-headset text-sm" /> <span>Keluhan</span>
+            <button onClick={() => handleTabClick('complaints')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'complaints' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-headset text-xs" /> <span>Keluhan</span>
             </button>
           </>
         )}
 
         {role === 'employee' && (
           <>
-            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'tenant_requests' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-list-check text-sm" /> <span>Tugas</span>
+            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'tenant_requests' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-list-check text-xs" /> <span>Tugas</span>
             </button>
-            <button onClick={() => handleTabClick('inventory')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'inventory' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-boxes-packing text-sm" /> <span>Audit SO</span>
+            <button onClick={() => handleTabClick('inventory')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'inventory' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-boxes-packing text-xs" /> <span>Audit SO</span>
             </button>
-            <button onClick={() => handleTabClick('approval')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'approval' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-clipboard-check text-sm" /> <span>Checkin</span>
+            <button onClick={() => handleTabClick('approval')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'approval' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-clipboard-check text-xs" /> <span>Checkin</span>
             </button>
           </>
         )}
 
         {role === 'vendor' && (
           <>
-            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'tenant_requests' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-store text-sm" /> <span>Orders</span>
+            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'tenant_requests' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-store text-xs" /> <span>Orders</span>
             </button>
-            <button onClick={() => handleTabClick('inventory')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'inventory' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-truck-fast text-sm" /> <span>Delivery</span>
+            <button onClick={() => handleTabClick('inventory')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'inventory' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-truck-fast text-xs" /> <span>Delivery</span>
             </button>
-            <button onClick={() => handleTabClick('invoices')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'invoices' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-receipt text-sm" /> <span>Add-On</span>
+            <button onClick={() => handleTabClick('invoices')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'invoices' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-receipt text-xs" /> <span>Add-On</span>
             </button>
           </>
         )}
 
         {role === 'tenant' && (
           <>
-            <button onClick={() => handleTabClick('invoices')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'invoices' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-credit-card text-sm" /> <span>Bayar QRIS</span>
+            <button onClick={() => handleTabClick('invoices')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'invoices' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-credit-card text-xs" /> <span>Bayar QRIS</span>
             </button>
-            <button onClick={() => handleTabClick('rooms_ai')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'rooms_ai' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-door-open text-sm" /> <span>Kamar Saya</span>
+            <button onClick={() => handleTabClick('rooms_ai')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'rooms_ai' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-door-open text-xs" /> <span>Kamar Saya</span>
             </button>
-            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'tenant_requests' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-bottle-water text-sm" /> <span>Add-On</span>
+            <button onClick={() => handleTabClick('tenant_requests')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'tenant_requests' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-bottle-water text-xs" /> <span>Add-On</span>
             </button>
-            <button onClick={() => handleTabClick('complaints')} className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl cursor-pointer ${activeTab === 'complaints' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'}`}>
-              <i className="fa-solid fa-headset text-sm" /> <span>Keluhan</span>
+            <button onClick={() => handleTabClick('complaints')} className={`flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all cursor-pointer ${activeTab === 'complaints' ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-black bg-emerald-500/10 shadow-xs scale-105' : 'neu-btn text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+              <i className="fa-solid fa-headset text-xs" /> <span>Keluhan</span>
             </button>
           </>
         )}
       </div>
 
-      {/* Toast Notification */}
+      {/* User Profile & Switcher Modal */}
+      <UserProfileModal
+        open={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        currentUser={currentUser}
+        allUsers={users}
+        onSwitchUser={handleSwitchUserProfile}
+        onUpdateUser={handleUpdateUser}
+      />
+
+      {/* Toast Notification (Bottom Right) */}
       {toast && (
-        <div className="fixed top-6 right-6 z-[999] px-5 py-3 rounded-2xl text-xs font-bold bg-[#047857] text-white shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check" />
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
+          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
           <span>{toast}</span>
         </div>
       )}

@@ -12,6 +12,17 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
   const [dismissCard, setDismissCard] = useState(false);
   const [doorOpen, setDoorOpen] = useState(false);
 
+  // Sync theme with document element
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isDark = document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    }
+  }, [theme]);
+
   // Automatic smooth door opening and closing loop
   useEffect(() => {
     const interval = setInterval(() => {
@@ -60,17 +71,29 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             </div>
           </div>
 
-          {/* Center Floating Pill Menu */}
-          <div className="hidden md:flex items-center gap-7 px-7 py-2.5 bg-white/95 dark:bg-white/10 backdrop-blur-md rounded-full border border-black/5 dark:border-white/10 shadow-sm text-xs font-medium text-slate-700 dark:text-slate-200">
-            <span className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Home
-            </span>
-            <a href="#rooms-section" className="hover:text-black dark:hover:text-white transition-colors">Kamar</a>
-            <a href="#amenities-section" className="hover:text-black dark:hover:text-white transition-colors">Fasilitas</a>
-            <a href="#location-section" className="hover:text-black dark:hover:text-white transition-colors">Lokasi</a>
-            <a href="#pricing" className="hover:text-black dark:hover:text-white transition-colors">Harga</a>
-          </div>
+          {/* Center Floating Pill Menu (Neumorphism with Tactile Buttons) */}
+          <nav className="hidden md:flex items-center gap-1.5 p-1.5 neu-inset rounded-full text-xs font-bold text-slate-600 dark:text-slate-300">
+            <a href="#" className="flex items-center gap-2 px-4 py-1.5 rounded-full neu-btn text-[#047857] dark:text-emerald-400 font-black transition-all">
+              <span className="w-2 h-2 rounded-full bg-[#047857] dark:bg-emerald-400 animate-pulse" />
+              <span>Home</span>
+            </a>
+            <a href="#rooms-section" className="px-4 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-1.5">
+              <i className="fa-solid fa-door-open text-[11px] text-slate-400" />
+              <span>Kamar</span>
+            </a>
+            <a href="#amenities-section" className="px-4 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-1.5">
+              <i className="fa-solid fa-wand-magic-sparkles text-[11px] text-slate-400" />
+              <span>Fasilitas</span>
+            </a>
+            <a href="#location-section" className="px-4 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-1.5">
+              <i className="fa-solid fa-location-dot text-[11px] text-slate-400" />
+              <span>Lokasi</span>
+            </a>
+            <a href="#pricing" className="px-4 py-1.5 rounded-full hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-1.5">
+              <i className="fa-solid fa-tag text-[11px] text-slate-400" />
+              <span>Harga</span>
+            </a>
+          </nav>
 
           {/* Right Action Group: Theme Toggle + CTA Button */}
           <div className="flex items-center gap-2 sm:gap-3">
@@ -78,7 +101,7 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             {onToggleTheme && (
               <button
                 onClick={onToggleTheme}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 border border-black/10 dark:border-white/15 shadow-sm flex items-center justify-center text-slate-800 dark:text-amber-400 hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm cursor-pointer"
+                className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-800 dark:text-amber-400 transition-all text-xs sm:text-sm cursor-pointer"
                 title={theme === 'dark' ? 'Ganti ke Mode Clean White (Terang)' : 'Ganti ke Mode Dark (Gelap)'}
                 aria-label="Toggle Theme"
               >
@@ -86,13 +109,13 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
               </button>
             )}
 
-            {/* CTA Button: Solid Black in White Mode, Solid White in Dark Mode */}
+            {/* CTA Button */}
             <button
               onClick={onLogin}
-              className="px-4 py-1.5 sm:px-5 sm:py-2.5 bg-black dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-slate-100 rounded-full font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white rounded-2xl font-black text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <i className="fa-solid fa-arrow-right-to-bracket text-[10px]" />
-              <span>Login</span>
+              <i className="fa-solid fa-arrow-right-to-bracket text-[11px]" />
+              <span>Login Portal</span>
             </button>
           </div>
         </div>
@@ -192,51 +215,38 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
         </div>
 
         {/* LAYER 4: Floating Glassmorphic Cards Tailored for KosanKu Pro */}
-        {/* Bottom Left Card: +500 Penghuni & Rating (RESTORED 100% UNTOUCHED FOR WEB DESKTOP) */}
-        <div className="absolute bottom-1.5 sm:bottom-2 left-14 sm:left-28 lg:left-40 z-40 max-w-[200px] sm:max-w-[220px] p-3 sm:p-3.5 bg-white/95 dark:bg-black/80 backdrop-blur-xl border border-black/5 dark:border-white/15 rounded-2xl shadow-lg text-slate-900 dark:text-white hidden sm:block">
+        {/* Bottom Left Card: +500 Penghuni & Rating */}
+        <div className="absolute bottom-3 sm:bottom-4 left-6 sm:left-16 lg:left-24 z-40 max-w-[200px] sm:max-w-[220px] p-3.5 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/15 rounded-2xl shadow-lg shadow-slate-900/5 text-slate-900 dark:text-white hidden sm:block hover:translate-y-[-2px] transition-transform">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">+500</h3>
-            <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">500+</h3>
+            <span className="text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200/60 dark:border-amber-500/20">
               ★ 4.9 / 5.0
             </span>
           </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 leading-tight font-medium">
+          <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug font-medium">
             Penghuni &amp; pemilik kos mempercayai KosanKuPro
           </p>
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-black/5 dark:border-white/10">
+          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-white/10">
             <div className="flex -space-x-1.5">
               <img src="/images/avatar1.png" alt="Avatar" className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 object-cover" />
-              <div className="w-6 h-6 rounded-full bg-amber-500 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">EK</div>
-              <div className="w-6 h-6 rounded-full bg-purple-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">AR</div>
+              <div className="w-6 h-6 rounded-full bg-emerald-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">EK</div>
+              <div className="w-6 h-6 rounded-full bg-indigo-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">AR</div>
             </div>
-            <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">96% Terisi</span>
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">96% Terisi</span>
           </div>
         </div>
 
-        {/* Mobile Floating Mini Badge (ONLY ON MOBILE, ZERO IMPACT ON DESKTOP) */}
-        <div className="absolute bottom-2 left-2 z-40 max-w-[110px] p-2 bg-white/95 dark:bg-black/80 backdrop-blur-xl border border-black/5 dark:border-white/15 rounded-xl shadow-md text-slate-900 dark:text-white block sm:hidden">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-xs font-extrabold tracking-tight">+500</h3>
-            <span className="text-[7px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded-full">
-              ★ 4.9
-            </span>
-          </div>
-          <div className="flex items-center gap-1 mt-1 pt-1 border-t border-black/5 dark:border-white/10 text-[7px] text-slate-500 font-medium">
-            <span>96% Terisi</span>
-          </div>
-        </div>
-
-        {/* Center Right Card: Smart Property Status (Shifted lower and further left closer to the house) */}
+        {/* Center Right Card: Smart Property Status */}
         {!dismissCard && (
-          <div className="absolute top-[40%] sm:top-[42%] right-14 sm:right-24 lg:right-36 xl:right-48 z-40 w-52 sm:w-60 p-3.5 sm:p-4 bg-white/95 dark:bg-slate-900/85 backdrop-blur-xl border border-black/5 dark:border-white/15 rounded-2xl shadow-lg text-slate-900 dark:text-white hidden sm:block animate-scale-in">
+          <div className="absolute top-[38%] sm:top-[40%] right-8 sm:right-16 lg:right-28 z-40 w-52 sm:w-60 p-3.5 sm:p-4 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/15 rounded-2xl shadow-lg shadow-slate-900/5 text-slate-900 dark:text-white hidden sm:block animate-scale-in hover:translate-y-[-2px] transition-transform">
             <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-1.5 text-[11px] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              <div className="flex items-center gap-2 text-[11px] font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Smart System Status</span>
               </div>
               <button
                 onClick={() => setDismissCard(true)}
-                className="w-4 h-4 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-[10px] text-slate-500 hover:text-black dark:hover:text-white transition-colors"
+                className="w-5 h-5 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-[10px] text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
                 title="Tutup Widget"
               >
                 ✕
@@ -245,21 +255,21 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
 
             <div className="space-y-2.5">
               <div>
-                <div className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Tingkat Okupansi</div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-lg sm:text-xl font-extrabold">98.4%</span>
-                  <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                    ↑ 4 Kamar Tersedia
+                <div className="text-[10px] text-slate-400 font-medium">Tingkat Okupansi</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">98.4%</span>
+                  <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    ↑ 4 Tersedia
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/10 text-xs">
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/10 text-xs">
                 <div>
-                  <div className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Smart Door Lock</div>
-                  <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">● 100% Aktif & Aman</div>
+                  <div className="text-[10px] text-slate-400 font-medium">Smart Keyless Lock</div>
+                  <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">● Active & Secure</div>
                 </div>
-                <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 text-[11px]">
+                <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs">
                   <i className="fa-solid fa-shield-halved" />
                 </div>
               </div>

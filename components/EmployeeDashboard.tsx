@@ -163,8 +163,8 @@ export default function EmployeeDashboard({
       }}
     >
       <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors">
-      {/* Staff Header Banner */}
-      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
+      {/* Staff Header Banner (Soft Raised Neumorphic Card) */}
+      <div className="neu-card p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300 text-[10px] font-bold border border-blue-300 dark:border-blue-500/30 flex items-center gap-1.5">
@@ -182,17 +182,17 @@ export default function EmployeeDashboard({
 
         <button
           onClick={() => setShowExpenseModal(true)}
-          className="px-5 py-3 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-2xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 w-fit"
+          className="px-5 py-3 neu-btn text-slate-900 dark:text-white font-bold rounded-2xl text-xs transition-all cursor-pointer flex items-center gap-2 w-fit"
         >
-          <i className="fa-solid fa-file-circle-plus" />
+          <i className="fa-solid fa-file-circle-plus text-[#047857] dark:text-emerald-400" />
           <span>+ Ajukan Dana ke Owner</span>
         </button>
       </div>
 
       {/* Tab: Stock Opname (SO) Audit Fisik Barang */}
       {activeTab === 'stock_opname' && (
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-boxes-packing text-amber-500" />
@@ -211,7 +211,7 @@ export default function EmployeeDashboard({
             </button>
           </div>
           {/* 📸 Verification Photo Upload with Realtime Watermark */}
-          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-3">
+          <div className="p-4 neu-card-sm rounded-2xl space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <span className="text-xs font-black text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
@@ -248,7 +248,7 @@ export default function EmployeeDashboard({
               return (
                 <div
                   key={item.id}
-                  className="bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 sm:p-5 space-y-3 transition-all hover:border-amber-500/40"
+                  className="neu-card-sm rounded-2xl p-4 sm:p-5 space-y-3 transition-all hover:scale-[1.01]"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
@@ -263,21 +263,21 @@ export default function EmployeeDashboard({
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-white dark:bg-white/5 p-2 rounded-xl border border-slate-200 dark:border-white/10 w-fit">
+                    <div className="flex items-center gap-3 neu-inset p-2 rounded-xl w-fit">
                       <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Stok Sistem: <strong className="text-slate-900 dark:text-white">{item.systemStock}</strong></span>
                       
                       {/* Counter Stepper Controls */}
-                      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-white/10 px-2 py-1 rounded-lg">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg">
                         <button
                           onClick={() => updatePhysicalCount(item.id, -1)}
-                          className="w-6 h-6 rounded-md bg-white dark:bg-white/20 flex items-center justify-center font-black text-slate-700 dark:text-white hover:bg-slate-200 transition-colors"
+                          className="w-6 h-6 rounded-md neu-btn flex items-center justify-center font-black text-slate-700 dark:text-white hover:bg-slate-200 transition-colors cursor-pointer"
                         >
                           -
                         </button>
                         <span className="w-8 text-center font-black text-sm text-purple-700 dark:text-purple-300">{item.physicalStock}</span>
                         <button
                           onClick={() => updatePhysicalCount(item.id, 1)}
-                          className="w-6 h-6 rounded-md bg-white dark:bg-white/20 flex items-center justify-center font-black text-slate-700 dark:text-white hover:bg-slate-200 transition-colors"
+                          className="w-6 h-6 rounded-md neu-btn flex items-center justify-center font-black text-slate-700 dark:text-white hover:bg-slate-200 transition-colors cursor-pointer"
                         >
                           +
                         </button>
@@ -301,7 +301,7 @@ export default function EmployeeDashboard({
                       value={item.note || ''}
                       onChange={(e) => updateSONote(item.id, e.target.value)}
                       placeholder="Catatan fisik / alasan selisih stok (opsional)..."
-                      className="w-full p-2.5 bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 rounded-xl text-xs outline-none focus:border-amber-500 text-slate-900 dark:text-white"
+                      className="w-full p-2.5 neu-input rounded-xl text-xs outline-none focus:border-amber-500 text-slate-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -313,8 +313,8 @@ export default function EmployeeDashboard({
 
       {/* Tab: Tasks List & Owner Plotted Task Alerts */}
       {activeTab === 'tasks' && (
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-bell text-amber-500" />
@@ -322,9 +322,9 @@ export default function EmployeeDashboard({
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tugas baru dari Owner &amp; jadwal perawatan rutin hari ini</p>
             </div>
-            <div className="w-48 bg-slate-100 dark:bg-white/10 rounded-full h-2.5 overflow-hidden">
+            <div className="w-48 neu-inset rounded-full h-3 overflow-hidden p-0.5">
               <div
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                className="bg-blue-600 h-2 rounded-full transition-all duration-500 shadow-xs"
                 style={{ width: `${(completedCount / tasks.length) * 100}%` }}
               />
             </div>
@@ -335,19 +335,19 @@ export default function EmployeeDashboard({
               <div
                 key={task.id}
                 onClick={() => toggleTask(task.id)}
-                className={`p-5 rounded-2xl border transition-all cursor-pointer flex items-start gap-4 ${
+                className={`p-5 rounded-2xl transition-all cursor-pointer flex items-start gap-4 ${
                   task.category === 'OWNER_PLOTTED'
-                    ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300 dark:border-amber-500/30'
+                    ? 'neu-card-sm border-amber-300 dark:border-amber-500/30'
                     : task.completed
-                    ? 'bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 opacity-65'
-                    : 'bg-white dark:bg-white/5 border-slate-200/80 dark:border-white/10 hover:border-blue-500/40 shadow-xs'
+                    ? 'neu-inset opacity-65'
+                    : 'neu-card-sm hover:scale-[1.01]'
                 }`}
               >
                 <div
                   className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs mt-0.5 transition-all shrink-0 ${
                     task.completed
-                      ? 'bg-emerald-600 text-white'
-                      : 'border-2 border-slate-300 dark:border-white/30 text-transparent'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'neu-inset text-transparent'
                   }`}
                 >
                   <i className="fa-solid fa-check" />
@@ -364,7 +364,7 @@ export default function EmployeeDashboard({
                   </div>
 
                   {task.ownerInstruction && (
-                    <div className="p-2.5 bg-amber-100/60 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-xs text-amber-900 dark:text-amber-300 font-medium">
+                    <div className="p-2.5 neu-inset rounded-xl text-xs text-amber-900 dark:text-amber-300 font-medium">
                       📌 <strong>Instruksi Owner:</strong> {task.ownerInstruction}
                       {task.connectedVendor && (
                         <span className="block mt-0.5 font-bold text-emerald-700 dark:text-emerald-400">
@@ -391,8 +391,8 @@ export default function EmployeeDashboard({
 
       {/* Tab: Check-in Inventory Inspection */}
       {activeTab === 'checkin' && (
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-clipboard-check text-blue-600 dark:text-blue-400" />
@@ -404,7 +404,7 @@ export default function EmployeeDashboard({
 
           <div className="space-y-3">
             {checklist.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 text-xs">
+              <div key={idx} className="flex items-center justify-between p-4 neu-card-sm rounded-2xl text-xs">
                 <span className="font-bold text-slate-900 dark:text-white">{item.item}</span>
                 <span className="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400 rounded-full font-bold">
                   {item.status === 'ADA_BAIK' ? '✅ Ada &amp; Baik' : '⚠️ Perlu Perbaikan'}
@@ -415,37 +415,37 @@ export default function EmployeeDashboard({
         </div>
       )}
 
-      {/* Toast Notification */}
+      {/* Toast Notification (Bottom Right) */}
       {toast && (
-        <div className="fixed top-6 right-6 z-[100] px-5 py-3 rounded-2xl text-xs font-bold bg-emerald-600 text-white shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check" />
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
+          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
           <span>{toast}</span>
         </div>
       )}
 
       {/* Expense Request Modal */}
       {showExpenseModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowExpenseModal(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowExpenseModal(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white">Form Pengajuan Dana ke Owner</h3>
-              <button onClick={() => setShowExpenseModal(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowExpenseModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={handleCreateExpenseRequest} className="space-y-4 text-xs">
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Judul Pengajuan *</label>
-                <input required value={reqTitle} onChange={(e) => setReqTitle(e.target.value)} placeholder="cth: Beli Kompresor AC Baru Kamar A-101" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none focus:border-blue-500 transition-colors" />
+                <input required value={reqTitle} onChange={(e) => setReqTitle(e.target.value)} placeholder="cth: Beli Kompresor AC Baru Kamar A-101" className="w-full p-3 neu-input rounded-xl outline-none focus:border-blue-500 transition-colors" />
               </div>
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nominal Anggaran (IDR) *</label>
-                <input required type="number" value={reqAmount} onChange={(e) => setReqAmount(e.target.value)} placeholder="1500000" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none focus:border-blue-500 transition-colors" />
+                <input required type="number" value={reqAmount} onChange={(e) => setReqAmount(e.target.value)} placeholder="1500000" className="w-full p-3 neu-input rounded-xl outline-none focus:border-blue-500 transition-colors" />
               </div>
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Alasan &amp; Urgensi *</label>
-                <textarea required value={reqReason} onChange={(e) => setReqReason(e.target.value)} rows={3} placeholder="Jelaskan kebutuhan pengajuan dana..." className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none focus:border-blue-500 transition-colors resize-none" />
+                <textarea required value={reqReason} onChange={(e) => setReqReason(e.target.value)} rows={3} placeholder="Jelaskan kebutuhan pengajuan dana..." className="w-full p-3 neu-input rounded-xl outline-none focus:border-blue-500 transition-colors resize-none" />
               </div>
-              <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
-                <button type="button" onClick={() => setShowExpenseModal(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
+              <div className="flex gap-3 pt-3 border-t border-slate-200/60 dark:border-white/10">
+                <button type="button" onClick={() => setShowExpenseModal(false)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
                 <button type="submit" className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-all cursor-pointer">Kirim ke Owner</button>
               </div>
             </form>

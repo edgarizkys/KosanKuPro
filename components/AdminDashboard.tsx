@@ -407,8 +407,8 @@ export default function AdminDashboard({
       }}
     >
       <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors">
-      {/* SuperAdmin Header Banner */}
-      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+      {/* SuperAdmin Header Banner (Soft Raised Neumorphic Card) */}
+      <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 text-[10px] font-black border border-amber-300 dark:border-amber-500/30 flex items-center gap-1.5">
@@ -420,7 +420,7 @@ export default function AdminDashboard({
           <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1">SuperAdmin Platform Master Console</h2>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <div className="px-3 py-1.5 bg-slate-100 dark:bg-white/10 rounded-xl border border-slate-200 dark:border-white/10 font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+          <div className="px-3 py-1.5 neu-card-sm rounded-xl font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
             <i className="fa-solid fa-sliders text-amber-500" />
             <span>Master Data Config: Active</span>
           </div>
@@ -431,8 +431,8 @@ export default function AdminDashboard({
       {tab === 'master_data' ? (
         <MasterDataSettings />
       ) : tab === 'complaints' ? (
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-headset text-purple-600 dark:text-purple-400" />
@@ -452,7 +452,7 @@ export default function AdminDashboard({
               <p className="text-center text-xs text-slate-500 dark:text-slate-400 py-8">Belum ada tiket keluhan penyewa.</p>
             )}
             {complaints.map((c) => (
-              <div key={c.id} className="bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 space-y-3 shadow-2xs">
+              <div key={c.id} className="neu-card-sm rounded-2xl p-5 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
                     <span className="px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 text-[10px] font-bold">
@@ -464,7 +464,7 @@ export default function AdminDashboard({
                     {c.status}
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-white dark:bg-white/5 p-3 rounded-xl border border-slate-200/50 dark:border-white/5">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed neu-inset p-3 rounded-xl">
                   &quot;{c.description}&quot;
                 </p>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] pt-2 border-t border-slate-200/60 dark:border-white/10">
@@ -475,20 +475,20 @@ export default function AdminDashboard({
                     <span className="text-slate-500 dark:text-slate-400 font-medium">Ubah Status:</span>
                     <button
                       onClick={() => updateComplaintStatus(c.id, 'IN_PROGRESS', 'Sedang ditangani oleh teknisi')}
-                      className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 rounded-lg font-bold transition-all cursor-pointer"
+                      className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 rounded-lg font-bold transition-all cursor-pointer shadow-xs"
                     >
                       Diproses
                     </button>
                     <button
                       onClick={() => updateComplaintStatus(c.id, 'RESOLVED', 'Selesai diperbaiki')}
-                      className="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-lg font-bold transition-all cursor-pointer"
+                      className="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-lg font-bold transition-all cursor-pointer shadow-xs"
                     >
                       Selesai
                     </button>
                   </div>
                 </div>
                 {c.adminNote && (
-                  <div className="p-2.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-[10px] text-amber-800 dark:text-amber-300">
+                  <div className="p-2.5 neu-inset rounded-xl text-[10px] text-amber-800 dark:text-amber-300">
                     📌 <strong>Catatan Admin:</strong> {c.adminNote}
                   </div>
                 )}
@@ -497,15 +497,15 @@ export default function AdminDashboard({
           </div>
         </div>
       ) : tab === 'tenants' ? (
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white">Manajemen Penyewa</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola data penyewa kosan aktif (Mobile App Connected)</p>
             </div>
             <button
               onClick={() => setShowAddTenant(true)}
-              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer"
+              className="px-4 py-2.5 neu-btn text-slate-900 dark:text-white font-bold rounded-xl text-xs transition-all cursor-pointer"
             >
               + Tambah Penyewa
             </button>
@@ -513,7 +513,7 @@ export default function AdminDashboard({
           <div className="space-y-3">
             {tenants.length === 0 && <p className="text-center text-xs text-slate-500 dark:text-slate-400 py-8">Belum ada data penyewa.</p>}
             {tenants.map((t: any) => (
-              <div key={t.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 hover:border-purple-500/30 transition-all">
+              <div key={t.id} className="flex items-center justify-between p-4 neu-card-sm rounded-2xl transition-all">
                 <div className="flex items-center gap-3.5">
                   <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 flex items-center justify-center text-sm font-black shadow-xs">
                     {t.name?.charAt(0)?.toUpperCase() || '?'}
@@ -540,13 +540,13 @@ export default function AdminDashboard({
         <FinancialDashboard />
       ) : (
       <>
-      {/* Stat cards */}
+      {/* Stat cards (Soft Raised Neumorphic Cards) */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         {/* Stat 1: Revenue */}
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
+        <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Revenue</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300 flex items-center justify-center text-xs sm:text-sm">
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl neu-btn text-purple-700 dark:text-purple-300 flex items-center justify-center text-xs sm:text-sm">
               <i className="fa-solid fa-wallet" />
             </div>
           </div>
@@ -557,24 +557,24 @@ export default function AdminDashboard({
         </div>
 
         {/* Stat 2: Okupansi */}
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
+        <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Okupansi</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 flex items-center justify-center text-xs sm:text-sm">
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl neu-btn text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs sm:text-sm">
               <i className="fa-solid fa-bed" />
             </div>
           </div>
           <div className="text-base sm:text-2xl font-black text-slate-900 dark:text-white">{occupancyPct}%</div>
-          <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-500 to-purple-600 h-1.5 rounded-full transition-all duration-700" style={{ width: `${occupancyPct}%` }} />
+          <div className="w-full neu-inset rounded-full h-2 overflow-hidden p-0.5">
+            <div className="bg-gradient-to-r from-amber-500 to-purple-600 h-1 rounded-full transition-all duration-700 shadow-xs" style={{ width: `${occupancyPct}%` }} />
           </div>
         </div>
 
         {/* Stat 3: Pending */}
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
+        <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pending</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 flex items-center justify-center text-xs sm:text-sm">
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl neu-btn text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs sm:text-sm">
               <i className="fa-solid fa-clock" />
             </div>
           </div>
@@ -587,10 +587,10 @@ export default function AdminDashboard({
         </div>
 
         {/* Stat 4: Total Unit */}
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3 shadow-xs">
+        <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Unit</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300 flex items-center justify-center text-xs sm:text-sm">
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl neu-btn text-rose-700 dark:text-rose-300 flex items-center justify-center text-xs sm:text-sm">
               <i className="fa-solid fa-door-open" />
             </div>
           </div>
@@ -604,8 +604,8 @@ export default function AdminDashboard({
       </div>
 
       {/* Room Management with Fitur 1 (Search & Filter System) */}
-      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-5 sm:p-8 rounded-3xl space-y-5 sm:space-y-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-black/5 dark:border-white/10 pb-4 sm:pb-5">
+      <div className="neu-card p-5 sm:p-8 rounded-3xl space-y-5 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200/60 dark:border-white/5 pb-4 sm:pb-5">
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Manajemen Kamar</h2>
             <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola status unit &amp; penghuni real-time</p>
@@ -613,13 +613,13 @@ export default function AdminDashboard({
           <div className="flex gap-2">
             <button
               onClick={() => setShowAddInvoice(true)}
-              className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold rounded-xl text-[10px] sm:text-xs border border-black/5 dark:border-white/10 transition-all cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 sm:py-2.5 neu-btn text-slate-900 dark:text-white font-bold rounded-xl text-[10px] sm:text-xs transition-all cursor-pointer"
             >
               + Invoice
             </button>
             <button
               onClick={() => setShowAddRoom(true)}
-              className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-xl text-[10px] sm:text-xs shadow-md transition-all cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 sm:py-2.5 neu-btn text-slate-900 dark:text-white font-bold rounded-xl text-[10px] sm:text-xs transition-all cursor-pointer"
             >
               + Tambah Kamar
             </button>
@@ -627,7 +627,7 @@ export default function AdminDashboard({
         </div>
 
         {/* Fitur 1: Interactive Search & Status Filter Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 dark:bg-black/20 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 neu-inset p-3 sm:p-4 rounded-2xl">
           {/* Search Box */}
           <div className="relative flex-1">
             <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
@@ -636,7 +636,7 @@ export default function AdminDashboard({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari no. kamar, tipe, atau penyewa..."
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors placeholder-slate-400"
+              className="w-full pl-9 pr-4 py-2 neu-input rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors placeholder-slate-400"
             />
           </div>
 
@@ -648,8 +648,8 @@ export default function AdminDashboard({
                 onClick={() => setStatusFilter(status)}
                 className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
                   statusFilter === status
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
-                    : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                    ? 'bg-[#047857] text-white shadow-[inset_2px_2px_4px_rgba(0,0,0,0.3)]'
+                    : 'neu-btn text-slate-600 dark:text-slate-300'
                 }`}
               >
                 {status === 'ALL' ? 'Semua Status' : status}
@@ -662,7 +662,7 @@ export default function AdminDashboard({
         <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between">
           <span>Menampilkan {filteredRooms.length} dari {rooms.length} unit</span>
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="text-purple-600 dark:text-purple-400 hover:underline">
+            <button onClick={() => setSearchQuery('')} className="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer">
               Reset Pencarian
             </button>
           )}
@@ -671,7 +671,7 @@ export default function AdminDashboard({
         {/* Room Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredRooms.map((room) => (
-            <div key={room.id} className="bg-slate-50 dark:bg-black/25 border border-slate-200/80 dark:border-white/10 p-5 rounded-2xl space-y-3 overflow-hidden shadow-xs hover:border-amber-500/40 transition-all">
+            <div key={room.id} className="neu-card-sm p-5 rounded-2xl space-y-3 overflow-hidden hover:scale-[1.01] transition-all">
               {room.imageUrl && (
                 <div className="-mx-5 -mt-5 mb-3 h-36 overflow-hidden bg-slate-200 dark:bg-slate-800">
                   <img src={room.imageUrl} alt={`Kamar ${room.number}`} className="w-full h-full object-cover" />
@@ -686,11 +686,11 @@ export default function AdminDashboard({
               {room.facilities && room.facilities.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {room.facilities.map((f) => (
-                    <span key={f} className="px-2 py-0.5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md text-[9px] text-slate-700 dark:text-slate-300 font-medium">{f}</span>
+                    <span key={f} className="px-2 py-0.5 neu-card-sm rounded-md text-[9px] text-slate-700 dark:text-slate-300 font-medium">{f}</span>
                   ))}
                 </div>
               )}
-              <div className="pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
+              <div className="pt-3 border-t border-slate-200/60 dark:border-white/5 space-y-2">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-slate-600 dark:text-slate-400 font-medium">{room.tenant ? `👤 ${room.tenant.name}` : 'Kosong'}</span>
                   <div className="flex items-center gap-3">
@@ -699,7 +699,7 @@ export default function AdminDashboard({
                   </div>
                 </div>
                 {room.status === 'BOOKING' && (
-                  <div className="bg-amber-50 dark:bg-amber-400/10 border border-amber-200 dark:border-amber-400/20 rounded-xl p-2.5 space-y-2">
+                  <div className="neu-inset rounded-xl p-2.5 space-y-2">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
                       <i className="fa-solid fa-clock-rotate-left" /> Menunggu Konfirmasi Admin
                     </div>
@@ -734,8 +734,8 @@ export default function AdminDashboard({
       {/* Utilities + Payment Tracker with Mobile Push Notification (Fitur 2) + Recent Activity Stream (Fitur 5) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Fitur 5: Recent Activity Stream */}
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 shadow-xs">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/5 pb-3">
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <i className="fa-solid fa-clock-rotate-left text-purple-600 dark:text-purple-400 text-[10px] sm:text-xs" />
               Aktivitas Terkini
@@ -744,8 +744,8 @@ export default function AdminDashboard({
           </div>
           <div className="space-y-3 text-xs max-h-80 overflow-y-auto">
             {activities.map((act) => (
-              <div key={act.id} className="p-3 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 flex items-start gap-3">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${act.color}`}>
+              <div key={act.id} className="p-3 neu-card-sm rounded-2xl flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 neu-btn ${act.color}`}>
                   <i className={`fa-solid ${act.icon}`} />
                 </div>
                 <div>
@@ -758,8 +758,8 @@ export default function AdminDashboard({
         </div>
 
         {/* Payment Tracker with Mobile App Push Notification Button (Fitur 2) */}
-        <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 lg:col-span-2 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 lg:col-span-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-white/5 pb-3">
             <div>
               <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-receipt text-amber-500 text-[10px] sm:text-xs" /> Payment Tracker &amp; Push Reminder
@@ -797,10 +797,10 @@ export default function AdminDashboard({
                       {t.paymentStatus === 'PENDING' ? (
                         <button
                           onClick={() => triggerMobilePush(t)}
-                          className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg text-[10px] shadow-2xs transition-all flex items-center gap-1 ml-auto cursor-pointer"
+                          className="px-2.5 py-1 neu-btn text-slate-900 dark:text-white font-bold rounded-lg text-[10px] transition-all flex items-center gap-1 ml-auto cursor-pointer"
                           title="Kirim Notifikasi Push ke Mobile App Penyewa"
                         >
-                          <i className="fa-solid fa-bell text-[9px]" />
+                          <i className="fa-solid fa-bell text-[9px] text-amber-500" />
                           <span>Push Notif</span>
                         </button>
                       ) : (
@@ -818,7 +818,7 @@ export default function AdminDashboard({
       </div>
 
       {/* AI Dynamic Pricing */}
-      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4 shadow-xs">
+      <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i className="fa-solid fa-robot text-purple-600 dark:text-purple-400 text-[10px] sm:text-xs" /> AI Dynamic Pricing
@@ -834,7 +834,7 @@ export default function AdminDashboard({
         {pricingData && (
           <div className="space-y-4 animate-scale-in">
             {pricingData.insights && (
-              <div className="p-4 bg-amber-50 dark:bg-white/5 rounded-2xl border border-amber-200 dark:border-white/10">
+              <div className="p-4 neu-inset rounded-2xl">
                 <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
                   <i className="fa-solid fa-lightbulb text-amber-600 dark:text-amber-400 mr-2" />
                   {pricingData.insights}
@@ -844,7 +844,7 @@ export default function AdminDashboard({
             {pricingData.recommendations?.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {pricingData.recommendations.map((rec: any, i: number) => (
-                  <div key={i} className="p-4 bg-slate-50 dark:bg-black/20 rounded-2xl border border-slate-200/80 dark:border-white/10 space-y-2">
+                  <div key={i} className="p-4 neu-card-sm rounded-2xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-slate-900 dark:text-white">{rec.roomType}</span>
                       <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${
@@ -877,38 +877,38 @@ export default function AdminDashboard({
       </>
       )}
 
-      {/* Toast notification */}
+      {/* Toast notification (Bottom Right) */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-[100] px-5 py-3 rounded-2xl text-xs font-bold shadow-2xl animate-scale-in flex items-center gap-2 ${
-          toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+        <div className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card border shadow-2xl animate-scale-in flex items-center gap-2 ${
+          toast.type === 'success' ? 'text-emerald-800 dark:text-emerald-300 border-emerald-500/30' : 'text-rose-800 dark:text-rose-300 border-rose-500/30'
         }`}>
-          <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}`} />
+          <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-rose-600 dark:text-rose-400'}`} />
           <span>{toast.msg}</span>
         </div>
       )}
 
       {/* Add Room Modal */}
       {showAddRoom && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddRoom(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-lg space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowAddRoom(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-lg space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Kamar Baru</h3>
-              <button onClick={() => setShowAddRoom(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddRoom(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={addRoom} className="space-y-4">
               <div>
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Foto Kamar</label>
                 <input ref={roomFileRef} type="file" accept="image/*" onChange={handleRoomPhoto} className="hidden" id="roomPhotoInput" />
                 {roomForm.imageUrl ? (
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/10">
                     <img src={roomForm.imageUrl} alt="Preview" className="w-full h-40 object-cover" />
-                    <button type="button" onClick={() => { setRoomForm((p) => ({ ...p, imageUrl: '' })); if (roomFileRef.current) roomFileRef.current.value = ''; }} className="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full text-xs flex items-center justify-center hover:bg-black/80 transition-all">
+                    <button type="button" onClick={() => { setRoomForm((p) => ({ ...p, imageUrl: '' })); if (roomFileRef.current) roomFileRef.current.value = ''; }} className="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full text-xs flex items-center justify-center hover:bg-black/80 transition-all cursor-pointer">
                       <i className="fa-solid fa-xmark" />
                     </button>
                   </div>
                 ) : (
-                  <label htmlFor="roomPhotoInput" className="block cursor-pointer border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-purple-500 rounded-2xl p-6 text-center transition-all bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10">
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base mx-auto mb-2"><i className="fa-solid fa-camera" /></div>
+                  <label htmlFor="roomPhotoInput" className="block cursor-pointer neu-inset hover:border-purple-500 rounded-2xl p-6 text-center transition-all group">
+                    <div className="w-10 h-10 rounded-xl neu-card-sm text-[#047857] dark:text-emerald-400 flex items-center justify-center text-base mx-auto mb-2 group-hover:scale-110 transition-transform"><i className="fa-solid fa-camera" /></div>
                     <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Klik untuk upload foto kamar</p>
                     <p className="text-[9px] text-slate-400">JPG, PNG, atau WebP</p>
                   </label>
@@ -918,7 +918,7 @@ export default function AdminDashboard({
               {/* 🎬 Video Tour Kamar */}
               <div>
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
-                  <i className="fa-solid fa-video text-purple-500" /> Video Tur Kamar <span className="text-[9px] font-normal text-slate-400">(MP4/MOV/WebM · maks. 50MB)</span>
+                  <i className="fa-solid fa-video text-[#047857] dark:text-emerald-400" /> Video Tur Kamar <span className="text-[9px] font-normal text-slate-400">(MP4/MOV/WebM · maks. 50MB)</span>
                 </label>
                 <input
                   ref={roomVideoRef}
@@ -929,7 +929,7 @@ export default function AdminDashboard({
                   id="roomVideoInput"
                 />
                 {roomForm.videoUrl ? (
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 bg-black">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/10 bg-black">
                     <video
                       src={roomForm.videoUrl}
                       controls
@@ -942,7 +942,7 @@ export default function AdminDashboard({
                         setRoomForm((p) => ({ ...p, videoUrl: '' }));
                         if (roomVideoRef.current) roomVideoRef.current.value = '';
                       }}
-                      className="absolute top-2 right-2 w-7 h-7 bg-black/70 text-white rounded-full text-xs flex items-center justify-center hover:bg-black/90 transition-all"
+                      className="absolute top-2 right-2 w-7 h-7 bg-black/70 text-white rounded-full text-xs flex items-center justify-center hover:bg-black/90 transition-all cursor-pointer"
                       title="Hapus video"
                     >
                       <i className="fa-solid fa-xmark" />
@@ -954,9 +954,9 @@ export default function AdminDashboard({
                 ) : (
                   <label
                     htmlFor="roomVideoInput"
-                    className="block cursor-pointer border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-purple-500 rounded-2xl p-5 text-center transition-all bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 group"
+                    className="block cursor-pointer neu-inset rounded-2xl p-5 text-center transition-all group"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base mx-auto mb-2 group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-xl neu-card-sm text-[#047857] dark:text-emerald-400 flex items-center justify-center text-base mx-auto mb-2 group-hover:scale-110 transition-transform">
                       <i className="fa-solid fa-film" />
                     </div>
                     <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Klik untuk upload video tur kamar</p>
@@ -967,21 +967,21 @@ export default function AdminDashboard({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nomor Kamar *</label>
-                  <input required value={roomForm.number} onChange={(e) => setRoomForm({ ...roomForm, number: e.target.value })} placeholder="cth: D-401" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                  <input required value={roomForm.number} onChange={(e) => setRoomForm({ ...roomForm, number: e.target.value })} placeholder="cth: D-401" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400 font-mono font-bold" />
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Tipe Kamar *</label>
-                  <input required value={roomForm.type} onChange={(e) => setRoomForm({ ...roomForm, type: e.target.value })} placeholder="cth: Deluxe Studio" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                  <input required value={roomForm.type} onChange={(e) => setRoomForm({ ...roomForm, type: e.target.value })} placeholder="cth: Deluxe Studio" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400 font-bold" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Harga/bulan *</label>
-                  <input required type="number" value={roomForm.price} onChange={(e) => setRoomForm({ ...roomForm, price: e.target.value })} placeholder="1500000" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                  <input required type="number" value={roomForm.price} onChange={(e) => setRoomForm({ ...roomForm, price: e.target.value })} placeholder="1500000" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400 font-mono font-bold" />
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Lantai</label>
-                  <input type="number" value={roomForm.floor} onChange={(e) => setRoomForm({ ...roomForm, floor: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors" />
+                  <input type="number" value={roomForm.floor} onChange={(e) => setRoomForm({ ...roomForm, floor: e.target.value })} className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors font-bold" />
                 </div>
               </div>
               <div>
@@ -992,10 +992,10 @@ export default function AdminDashboard({
                       key={f}
                       type="button"
                       onClick={() => toggleFacility(f)}
-                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
                         roomForm.facilities.includes(f)
-                          ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/40 shadow-xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                          ? 'neu-inset text-[#047857] dark:text-emerald-300 font-bold'
+                          : 'neu-btn text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       {roomForm.facilities.includes(f) && <i className="fa-solid fa-check mr-1 text-[8px]" />}{f}
@@ -1003,9 +1003,9 @@ export default function AdminDashboard({
                   ))}
                 </div>
               </div>
-              <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
-                <button type="button" onClick={() => setShowAddRoom(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-white/15 transition-all cursor-pointer">Batal</button>
-                <button type="submit" disabled={saving} className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 shadow-md transition-all disabled:opacity-50 cursor-pointer">
+              <div className="flex gap-3 pt-3 border-t border-slate-200/60 dark:border-white/10">
+                <button type="button" onClick={() => setShowAddRoom(false)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all cursor-pointer">Batal</button>
+                <button type="submit" disabled={saving} className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer">
                   {saving ? <i className="fa-solid fa-spinner fa-spin" /> : 'Simpan Kamar'}
                 </button>
               </div>
@@ -1016,45 +1016,45 @@ export default function AdminDashboard({
 
       {/* Add Tenant Modal */}
       {showAddTenant && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddTenant(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowAddTenant(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Penyewa Baru</h3>
-              <button onClick={() => setShowAddTenant(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddTenant(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={addTenant} className="space-y-4">
               <div>
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nama Lengkap *</label>
-                <input required value={tenantForm.name} onChange={(e) => setTenantForm({ ...tenantForm, name: e.target.value })} placeholder="cth: Budi Santoso" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                <input required value={tenantForm.name} onChange={(e) => setTenantForm({ ...tenantForm, name: e.target.value })} placeholder="cth: Budi Santoso" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400 font-bold" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Email *</label>
-                  <input required type="email" value={tenantForm.email} onChange={(e) => setTenantForm({ ...tenantForm, email: e.target.value })} placeholder="email@contoh.com" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                  <input required type="email" value={tenantForm.email} onChange={(e) => setTenantForm({ ...tenantForm, email: e.target.value })} placeholder="email@contoh.com" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400 font-mono font-bold" />
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">No. WhatsApp *</label>
-                  <input required value={tenantForm.phone} onChange={(e) => setTenantForm({ ...tenantForm, phone: e.target.value })} placeholder="0812xxxx" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                  <input required value={tenantForm.phone} onChange={(e) => setTenantForm({ ...tenantForm, phone: e.target.value })} placeholder="0812xxxx" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400 font-mono font-bold" />
                 </div>
               </div>
               <div>
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Password</label>
-                <input type="password" value={tenantForm.password} onChange={(e) => setTenantForm({ ...tenantForm, password: e.target.value })} placeholder="Password login tenant" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                <input type="password" value={tenantForm.password} onChange={(e) => setTenantForm({ ...tenantForm, password: e.target.value })} placeholder="Password login tenant" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400" />
               </div>
               <div>
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Assign Kamar (opsional)</label>
-                <select value={tenantForm.roomId} onChange={(e) => setTenantForm({ ...tenantForm, roomId: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors">
-                  <option value="" className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">Tanpa kamar</option>
+                <select value={tenantForm.roomId} onChange={(e) => setTenantForm({ ...tenantForm, roomId: e.target.value })} className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors font-bold cursor-pointer">
+                  <option value="" className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">Tanpa kamar</option>
                   {rooms.filter((r) => r.status === 'AVAILABLE').map((r) => (
-                    <option key={r.id} value={r.id} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">
+                    <option key={r.id} value={r.id} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">
                       {r.number} - {r.type} ({formatIDR(r.price)})
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
-                <button type="button" onClick={() => setShowAddTenant(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-white/15 transition-all cursor-pointer">Batal</button>
-                <button type="submit" disabled={saving} className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 shadow-md transition-all disabled:opacity-50 cursor-pointer">
+              <div className="flex gap-3 pt-3 border-t border-slate-200/60 dark:border-white/10">
+                <button type="button" onClick={() => setShowAddTenant(false)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all cursor-pointer">Batal</button>
+                <button type="submit" disabled={saving} className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer">
                   {saving ? <i className="fa-solid fa-spinner fa-spin" /> : 'Simpan Penyewa'}
                 </button>
               </div>
@@ -1065,19 +1065,19 @@ export default function AdminDashboard({
 
       {/* Add Invoice Modal */}
       {showAddInvoice && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowAddInvoice(false)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setShowAddInvoice(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white">Buat Invoice Baru</h3>
-              <button onClick={() => setShowAddInvoice(false)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowAddInvoice(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
             <form onSubmit={addInvoice} className="space-y-4">
               <div>
                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Penyewa *</label>
-                <select required value={invForm.userId} onChange={(e) => setInvForm({ ...invForm, userId: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors">
-                  <option value="" className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">Pilih penyewa...</option>
+                <select required value={invForm.userId} onChange={(e) => setInvForm({ ...invForm, userId: e.target.value })} className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors font-bold cursor-pointer">
+                  <option value="" className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">Pilih penyewa...</option>
                   {tenants.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">{t.name}</option>
+                    <option key={t.id} value={t.id} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{t.name}</option>
                   ))}
                 </select>
               </div>
@@ -1086,26 +1086,26 @@ export default function AdminDashboard({
                 <select required value={invForm.roomId} onChange={(e) => {
                   const room = rooms.find((r) => r.id === e.target.value);
                   setInvForm({ ...invForm, roomId: e.target.value, amount: room ? String(room.price) : invForm.amount });
-                }} className="w-full p-3 bg-slate-50 dark:bg-[#1f1930] border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors">
-                  <option value="" className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">Pilih kamar...</option>
+                }} className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors font-bold cursor-pointer">
+                  <option value="" className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">Pilih kamar...</option>
                   {rooms.map((r) => (
-                    <option key={r.id} value={r.id} className="bg-white text-slate-900 dark:bg-[#181324] dark:text-white">{r.number} - {r.type}</option>
+                    <option key={r.id} value={r.id} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{r.number} - {r.type}</option>
                   ))}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nominal *</label>
-                  <input required type="number" value={invForm.amount} onChange={(e) => setInvForm({ ...invForm, amount: e.target.value })} placeholder="1500000" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors placeholder-slate-400" />
+                  <input required type="number" value={invForm.amount} onChange={(e) => setInvForm({ ...invForm, amount: e.target.value })} placeholder="1500000" className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors placeholder-slate-400 font-mono font-bold" />
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Jatuh Tempo *</label>
-                  <input required type="date" value={invForm.dueDate} onChange={(e) => setInvForm({ ...invForm, dueDate: e.target.value })} className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-purple-500 transition-colors" />
+                  <input required type="date" value={invForm.dueDate} onChange={(e) => setInvForm({ ...invForm, dueDate: e.target.value })} className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors font-bold" />
                 </div>
               </div>
-              <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
-                <button type="button" onClick={() => setShowAddRoom(false)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-200 dark:hover:bg-white/15 transition-all cursor-pointer">Batal</button>
-                <button type="submit" disabled={saving} className="flex-1 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl hover:bg-slate-800 dark:hover:bg-slate-100 shadow-md transition-all disabled:opacity-50 cursor-pointer">
+              <div className="flex gap-3 pt-3 border-t border-slate-200/60 dark:border-white/10">
+                <button type="button" onClick={() => setShowAddInvoice(false)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all cursor-pointer">Batal</button>
+                <button type="submit" disabled={saving} className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer">
                   {saving ? <i className="fa-solid fa-spinner fa-spin" /> : 'Buat Invoice'}
                 </button>
               </div>

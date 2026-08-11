@@ -144,8 +144,8 @@ export default function VendorDashboard({
       activeTab="tenant_requests"
     >
       <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors">
-      {/* Vendor Partner Banner */}
-      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
+      {/* Vendor Partner Banner (Soft Raised Neumorphic Card) */}
+      <div className="neu-card p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1.5">
@@ -162,7 +162,7 @@ export default function VendorDashboard({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-500/20 text-center">
+          <div className="p-4 neu-card-sm rounded-2xl text-center">
             <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">Rekap Pencairan Bulan Ini</span>
             <span className="text-lg font-black text-emerald-800 dark:text-emerald-300">{formatIDR(totalMonthlyPayout)}</span>
           </div>
@@ -170,8 +170,8 @@ export default function VendorDashboard({
       </div>
 
       {/* Orders List Table */}
-      <div className="bg-white/90 dark:bg-[#161224]/80 backdrop-blur-xl border border-black/5 dark:border-white/10 p-6 sm:p-8 rounded-3xl space-y-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/10 pb-5">
+      <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
           <div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
               <i className="fa-solid fa-truck-ramp-box text-emerald-600 dark:text-emerald-400" />
@@ -185,7 +185,7 @@ export default function VendorDashboard({
           {orders.map((order) => (
             <div
               key={order.id}
-              className="bg-slate-50 dark:bg-black/25 rounded-2xl border border-slate-200/80 dark:border-white/10 p-5 space-y-4 transition-all hover:border-emerald-500/40"
+              className="neu-card-sm rounded-2xl p-5 space-y-4 transition-all hover:scale-[1.01]"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
@@ -210,7 +210,7 @@ export default function VendorDashboard({
                 </div>
               </div>
 
-              <div className="p-3.5 bg-white dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="p-3.5 neu-inset rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                 <div>
                   <span className="text-slate-600 dark:text-slate-400 block">
                     Waktu Pesan: <strong className="text-slate-900 dark:text-white">{order.orderTime}</strong> • Staf: <strong className="text-emerald-600 dark:text-emerald-400">{order.assignedStaff}</strong>
@@ -268,13 +268,13 @@ export default function VendorDashboard({
       {/* Add-On Billing Modal Dialog */}
       {selectedOrderForAddOn && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedOrderForAddOn(null)}>
-          <div className="bg-white dark:bg-[#181324] border border-black/10 dark:border-white/15 rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
               <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Add-On ke Tagihan Tenant</h3>
-              <button onClick={() => setSelectedOrderForAddOn(null)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors">✕</button>
+              <button onClick={() => setSelectedOrderForAddOn(null)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 hover:text-black dark:hover:text-white transition-colors cursor-pointer">✕</button>
             </div>
 
-            <div className="p-3.5 bg-purple-50 dark:bg-purple-950/30 rounded-2xl border border-purple-200 dark:border-purple-500/20 text-xs space-y-1">
+            <div className="p-3.5 neu-inset rounded-2xl text-xs space-y-1">
               <span className="font-bold block text-purple-900 dark:text-purple-300">Penerima Tagihan:</span>
               <p className="text-slate-900 dark:text-white font-black text-sm">{selectedOrderForAddOn.tenantName} (Kamar {selectedOrderForAddOn.roomNumber})</p>
               <p className="text-slate-600 dark:text-slate-300">{selectedOrderForAddOn.item}</p>
@@ -283,16 +283,16 @@ export default function VendorDashboard({
             <form onSubmit={handleAddOnBilling} className="space-y-4 text-xs">
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nominal Biaya Kelebihan (IDR) *</label>
-                <input required type="number" value={addOnCost} onChange={(e) => setAddOnCost(e.target.value)} placeholder="20000" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none text-slate-900 dark:text-white" />
+                <input required type="number" value={addOnCost} onChange={(e) => setAddOnCost(e.target.value)} placeholder="20000" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
 
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Rincian Kelebihan / Catatan *</label>
-                <input required value={addOnNote} onChange={(e) => setAddOnNote(e.target.value)} placeholder="cth: Over-limit Laundry +2.5kg @ Rp 8.000" className="w-full p-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/15 rounded-xl outline-none text-slate-900 dark:text-white" />
+                <input required value={addOnNote} onChange={(e) => setAddOnNote(e.target.value)} placeholder="cth: Over-limit Laundry +2.5kg @ Rp 8.000" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setSelectedOrderForAddOn(null)} className="flex-1 py-3 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
+              <div className="flex gap-3 pt-2 border-t border-slate-200/60 dark:border-white/10">
+                <button type="button" onClick={() => setSelectedOrderForAddOn(null)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
                 <button type="submit" className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-purple-600 text-white font-bold rounded-xl shadow-md transition-all cursor-pointer">Akumulasikan ke Tagihan</button>
               </div>
             </form>
@@ -300,10 +300,10 @@ export default function VendorDashboard({
         </div>
       )}
 
-      {/* Toast Notification */}
+      {/* Toast Notification (Bottom Right) */}
       {toast && (
-        <div className="fixed top-6 right-6 z-[100] px-5 py-3 rounded-2xl text-xs font-bold bg-emerald-600 text-white shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check" />
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
+          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
           <span>{toast}</span>
         </div>
       )}

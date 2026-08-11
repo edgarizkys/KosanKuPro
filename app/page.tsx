@@ -9,7 +9,7 @@ import ReviewsSection from '@/components/ReviewsSection';
 import LocationSection from '@/components/LocationSection';
 import Navbar from '@/components/Navbar';
 import WhatsAppWidget from '@/components/WhatsAppWidget';
-import LoginModal from '@/components/LoginModal';
+import LoginView from '@/components/LoginView';
 import NotificationDrawer from '@/components/NotificationDrawer';
 import AdminDashboard from '@/components/AdminDashboard';
 import OwnerDashboard from '@/components/OwnerDashboard';
@@ -20,7 +20,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import { useAppEffects } from '@/lib/useAppEffects';
 
 export type RoleType = 'owner' | 'admin' | 'superadmin' | 'employee' | 'vendor' | 'tenant';
-export type ViewType = 'landing' | RoleType;
+export type ViewType = 'landing' | 'login' | RoleType;
 
 interface LoggedUser {
   id: string;
@@ -34,11 +34,16 @@ export default function Home() {
   const [view, setView] = useState<ViewType>('landing');
   const [role, setRole] = useState<RoleType>('owner');
   const [user, setUser] = useState<LoggedUser | null>(null);
-  const [showLogin, setShowLogin] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
 
   useAppEffects();
+
+  useEffect(() => {
+    (window as any).__toggleNotifDrawer = () => {
+      setShowNotif((prev) => !prev);
+    };
+  }, []);
 
   const toggleTheme = useCallback(() => {
     const html = document.documentElement;
@@ -46,21 +51,31 @@ export default function Home() {
     setTheme((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', next);
+      if (next === 'dark') {
+        html.classList.add('dark');
+      } else {
+        html.classList.remove('dark');
+      }
       localStorage.setItem('kosanku-theme', next);
+      localStorage.setItem('kosanku_theme', next);
       return next;
     });
     setTimeout(() => html.classList.remove('theme-transition'), 500);
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem('kosanku-theme');
+    const saved = localStorage.getItem('kosanku-theme') || localStorage.getItem('kosanku_theme');
     const initialTheme = saved === 'dark' ? 'dark' : 'light';
     setTheme(initialTheme);
     document.documentElement.setAttribute('data-theme', initialTheme);
+    if (initialTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, []);
 
   const handleLogin = (userData: LoggedUser) => {
-    setShowLogin(false);
     setUser(userData);
     const assignedRole = (userData.role as RoleType) || 'admin';
     setRole(assignedRole);
@@ -79,31 +94,8 @@ export default function Home() {
 
   return (
     <>
-      {/* Top Glowing Scroll Progress Bar */}
-      <div 
-        id="scrollProgressBar" 
-        className="fixed top-0 left-0 h-[3px] bg-gradient-to-r from-amber-500 via-purple-600 to-indigo-500 z-[100] transition-all duration-75 shadow-sm shadow-amber-500/50" 
-        style={{ width: '0%' }}
-      />
-
-      {/* Dynamic background lighting */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="ambient-glow -top-40 -left-40 bg-purple-600/10 dark:bg-purple-600/20" />
-        <div className="ambient-glow -bottom-40 -right-40 bg-indigo-600/10 dark:bg-indigo-600/20" />
-      </div>
-
-      {/* Navbar */}
-      <Navbar
-        view={view}
-        role={role}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        onLogin={() => setShowLogin(true)}
-        onLogout={handleLogout}
-        onSwitchRole={switchRole}
-        onToggleNotif={() => setShowNotif((v) => !v)}
-        onNavigate={setView}
-      />
+      {/* Background container */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" />
 
       {/* Main content */}
       <main className="flex-1 w-full mx-auto space-y-14 sm:space-y-24 relative z-10 pb-16 sm:pb-0">
@@ -111,19 +103,25 @@ export default function Home() {
           <div className="space-y-16 sm:space-y-28 w-full">
             <div className="w-full px-2 sm:px-4 lg:px-6 pt-2">
               <HeroSection 
-                onLogin={() => setShowLogin(true)} 
+                onLogin={() => setView('login')} 
                 theme={theme}
                 onToggleTheme={toggleTheme}
               />
             </div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-28">
               <MarqueeTicker />
-              <RoomsSection onLogin={() => setShowLogin(true)} />
+              <RoomsSection onLogin={() => setView('login')} />
               <AmenitiesSection />
               <ReviewsSection />
               <LocationSection />
             </div>
           </div>
+        )}
+        {view === 'login' && (
+          <LoginView
+            onClose={() => setView('landing')}
+            onLogin={handleLogin}
+          />
         )}
         {view === 'owner' && (
           <OwnerDashboard
@@ -175,14 +173,15 @@ export default function Home() {
 
       {/* Floating Mobile Bottom Navigation Dock */}
       {view === 'landing' && (
-        <MobileBottomNav onLogin={() => setShowLogin(true)} />
+        <MobileBottomNav onLogin={() => setView('login')} />
       )}
 
-      {/* WhatsApp widget */}
-      <WhatsAppWidget />
+      {/* WhatsApp AI Assistant widget (Only for Landing frontend and Tenant portal) */}
+      {(view === 'landing' || view === 'tenant') && (
+        <WhatsAppWidget />
+      )}
 
-      {/* Modals & drawers */}
-      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} onLogin={handleLogin} />
+      {/* Rincian Notification Drawer Slide-over */}
       <NotificationDrawer open={showNotif} onClose={() => setShowNotif(false)} />
     </>
   );
