@@ -6,6 +6,7 @@ export interface UserProfile {
   role: 'owner' | 'admin' | 'superadmin' | 'employee' | 'vendor' | 'tenant';
   title: string;
   avatar: string;
+  avatarUrl?: string;
   avatarBg?: string;
   branchId: string;
   branchName: string;

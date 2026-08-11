@@ -358,10 +358,18 @@ export default function SequenceSaaSLayout({
           {/* 2. Foto User Avatar (Disamping Garis 3 Menu) */}
           <button
             onClick={() => setShowProfileModal(true)}
-            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center cursor-pointer active:scale-95 transition-all bg-gradient-to-br from-amber-500/10 to-emerald-500/10 border border-emerald-500/30"
+            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center cursor-pointer active:scale-95 transition-all overflow-hidden border border-emerald-500/30"
             title="Buka Profil Akun"
           >
-            <span className="text-base">{currentUser?.avatar || '👤'}</span>
+            {currentUser?.avatarUrl ? (
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.name}
+                className="w-full h-full object-cover rounded-2xl"
+              />
+            ) : (
+              <span className="text-base">{currentUser?.avatar || '👤'}</span>
+            )}
           </button>
         </div>
 
@@ -428,9 +436,17 @@ export default function SequenceSaaSLayout({
                   className="flex items-center gap-3 overflow-hidden cursor-pointer group flex-1"
                   title="Klik untuk lihat rincian profil"
                 >
-                  <div className={`w-11 h-11 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
-                    {currentUser?.avatar || '👤'}
-                  </div>
+                  {currentUser?.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.name}
+                      className="w-11 h-11 rounded-full object-cover shrink-0 shadow-md border border-emerald-500 group-hover:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <div className={`w-11 h-11 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                      {currentUser?.avatar || '👤'}
+                    </div>
+                  )}
                   <div className="truncate flex-1">
                     <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
                       {currentUser?.title || role.toUpperCase()}

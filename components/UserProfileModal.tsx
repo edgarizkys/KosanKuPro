@@ -83,9 +83,17 @@ export default function UserProfileModal({
             <div className="neu-inset p-5 sm:p-6 rounded-3xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-3xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center text-3xl shadow-md neu-card-sm shrink-0`}>
-                    {currentUser.avatar}
-                  </div>
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.name}
+                      className="w-16 h-16 rounded-3xl object-cover shadow-md shrink-0 border-2 border-emerald-500"
+                    />
+                  ) : (
+                    <div className={`w-16 h-16 rounded-3xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center text-3xl shadow-md neu-card-sm shrink-0`}>
+                      {currentUser.avatar}
+                    </div>
+                  )}
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
@@ -236,21 +244,88 @@ export default function UserProfileModal({
                 />
               </div>
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Icon Avatar Emoji</label>
-                <div className="flex items-center gap-2">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Avatar Preset Emoji</label>
+                <div className="flex flex-wrap items-center gap-2">
                   {['👑', '🛡️', '👷', '👩‍💼', '🏪', '👤', '💼', '🧑‍💻'].map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
                       onClick={() => setEditForm({ ...editForm, avatar: emoji })}
                       className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg cursor-pointer transition-all ${
-                        editForm.avatar === emoji ? 'neu-inset scale-110' : 'neu-btn'
+                        editForm.avatar === emoji ? 'neu-inset scale-110 ring-2 ring-emerald-500' : 'neu-btn'
                       }`}
                     >
                       {emoji}
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Custom Photo Upload Section */}
+            <div className="neu-inset p-4 rounded-2xl space-y-3">
+              <label className="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <i className="fa-solid fa-camera text-emerald-500" />
+                Upload Foto Profil Asli (File / URL Image)
+              </label>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="relative group shrink-0">
+                  {editForm.avatarUrl ? (
+                    <img
+                      src={editForm.avatarUrl}
+                      alt="Profile"
+                      className="w-14 h-14 rounded-full object-cover border-2 border-emerald-500 shadow-md"
+                    />
+                  ) : (
+                    <div className={`w-14 h-14 rounded-full ${editForm.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center text-2xl font-bold shadow-md`}>
+                      {editForm.avatar}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 w-full space-y-2">
+                  {/* File Upload Button Input */}
+                  <label className="w-full p-2.5 neu-btn rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer flex items-center justify-center gap-2 hover:text-emerald-500 transition-colors">
+                    <i className="fa-solid fa-upload text-emerald-500" />
+                    <span>Pilih Foto dari Galeri HP / Komputer</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setEditForm({ ...editForm, avatarUrl: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+
+                  {/* Direct Image URL input */}
+                  <input
+                    type="url"
+                    placeholder="Atau tempel Link URL Foto (Contoh: https://...)"
+                    value={editForm.avatarUrl || ''}
+                    onChange={(e) => setEditForm({ ...editForm, avatarUrl: e.target.value })}
+                    className="w-full p-2.5 neu-input rounded-xl outline-none font-mono text-[11px] text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                {editForm.avatarUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, avatarUrl: '' })}
+                    className="px-3 py-2 neu-btn text-rose-500 hover:text-rose-700 text-xs font-bold rounded-xl shrink-0"
+                    title="Hapus Foto Kustom"
+                  >
+                    <i className="fa-solid fa-trash" />
+                  </button>
+                )}
               </div>
             </div>
 
