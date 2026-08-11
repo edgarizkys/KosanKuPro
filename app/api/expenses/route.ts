@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 import { visionOCR } from '@/lib/openai';
 
 // GET /api/expenses — list expenses with optional filters (category, dateFrom, dateTo)

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/tenants — list all tenants (users with role TENANT)
 export async function GET(req: NextRequest) {
   try {
