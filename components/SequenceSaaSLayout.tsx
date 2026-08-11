@@ -305,23 +305,28 @@ export default function SequenceSaaSLayout({
   const navSections = getNavSections();
 
   return (
-    <div className="min-h-screen bg-[#f2f5fa] dark:bg-[#0f0c1a] text-[#0f172a] dark:text-[#f1edf4] font-sans flex flex-col lg:flex-row antialiased selection:bg-emerald-500 selection:text-white transition-colors">
+    <div className="min-h-screen bg-[#f8f7f4] dark:bg-[#0a0710] flex flex-col lg:flex-row font-sans overflow-x-hidden max-w-full">
       
-      {/* 📱 MOBILE TOP HEADER BAR (lg:hidden) */}
-      <div className="lg:hidden bg-[#f2f5fa] dark:bg-[#141122] border-b border-[#d1d9e6]/70 dark:border-white/5 px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-[0_4px_16px_rgba(166,178,196,0.3)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center gap-2.5">
+      {/* 🟣 MOBILE TOP BAR NAVIGATION HEADER */}
+      <div className="lg:hidden flex items-center justify-between p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 sticky top-0 z-40 shadow-sm max-w-full overflow-hidden">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold cursor-pointer"
-            title="Buka Menu Navigasi"
+            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 transition-all"
+            title="Buka Menu Sidebar"
           >
-            <i className={`fa-solid ${mobileMenuOpen ? 'fa-xmark' : 'fa-bars-staggered'} text-sm`} />
+            <i className="fa-solid fa-bars text-sm" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#047857] flex items-center justify-center text-white font-black text-xs neu-card-sm">
-              <i className="fa-solid fa-building-user" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#047857] to-[#10b981] flex items-center justify-center text-white font-black text-xs shadow-md">
+              K
             </div>
-            <span className="font-black text-base text-[#047857] truncate max-w-[150px]">{propertyName}</span>
+            <div>
+              <span className="font-black text-sm tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-emerald-800 to-emerald-600 dark:from-white dark:via-emerald-300 dark:to-emerald-500 block leading-none">
+                KOSANKU<span className="text-[#047857] dark:text-[#10b981]">.PRO</span>
+              </span>
+              <span className="text-[9px] font-mono text-slate-400 font-bold">Luxury SaaS</span>
+            </div>
           </div>
         </div>
 
@@ -599,7 +604,7 @@ export default function SequenceSaaSLayout({
       </aside>
 
       {/* ⚪ MAIN CONTENT AREA (Sequence.io Layout Engine) */}
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 overflow-x-hidden">
+      <main className="flex-1 p-3 sm:p-6 lg:p-8 space-y-6 overflow-x-hidden max-w-full min-w-0">
 
         {/* 1. TOP HEADER BAR (Search + Active User Profile Capsule + Branch Selector + Date Range + Export) */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">

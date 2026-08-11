@@ -336,7 +336,7 @@ export default function ReportsHub({
       </div>
 
       {/* Tab Switcher Navigation */}
-      <div className="flex items-center gap-2 neu-inset p-1.5 rounded-2xl overflow-x-auto text-xs font-bold">
+      <div className="flex items-center gap-2 neu-inset p-1.5 rounded-2xl overflow-x-auto scrollbar-none max-w-full text-xs font-bold whitespace-nowrap">
         <button
           onClick={() => setActiveReportTab('all')}
           className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
