@@ -412,20 +412,6 @@ export default function SequenceSaaSLayout({
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
               </div>
 
-              {/* Prominent High-Contrast Floating Collapse/Expand Trigger Badge */}
-              <button
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className={`hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full text-white font-black text-[10px] transition-all cursor-pointer shadow-md active:scale-95 ${
-                  sidebarCollapsed
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 ring-2 ring-emerald-400/50 animate-pulse'
-                    : 'bg-slate-800 hover:bg-slate-700 dark:bg-emerald-600 dark:hover:bg-emerald-500'
-                }`}
-                title={sidebarCollapsed ? "Perluas Menu Sidebar" : "Kecilkan Menu Sidebar"}
-              >
-                <span>{sidebarCollapsed ? 'BUKA' : 'KECILKAN'}</span>
-                <i className={`fa-solid ${sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-[9px]`} />
-              </button>
-
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="lg:hidden w-7 h-7 rounded-full neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs"
@@ -434,34 +420,54 @@ export default function SequenceSaaSLayout({
               </button>
             </div>
 
-            {/* Profile Row: [Foto Profil User] + [Nama & Title] */}
+            {/* Profile Row: [Foto Profil User] + [Nama & Title] + [Large Chevron Circle Button on Right] */}
             {!sidebarCollapsed ? (
-              <div 
-                onClick={() => setShowProfileModal(true)}
-                className="flex items-center gap-3 pt-1 cursor-pointer group"
-                title="Klik untuk lihat rincian profil"
-              >
-                <div className={`w-11 h-11 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
-                  {currentUser?.avatar || '👤'}
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <div 
+                  onClick={() => setShowProfileModal(true)}
+                  className="flex items-center gap-3 overflow-hidden cursor-pointer group flex-1"
+                  title="Klik untuk lihat rincian profil"
+                >
+                  <div className={`w-11 h-11 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                    {currentUser?.avatar || '👤'}
+                  </div>
+                  <div className="truncate flex-1">
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
+                      {currentUser?.title || role.toUpperCase()}
+                    </span>
+                    <span className="font-black text-sm text-slate-900 dark:text-white block truncate leading-tight group-hover:text-emerald-500 transition-colors">
+                      {currentUser?.name || 'User KosanKu'}
+                    </span>
+                  </div>
                 </div>
-                <div className="truncate flex-1">
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
-                    {currentUser?.title || role.toUpperCase()}
-                  </span>
-                  <span className="font-black text-sm text-slate-900 dark:text-white block truncate leading-tight group-hover:text-emerald-500 transition-colors">
-                    {currentUser?.name || 'User KosanKu'}
-                  </span>
-                </div>
+
+                {/* Large Chevron Circle Button (Right edge of profile card) */}
+                <button
+                  onClick={() => setSidebarCollapsed(true)}
+                  className="hidden lg:flex w-8 h-8 rounded-full neu-btn items-center justify-center text-slate-600 dark:text-slate-200 hover:text-emerald-500 dark:hover:text-emerald-400 shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer shrink-0 border border-slate-300/50 dark:border-white/10"
+                  title="Kecilkan Sidebar"
+                >
+                  <i className="fa-solid fa-chevron-left text-xs font-black" />
+                </button>
               </div>
             ) : (
-              <div 
-                onClick={() => setShowProfileModal(true)}
-                className="flex flex-col items-center pt-1 cursor-pointer"
-                title={`${currentUser?.name} (${currentUser?.title})`}
-              >
-                <div className={`w-10 h-10 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-base shadow-md hover:scale-105 transition-transform`}>
+              <div className="flex flex-col items-center gap-3 pt-1">
+                <div 
+                  onClick={() => setShowProfileModal(true)}
+                  className={`w-10 h-10 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-base shadow-md hover:scale-105 transition-transform cursor-pointer`}
+                  title={`${currentUser?.name} (${currentUser?.title})`}
+                >
                   {currentUser?.avatar || '👤'}
                 </div>
+
+                {/* Large Chevron Circle Button (Expanded view trigger) */}
+                <button
+                  onClick={() => setSidebarCollapsed(false)}
+                  className="hidden lg:flex w-8 h-8 rounded-full neu-btn items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md hover:scale-110 active:scale-95 transition-all cursor-pointer shrink-0 border border-emerald-500/40 bg-emerald-500/10"
+                  title="Perluas Sidebar"
+                >
+                  <i className="fa-solid fa-chevron-right text-xs font-black" />
+                </button>
               </div>
             )}
           </div>
