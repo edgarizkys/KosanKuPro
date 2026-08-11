@@ -18,7 +18,8 @@ import VendorDashboard from '@/components/VendorDashboard';
 import TenantDashboard from '@/components/TenantDashboard';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import BookingView from '@/components/BookingView';
-import OwnerRegisterModal from '@/components/OwnerRegisterModal';
+import SaaSLeadModal from '@/components/SaaSLeadModal';
+import SuperadminDashboard from '@/components/SuperadminDashboard';
 import { RoomForBooking } from '@/components/BookingModal';
 import { useAppEffects } from '@/lib/useAppEffects';
 
@@ -188,7 +189,10 @@ export default function Home() {
             onLogout={() => setView('landing')}
           />
         )}
-        {(view === 'admin' || view === 'superadmin') && (
+        {view === 'superadmin' && (
+          <SuperadminDashboard />
+        )}
+        {view === 'admin' && (
           <AdminDashboard
             onSwitchRole={(r) => {
               setRole(r);
@@ -240,14 +244,10 @@ export default function Home() {
       {/* Rincian Notification Drawer Slide-over */}
       <NotificationDrawer open={showNotif} onClose={() => setShowNotif(false)} />
 
-      {/* Owner Self-Registration Modal (Workspace Clean Slate Onboarding) */}
+      {/* SaaS Partnership Lead Offer Modal */}
       {showRegisterOwner && (
-        <OwnerRegisterModal
+        <SaaSLeadModal
           onClose={() => setShowRegisterOwner(false)}
-          onSuccessLogin={(userData) => {
-            setShowRegisterOwner(false);
-            handleLogin(userData);
-          }}
         />
       )}
     </>
