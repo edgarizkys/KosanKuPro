@@ -34,9 +34,34 @@ interface LoggedUser {
 }
 
 export default function Home() {
-  const [view, setView] = useState<ViewType>('landing');
-  const [role, setRole] = useState<RoleType>('owner');
-  const [user, setUser] = useState<LoggedUser | null>(null);
+  const [view, setView] = useState<ViewType>(() => {
+    if (typeof window !== 'undefined') {
+      const savedView = localStorage.getItem('kosanku_current_view') as ViewType;
+      if (savedView && savedView !== 'landing') return savedView;
+    }
+    return 'landing';
+  });
+
+  const [role, setRole] = useState<RoleType>(() => {
+    if (typeof window !== 'undefined') {
+      const savedRole = localStorage.getItem('kosanku_user_role') as RoleType;
+      if (savedRole) return savedRole;
+    }
+    return 'owner';
+  });
+
+  const [user, setUser] = useState<LoggedUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('kosanku_user_session');
+      if (savedUser) {
+        try {
+          return JSON.parse(savedUser);
+        } catch {}
+      }
+    }
+    return null;
+  });
+
   const [showNotif, setShowNotif] = useState(false);
   const [showRegisterOwner, setShowRegisterOwner] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
@@ -84,22 +109,6 @@ export default function Home() {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
-    }
-
-    // Restore persistent session on page refresh
-    const savedUser = localStorage.getItem('kosanku_user_session');
-    const savedRole = localStorage.getItem('kosanku_user_role') as RoleType;
-    const savedView = localStorage.getItem('kosanku_current_view') as ViewType;
-
-    if (savedUser && savedRole && savedView && savedView !== 'landing') {
-      try {
-        const parsed = JSON.parse(savedUser);
-        setUser(parsed);
-        setRole(savedRole);
-        setView(savedView);
-      } catch (e) {
-        console.error('Failed to restore session:', e);
-      }
     }
   }, []);
 
