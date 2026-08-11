@@ -205,7 +205,13 @@ function statusColor(status: string) {
   return 'bg-amber-500 text-slate-900';
 }
 
-export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
+export default function RoomsSection({
+  onLogin,
+  onOpenBookingPage,
+}: {
+  onLogin: () => void;
+  onOpenBookingPage?: (roomObj: RoomItem) => void;
+}) {
   const swiperRef = useRef<HTMLDivElement>(null);
   const swiperInstance = useRef<any>(null);
   const [rooms, setRooms] = useState<RoomItem[]>(FALLBACK_ROOMS);
@@ -799,8 +805,15 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
                     <button
                       type="button"
                       onClick={() => {
+                        const targetRoom = detailRoom;
                         setDetailRoom(null);
-                        setBookingRoom(detailRoom);
+                        if (onOpenBookingPage && targetRoom) {
+                          onOpenBookingPage(targetRoom);
+                        } else if ((window as any).__navigateToBookingPage && targetRoom) {
+                          (window as any).__navigateToBookingPage(targetRoom);
+                        } else {
+                          setBookingRoom(targetRoom);
+                        }
                       }}
                       className="w-full sm:flex-1 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-xl hover:scale-[1.01] active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
                     >

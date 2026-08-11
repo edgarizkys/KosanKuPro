@@ -17,10 +17,12 @@ import EmployeeDashboard from '@/components/EmployeeDashboard';
 import VendorDashboard from '@/components/VendorDashboard';
 import TenantDashboard from '@/components/TenantDashboard';
 import MobileBottomNav from '@/components/MobileBottomNav';
+import BookingView from '@/components/BookingView';
+import { RoomForBooking } from '@/components/BookingModal';
 import { useAppEffects } from '@/lib/useAppEffects';
 
 export type RoleType = 'owner' | 'admin' | 'superadmin' | 'employee' | 'vendor' | 'tenant';
-export type ViewType = 'landing' | 'login' | RoleType;
+export type ViewType = 'landing' | 'login' | 'booking' | RoleType;
 
 interface LoggedUser {
   id: string;
@@ -36,12 +38,17 @@ export default function Home() {
   const [user, setUser] = useState<LoggedUser | null>(null);
   const [showNotif, setShowNotif] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
+  const [selectedBookingRoom, setSelectedBookingRoom] = useState<RoomForBooking | null>(null);
 
   useAppEffects();
 
   useEffect(() => {
     (window as any).__toggleNotifDrawer = () => {
       setShowNotif((prev) => !prev);
+    };
+    (window as any).__navigateToBookingPage = (roomObj?: RoomForBooking) => {
+      setSelectedBookingRoom(roomObj || null);
+      setView('booking');
     };
   }, []);
 
@@ -110,7 +117,13 @@ export default function Home() {
             </div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-28">
               <MarqueeTicker />
-              <RoomsSection onLogin={() => setView('login')} />
+              <RoomsSection 
+                onLogin={() => setView('login')} 
+                onOpenBookingPage={(roomObj) => {
+                  setSelectedBookingRoom(roomObj);
+                  setView('booking');
+                }}
+              />
               <AmenitiesSection />
               <ReviewsSection />
               <LocationSection />
@@ -121,6 +134,15 @@ export default function Home() {
           <LoginView
             onClose={() => setView('landing')}
             onLogin={handleLogin}
+          />
+        )}
+        {view === 'booking' && (
+          <BookingView
+            room={selectedBookingRoom}
+            onClose={() => setView('landing')}
+            onBookingSuccess={(roomId) => {
+              console.log('Booking successful for room:', roomId);
+            }}
           />
         )}
         {view === 'owner' && (

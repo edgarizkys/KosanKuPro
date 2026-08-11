@@ -35,10 +35,12 @@ export default function BookingModal({
   room,
   onClose,
   onBookingSuccess,
+  isFullPage = false,
 }: {
   room: RoomForBooking;
   onClose: () => void;
   onBookingSuccess: (roomId: string) => void;
+  isFullPage?: boolean;
 }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState<BookingFormData>({
@@ -116,24 +118,21 @@ export default function BookingModal({
     'w-full px-0 py-2 border-b-2 border-slate-300 dark:border-white/20 focus:border-rose-500 dark:focus:border-rose-400 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 transition-colors bg-transparent';
   const labelCls = 'text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 block mb-2';
 
-  return (
+  const content = (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3"
-      onClick={onClose}
+      className={isFullPage ? "w-full overflow-hidden flex flex-col text-slate-900 dark:text-white" : "neu-card w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col animate-scale-in text-slate-900 dark:text-white border border-black/5 dark:border-white/10"}
+      onClick={(e) => e.stopPropagation()}
     >
-      <div
-        className="neu-card w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col animate-scale-in text-slate-900 dark:text-white"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ===== HEADER ===== */}
+      {/* ===== HEADER ===== */}
+      {!isFullPage && (
         <div className="bg-gradient-to-r from-[#047857] to-teal-700 px-6 py-4 flex items-start justify-between shrink-0">
           <div>
             <h2 className="text-white font-black text-base">
-              {step === 1 ? 'Data Tenant Juragan Kost' : step === 2 ? 'Pembayaran DP Booking' : '🎉 Booking Berhasil!'}
+              {step === 1 ? 'Formulir Pemesanan Kamar' : step === 2 ? 'Pembayaran DP Booking' : '🎉 Booking Berhasil!'}
             </h2>
             <p className="text-emerald-200 text-[10px] font-medium mt-0.5">
               {step === 1
-                ? `Data Calon Penghuni Juragan Kost`
+                ? `Data Calon Penghuni — KosanKu Pro`
                 : step === 2
                 ? `Booking ID: ${bookingId}`
                 : 'Menunggu verifikasi admin · Kamar status BOOKING'}
@@ -141,11 +140,13 @@ export default function BookingModal({
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center text-sm transition-colors shrink-0 cursor-pointer"
+            className="w-8 h-8 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center text-sm transition-colors shrink-0 cursor-pointer font-bold"
+            title="Tutup Modal"
           >
             ✕
           </button>
         </div>
+      )}
 
         {/* ===== STEP INDICATOR ===== */}
         <div className="flex items-center px-5 py-3 neu-inset border-b border-slate-200/60 dark:border-white/5 shrink-0 gap-0">
@@ -513,6 +514,18 @@ export default function BookingModal({
           </div>
         )}
       </div>
+  );
+
+  if (isFullPage) {
+    return content;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-3 animate-fade-in"
+      onClick={onClose}
+    >
+      {content}
     </div>
   );
 }
