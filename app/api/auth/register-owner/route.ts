@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // 2. Create Owner Account linked to new PropertyId
+    // 2. Create Owner Account linked to new Property
     const newOwner = await prisma.user.create({
       data: {
         name,
@@ -46,9 +46,6 @@ export async function POST(req: Request) {
         phone,
         passwordHash: password, // In production, hash with bcrypt
         role: Role.OWNER,
-        property: {
-          connect: { id: property.id },
-        },
       },
     });
 
