@@ -249,6 +249,24 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
                 {loading ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-right-to-bracket" />}
                 <span>Masuk ke Dashboard Pro</span>
               </button>
+
+              <div className="pt-2 text-center border-t border-slate-200 dark:border-white/10 mt-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2">
+                  Pemilik Kos Baru? Ingin Daftarkan Kosan Anda?
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if ((window as any).__openOwnerRegister) {
+                      (window as any).__openOwnerRegister();
+                    }
+                  }}
+                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-2xl shadow-lg hover:scale-[1.01] transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-building-circle-check" />
+                  <span>Daftarkan Kosan Baru (Workspace Clean Slate)</span>
+                </button>
+              </div>
             </form>
           </div>
         </div>

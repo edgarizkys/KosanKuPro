@@ -18,6 +18,7 @@ import VendorDashboard from '@/components/VendorDashboard';
 import TenantDashboard from '@/components/TenantDashboard';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import BookingView from '@/components/BookingView';
+import OwnerRegisterModal from '@/components/OwnerRegisterModal';
 import { RoomForBooking } from '@/components/BookingModal';
 import { useAppEffects } from '@/lib/useAppEffects';
 
@@ -37,6 +38,7 @@ export default function Home() {
   const [role, setRole] = useState<RoleType>('owner');
   const [user, setUser] = useState<LoggedUser | null>(null);
   const [showNotif, setShowNotif] = useState(false);
+  const [showRegisterOwner, setShowRegisterOwner] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
   const [selectedBookingRoom, setSelectedBookingRoom] = useState<RoomForBooking | null>(null);
 
@@ -49,6 +51,9 @@ export default function Home() {
     (window as any).__navigateToBookingPage = (roomObj?: RoomForBooking) => {
       setSelectedBookingRoom(roomObj || null);
       setView('booking');
+    };
+    (window as any).__openOwnerRegister = () => {
+      setShowRegisterOwner(true);
     };
   }, []);
 
@@ -205,6 +210,17 @@ export default function Home() {
 
       {/* Rincian Notification Drawer Slide-over */}
       <NotificationDrawer open={showNotif} onClose={() => setShowNotif(false)} />
+
+      {/* Owner Self-Registration Modal (Workspace Clean Slate Onboarding) */}
+      {showRegisterOwner && (
+        <OwnerRegisterModal
+          onClose={() => setShowRegisterOwner(false)}
+          onSuccessLogin={(userData) => {
+            setShowRegisterOwner(false);
+            handleLogin(userData);
+          }}
+        />
+      )}
     </>
   );
 }

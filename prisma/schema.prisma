@@ -54,6 +54,7 @@ model Property {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   rooms      Room[]
+  users      User[]
   faqEntries FaqEntry[]
 }
 
@@ -75,6 +76,8 @@ model User {
   passwordHash String
   role         Role              @default(TENANT)
   avatar       String?
+  propertyId   String?
+  property     Property?         @relation(fields: [propertyId], references: [id])
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   rooms        Room[]            @relation("RoomTenant")
