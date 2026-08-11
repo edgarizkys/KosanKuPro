@@ -184,89 +184,98 @@ export default function FinancialDashboard() {
           </div>
         </div>
 
-        {/* Dynamic Curved SVG Area Wave Chart */}
-        <div className="h-64 sm:h-72 w-full pt-8 pb-4 px-2 sm:px-6 relative overflow-hidden">
-          {/* Background Grid Lines */}
-          <div className="absolute inset-x-0 top-2 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 40.000.000</div>
-          <div className="absolute inset-x-0 top-1/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 25.000.000</div>
-          <div className="absolute inset-x-0 top-2/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 10.000.000</div>
-
-          <svg className="w-full h-48 overflow-visible" viewBox="0 0 500 150" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
-                <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-              </linearGradient>
-              <linearGradient id="gradExpense" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
-              </linearGradient>
-              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-              </filter>
-            </defs>
-
-            {/* Revenue Wave Fill & Stroke */}
-            <path
-              d="M 0,70 Q 100,50 200,60 T 400,35 T 500,15 L 500,150 L 0,150 Z"
-              fill="url(#gradRevenue)"
-              className="transition-all duration-700"
-            />
-            <path
-              d="M 0,70 Q 100,50 200,60 T 400,35 T 500,15"
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="4"
-              strokeLinecap="round"
-              filter="url(#glow)"
-              className="transition-all duration-700"
-            />
-
-            {/* Expense Wave Fill & Stroke */}
-            <path
-              d="M 0,115 Q 100,120 200,110 T 400,115 T 500,105 L 500,150 L 0,150 Z"
-              fill="url(#gradExpense)"
-              className="transition-all duration-700"
-            />
-            <path
-              d="M 0,115 Q 100,120 200,110 T 400,115 T 500,105"
-              fill="none"
-              stroke="#f43f5e"
-              strokeWidth="3"
-              strokeDasharray="5 5"
-              strokeLinecap="round"
-              className="transition-all duration-700"
-            />
-
-            {/* Animated Interactive Pulsing Data Nodes */}
-            <g className="cursor-pointer group">
-              <circle cx="0" cy="70" r="5" fill="#10b981" />
-              <circle cx="100" cy="55" r="5" fill="#10b981" />
-              <circle cx="200" cy="60" r="5" fill="#10b981" />
-              <circle cx="300" cy="45" r="5" fill="#10b981" />
-              <circle cx="400" cy="35" r="5" fill="#10b981" />
-              <circle cx="500" cy="15" r="7" fill="#34d399" className="animate-pulse" />
-            </g>
-          </svg>
-
-          {/* Month Labels */}
-          <div className="flex items-center justify-between pt-2 text-[10px] font-black text-slate-500">
-            {MONTHLY_DATA.map((d, i) => (
-              <span key={i} className="hover:text-emerald-500 cursor-pointer transition-colors font-mono">{d.month}</span>
-            ))}
+        {/* Ultra-Sleek Modern Animated Bar & Line Hybrid Chart Container */}
+        <div className="h-72 w-full pt-6 pb-2 px-2 sm:px-6 relative flex items-end justify-between gap-3 sm:gap-6">
+          
+          {/* Y-Axis Grid Lines */}
+          <div className="absolute inset-x-0 top-6 border-b border-slate-200/60 dark:border-white/5 text-[10px] text-slate-400 font-mono pl-2 flex justify-between">
+            <span>Rp 40.000.000</span>
+            <span className="text-[9px] text-emerald-500 font-bold">Target Inflow 🔥</span>
           </div>
+          <div className="absolute inset-x-0 top-1/3 border-b border-slate-200/60 dark:border-white/5 text-[10px] text-slate-400 font-mono pl-2">Rp 25.000.000</div>
+          <div className="absolute inset-x-0 top-2/3 border-b border-slate-200/60 dark:border-white/5 text-[10px] text-slate-400 font-mono pl-2">Rp 10.000.000</div>
+
+          {/* Animated Bar & Hover Tooltips Column Grid */}
+          {MONTHLY_DATA.map((d, i) => {
+            const revHeight = Math.min(100, Math.round((d.revenue / 40000000) * 100));
+            const expHeight = Math.min(100, Math.round((d.expenses / 40000000) * 100));
+            const profit = d.revenue - d.expenses;
+            const profitHeight = Math.min(100, Math.round((profit / 40000000) * 100));
+
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group z-10 relative">
+                
+                {/* Floating Glassmorphism Tooltip on Hover */}
+                <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-2 absolute -top-12 bg-slate-900/90 backdrop-blur-md text-white px-3.5 py-2 rounded-2xl text-[10px] font-bold shadow-2xl border border-white/10 pointer-events-none z-30 flex flex-col items-center gap-0.5 min-w-[130px]">
+                  <span className="text-amber-400 uppercase tracking-wider text-[9px] font-black">{d.month}</span>
+                  <div className="flex items-center justify-between w-full gap-2">
+                    <span className="text-slate-400">Revenue:</span>
+                    <span className="text-emerald-400 font-mono font-black">{formatShort(d.revenue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between w-full gap-2">
+                    <span className="text-slate-400">Expense:</span>
+                    <span className="text-rose-400 font-mono font-black">{formatShort(d.expenses)}</span>
+                  </div>
+                  <div className="flex items-center justify-between w-full gap-2 pt-1 border-t border-white/10">
+                    <span className="text-slate-300">Profit:</span>
+                    <span className="text-amber-300 font-mono font-black">{formatShort(profit)}</span>
+                  </div>
+                </div>
+
+                {/* Animated Bars */}
+                {activeChartTab === 'revenue' ? (
+                  <div className="w-full flex items-end justify-center gap-1 sm:gap-2.5 h-full pt-8">
+                    {/* Revenue Bar */}
+                    <div
+                      style={{ height: `${revHeight}%` }}
+                      className="w-1/2 bg-gradient-to-t from-emerald-600 via-emerald-500 to-teal-400 rounded-t-2xl transition-all duration-700 ease-out group-hover:scale-105 shadow-lg shadow-emerald-500/20 relative overflow-hidden group-hover:shadow-emerald-500/40"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1 bg-white/40" />
+                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+
+                    {/* Expense Bar */}
+                    <div
+                      style={{ height: `${expHeight}%` }}
+                      className="w-1/2 bg-gradient-to-t from-rose-600 via-rose-500 to-pink-400 rounded-t-2xl transition-all duration-700 ease-out group-hover:scale-105 shadow-lg shadow-rose-500/20 relative overflow-hidden group-hover:shadow-rose-500/40"
+                    >
+                      <div className="absolute inset-x-0 top-0 h-1 bg-white/40" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full flex items-end justify-center h-full pt-8">
+                    {/* Net Profit Bar */}
+                    <div
+                      style={{ height: `${profitHeight}%` }}
+                      className="w-2/3 bg-gradient-to-t from-amber-600 via-amber-500 to-yellow-400 rounded-t-2xl transition-all duration-700 ease-out group-hover:scale-105 shadow-lg shadow-amber-500/20 relative overflow-hidden flex items-start justify-center pt-1"
+                    >
+                      <span className="text-[9px] font-black text-slate-900 font-mono drop-shadow">{formatShort(profit)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* X-Axis Month Tag */}
+                <span className="mt-3 text-[11px] font-black text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors font-mono tracking-tight">
+                  {d.month}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-8 pt-2 border-t border-slate-200 dark:border-white/10 text-xs font-bold">
+        <div className="flex items-center justify-center gap-8 pt-3 border-t border-slate-200 dark:border-white/10 text-xs font-bold">
           <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/30" />
-            <span>Penerimaan (Inflow Revenue)</span>
+            <span className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-md shadow-emerald-500/30" />
+            <span className="text-slate-700 dark:text-slate-200">Penerimaan (Inflow Revenue)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full bg-rose-500 shadow-md shadow-rose-500/30" />
-            <span>Pengeluaran (Outflow Expenses)</span>
+            <span className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-rose-600 to-pink-400 shadow-md shadow-rose-500/30" />
+            <span className="text-slate-700 dark:text-slate-200">Pengeluaran (Outflow Expenses)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3.5 h-3.5 rounded-lg bg-gradient-to-tr from-amber-600 to-yellow-400 shadow-md shadow-amber-500/30" />
+            <span className="text-slate-700 dark:text-slate-200">Laba Bersih (Net Profit)</span>
           </div>
         </div>
       </div>
