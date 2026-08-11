@@ -138,7 +138,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
-                onClick={() => selectPreset('owner@kosanku.pro')}
+                onClick={() => {
+                  selectPreset('owner@kosanku.pro');
+                  onLogin({
+                    id: 'usr_owner_01',
+                    name: 'Bapak Hendra (Property Owner)',
+                    email: 'owner@kosanku.pro',
+                    role: 'owner',
+                  });
+                }}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                   email === 'owner@kosanku.pro'
                     ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
@@ -154,7 +162,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
 
               <button
                 type="button"
-                onClick={() => selectPreset('superadmin@kosanku.pro')}
+                onClick={() => {
+                  selectPreset('superadmin@kosanku.pro');
+                  onLogin({
+                    id: 'usr_superadmin_01',
+                    name: 'Superadmin Master SaaS',
+                    email: 'superadmin@kosanku.pro',
+                    role: 'superadmin',
+                  });
+                }}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                   email === 'superadmin@kosanku.pro'
                     ? 'neu-inset border-2 border-purple-500 bg-purple-500/10'
@@ -170,7 +186,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
 
               <button
                 type="button"
-                onClick={() => selectPreset('admin@kosanku.pro')}
+                onClick={() => {
+                  selectPreset('admin@kosanku.pro');
+                  onLogin({
+                    id: 'usr_admin_01',
+                    name: 'Pak Admin Operasional',
+                    email: 'admin@kosanku.pro',
+                    role: 'admin',
+                  });
+                }}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                   email === 'admin@kosanku.pro'
                     ? 'neu-inset border-2 border-[#047857] bg-[#047857]/10'
@@ -186,7 +210,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
 
               <button
                 type="button"
-                onClick={() => selectPreset('staf@kosanku.pro')}
+                onClick={() => {
+                  selectPreset('staf@kosanku.pro');
+                  onLogin({
+                    id: 'usr_staf_01',
+                    name: 'Bambang (Staf Maintenance)',
+                    email: 'staf@kosanku.pro',
+                    role: 'employee',
+                  });
+                }}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                   email === 'staf@kosanku.pro'
                     ? 'neu-inset border-2 border-blue-500 bg-blue-500/10'
@@ -202,7 +234,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
 
               <button
                 type="button"
-                onClick={() => selectPreset('vendor@kosanku.pro')}
+                onClick={() => {
+                  selectPreset('vendor@kosanku.pro');
+                  onLogin({
+                    id: 'usr_vendor_01',
+                    name: 'Depot Air & Gas Suci (Vendor Mitra)',
+                    email: 'vendor@kosanku.pro',
+                    role: 'vendor',
+                  });
+                }}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
                   email === 'vendor@kosanku.pro'
                     ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
@@ -218,7 +258,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
 
               <button
                 type="button"
-                onClick={() => selectPreset('tenant@kosanku.pro')}
+                onClick={() => {
+                  selectPreset('tenant@kosanku.pro');
+                  onLogin({
+                    id: 'usr_tenant_01',
+                    name: 'Rian Pratama',
+                    email: 'tenant@kosanku.pro',
+                    role: 'tenant',
+                  });
+                }}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer col-span-2 ${
                   email === 'tenant@kosanku.pro'
                     ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
