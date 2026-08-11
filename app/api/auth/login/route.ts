@@ -2,38 +2,52 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 const DEMO_USERS: Record<string, any> = {
+  'owner@kosanku.pro': {
+    id: 'usr_owner_01',
+    name: 'Bapak Hendra (Property Owner)',
+    email: 'owner@kosanku.pro',
+    role: 'owner',
+    phone: '0811-9988-7766',
+  },
   'owner@kosanku.com': {
     id: 'usr_owner_01',
     name: 'Bapak Hendra (Property Owner)',
-    email: 'owner@kosanku.com',
+    email: 'owner@kosanku.pro',
     role: 'owner',
     phone: '0811-9988-7766',
+  },
+  'admin@kosanku.pro': {
+    id: 'usr_admin_01',
+    name: 'Pak Admin (Manager Kosan)',
+    email: 'admin@kosanku.pro',
+    role: 'admin',
+    phone: '0812-3456-7890',
   },
   'admin@kosanku.com': {
     id: 'usr_admin_01',
     name: 'Pak Admin (Manager Kosan)',
-    email: 'admin@kosanku.com',
+    email: 'admin@kosanku.pro',
     role: 'admin',
     phone: '0812-3456-7890',
   },
-  'staf@kosanku.com': {
+  'staf@kosanku.pro': {
     id: 'usr_staf_01',
     name: 'Bambang (Staf Maintenance)',
-    email: 'staf@kosanku.com',
+    email: 'staf@kosanku.pro',
     role: 'employee',
     phone: '0813-5544-3322',
   },
-  'vendor@kosanku.com': {
+  'vendor@kosanku.pro': {
     id: 'usr_vendor_01',
     name: 'Depot Air & Gas Suci (Vendor Mitra)',
-    email: 'vendor@kosanku.com',
+    email: 'vendor@kosanku.pro',
     role: 'vendor',
     phone: '0814-7788-9900',
   },
-  'budi@kosanku.com': {
+  'tenant@kosanku.pro': {
     id: 'usr_tenant_01',
-    name: 'Budi Santoso',
-    email: 'budi@kosanku.com',
+    name: 'Rian Pratama',
+    email: 'tenant@kosanku.pro',
     role: 'tenant',
     phone: '0815-6677-8899',
     rooms: [{ id: '1', number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000 }],
