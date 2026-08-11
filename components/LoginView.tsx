@@ -154,18 +154,34 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
 
               <button
                 type="button"
-                onClick={() => selectPreset('admin@kosanku.pro')}
+                onClick={() => selectPreset('superadmin@kosanku.pro')}
                 className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'admin@kosanku.pro'
+                  email === 'superadmin@kosanku.pro'
                     ? 'neu-inset border-2 border-purple-500 bg-purple-500/10'
                     : 'neu-card-sm hover:scale-[1.02]'
                 }`}
               >
                 <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-                  🛡️ Super Admin
+                  👑 Super Admin SaaS
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">superadmin@kosanku.pro</span>
+                <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold block mt-0.5">Provisioning &amp; Leads</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => selectPreset('admin@kosanku.pro')}
+                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
+                  email === 'admin@kosanku.pro'
+                    ? 'neu-inset border-2 border-[#047857] bg-[#047857]/10'
+                    : 'neu-card-sm hover:scale-[1.02]'
+                }`}
+              >
+                <span className="text-xs font-black text-[#047857] dark:text-emerald-300 flex items-center gap-1.5">
+                  🛡️ Admin Operasional
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">admin@kosanku.pro</span>
-                <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold block mt-0.5">Full System Control</span>
+                <span className="text-[9px] text-[#047857] dark:text-emerald-400 font-bold block mt-0.5">Kamar, Billing &amp; Tiket</span>
               </button>
 
               <button
