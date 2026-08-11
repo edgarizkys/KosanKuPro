@@ -132,7 +132,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   },
 ];
 
-const STORAGE_KEY = 'kosanku_user_profiles_v1';
+const STORAGE_KEY = 'kosanku_user_profiles_v2';
 
 export function getStoredUserProfiles(): UserProfile[] {
   if (typeof window === 'undefined') return INITIAL_USER_PROFILES;
