@@ -344,16 +344,9 @@ export default function SequenceSaaSLayout({
       
       {/* 🟣 MOBILE TOP BAR NAVIGATION HEADER */}
       <div className="lg:hidden flex items-center justify-between p-3 sm:p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 sticky top-0 z-40 shadow-sm max-w-full overflow-hidden">
-        {/* LEFT SIDE: Foto User Avatar Pill + Garis 3 Menu Button */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setShowProfileModal(true)}
-            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center cursor-pointer active:scale-95 transition-all bg-gradient-to-br from-amber-500/10 to-emerald-500/10 border border-emerald-500/30"
-            title="Buka Profil Akun"
-          >
-            <span className="text-base">{currentUser?.avatar || '👤'}</span>
-          </button>
-
+        {/* LEFT SIDE: [1. Garis 3 Menu] + [2. Foto Profil User Avatar (Tepat Disampingnya)] */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          {/* 1. Garis 3 Menu Button (Paling Kiri) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 transition-all"
@@ -361,10 +354,20 @@ export default function SequenceSaaSLayout({
           >
             <i className="fa-solid fa-bars text-sm" />
           </button>
+
+          {/* 2. Foto User Avatar (Disamping Garis 3 Menu) */}
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center cursor-pointer active:scale-95 transition-all bg-gradient-to-br from-amber-500/10 to-emerald-500/10 border border-emerald-500/30"
+            title="Buka Profil Akun"
+          >
+            <span className="text-base">{currentUser?.avatar || '👤'}</span>
+          </button>
         </div>
 
-        {/* RIGHT SIDE: Dark/Light Mode Toggle + Logout Button */}
+        {/* RIGHT SIDE: [1. Dark/Light Mode Toggle] + [2. Logout Button] */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Dark / White Mode Toggle */}
           <button
             onClick={handleToggleTheme}
             className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-amber-500 dark:text-amber-400 cursor-pointer text-sm active:scale-95 transition-all"
@@ -373,6 +376,7 @@ export default function SequenceSaaSLayout({
             <i className={`fa-solid ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
           </button>
 
+          {/* Logout Button */}
           <button
             onClick={onLogout}
             className="w-10 h-10 rounded-2xl neu-btn text-rose-500 hover:text-rose-700 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
