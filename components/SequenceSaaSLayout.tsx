@@ -162,6 +162,27 @@ export default function SequenceSaaSLayout({
     return () => clearInterval(interval);
   }, []);
 
+  // Read stored user property name if available
+  const [propertyName, setPropertyName] = useState('KosanKu Pro');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('kosanku_user_session');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          if (parsed.property && parsed.property.name) {
+            setPropertyName(parsed.property.name);
+          } else if (parsed.name && parsed.role === 'OWNER') {
+            setPropertyName(`Kosan ${parsed.name.split(' ')[0]}`);
+          }
+        } catch (e) {
+          // fallback
+        }
+      }
+    }
+  }, []);
+
   const selectedBranch = BRANCHES.find((b) => b.id === activeBranch) || BRANCHES[0];
 
   const showToast = (msg: string) => {
@@ -297,9 +318,9 @@ export default function SequenceSaaSLayout({
           </button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#047857] flex items-center justify-center text-white font-black text-xs neu-card-sm">
-              <i className="fa-solid fa-cubes-stacked" />
+              <i className="fa-solid fa-building-user" />
             </div>
-            <span className="font-black text-base text-[#047857]">KosanKu<span className="text-slate-900 dark:text-white">Pro</span></span>
+            <span className="font-black text-base text-[#047857] truncate max-w-[150px]">{propertyName}</span>
           </div>
         </div>
 
@@ -367,14 +388,14 @@ export default function SequenceSaaSLayout({
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <div className="w-9 h-9 rounded-2xl bg-[#047857] flex items-center justify-center text-white font-black neu-card-sm text-sm shrink-0">
-                  <i className="fa-solid fa-cubes-stacked" />
+                  <i className="fa-solid fa-building-user" />
                 </div>
                 <div className="truncate">
-                  <span className="font-black text-lg text-[#047857] tracking-tight block leading-none">
-                    KosanKu<span className="text-[#0f172a] dark:text-white">Pro</span>
+                  <span className="font-black text-base text-[#047857] tracking-tight block leading-none truncate max-w-[160px]" title={propertyName}>
+                    {propertyName}
                   </span>
                   <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase mt-0.5 block">
-                    Enterprise v2.5
+                    {role.toUpperCase()} WORKSPACE
                   </span>
                 </div>
               </div>
