@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatCompletion } from '@/lib/openai';
 import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 import type OpenAI from 'openai';
 
 // POST /api/ai/chat — Admin chatbot untuk KosanKu Pro
