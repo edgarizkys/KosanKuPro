@@ -349,7 +349,7 @@ export default function FinancialDashboard() {
           {/* Revenue Card (Soft Raised Extruded) */}
           <div className="neu-card p-5 sm:p-6 rounded-3xl space-y-3 transition-all hover:-translate-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Revenue</span>
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Revenue (Pendapatan)</span>
               <div className="w-10 h-10 rounded-2xl neu-inset text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-black">
                 <i className="fa-solid fa-arrow-trend-up" />
               </div>
@@ -357,14 +357,14 @@ export default function FinancialDashboard() {
             <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{formatShort(totalRevenue)}</div>
             <div className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              Bulan ini (Juni 2026)
+              Bulan ini (Juni 2026) • Auto-sync QRIS Midtrans
             </div>
           </div>
 
           {/* Expenses Card (Soft Raised Extruded) */}
           <div className="neu-card p-5 sm:p-6 rounded-3xl space-y-3 transition-all hover:-translate-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Expenses</span>
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Expenses (Pengeluaran)</span>
               <div className="w-10 h-10 rounded-2xl neu-inset text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm font-black">
                 <i className="fa-solid fa-arrow-trend-down" />
               </div>
@@ -388,6 +388,95 @@ export default function FinancialDashboard() {
             <div className="text-[10px] sm:text-[11px] text-purple-600 dark:text-purple-300 font-bold flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
               Profit Margin {margin}%
+            </div>
+          </div>
+        </div>
+
+        {/* 📊 SEKSI REPORT PENDAPATAN DARI MANA AJA (Sumber Income breakdown & Payment Notifications) */}
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-white/10 pb-4">
+            <div>
+              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <i className="fa-solid fa-[#047857] fa-sack-dollar text-[#047857] dark:text-emerald-400 text-xs" /> Rincian Sumber Pendapatan (Report Revenue Streams)
+              </h3>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-bold">
+                Breakdown lengkap asal mula pendapatan bulanan &amp; notifikasi pembayaran otomatis
+              </p>
+            </div>
+            <span className="px-3 py-1.5 rounded-full neu-inset text-[#047857] dark:text-emerald-400 text-[10px] font-black self-start sm:self-auto">
+              💰 Total Inflow: {formatIDR(totalRevenue)}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="p-4 neu-card-sm rounded-2xl space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-500 uppercase">Sewa Kamar Utilitas</span>
+                <i className="fa-solid fa-door-closed text-emerald-500 text-xs" />
+              </div>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{formatIDR(28500000)}</p>
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block">82.6% dari Total Revenue</span>
+            </div>
+
+            <div className="p-4 neu-card-sm rounded-2xl space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-500 uppercase">Deposit &amp; Late Fee</span>
+                <i className="fa-solid fa-vault text-amber-500 text-xs" />
+              </div>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{formatIDR(3200000)}</p>
+              <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold block">9.3% Escrow Retainage</span>
+            </div>
+
+            <div className="p-4 neu-card-sm rounded-2xl space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-500 uppercase">Vendor Add-On Marketplace</span>
+                <i className="fa-solid fa-store text-purple-500 text-xs" />
+              </div>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{formatIDR(1800000)}</p>
+              <span className="text-[9px] text-purple-600 dark:text-purple-300 font-bold block">5.2% Komisi Air &amp; Laundry</span>
+            </div>
+
+            <div className="p-4 neu-card-sm rounded-2xl space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-500 uppercase">Parkir &amp; Fasilitas Ekstra</span>
+                <i className="fa-solid fa-square-parking text-blue-500 text-xs" />
+              </div>
+              <p className="text-lg font-black text-slate-900 dark:text-white">{formatIDR(1000000)}</p>
+              <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold block">2.9% Layanan Tambahan</span>
+            </div>
+          </div>
+
+          {/* Notifikasi Payment Realtime Masuk ke Income */}
+          <div className="neu-inset p-4 rounded-2xl space-y-2">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+              🔔 LOG NOTIFIKASI PEMBAYARAN REALTME (AUTOMATIC INFLOW NOTIFICATION)
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="p-3 neu-card-sm rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <i className="fa-solid fa-qrcode" />
+                  </div>
+                  <div>
+                    <span className="font-black text-slate-900 dark:text-white block text-xs">INV-2026-0602 (Rian Pratama)</span>
+                    <span className="text-[9px] text-slate-500">QRIS Midtrans • Terverifikasi Otomatis</span>
+                  </div>
+                </div>
+                <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">+Rp 2.500.000</span>
+              </div>
+
+              <div className="p-3 neu-card-sm rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#047857]/10 text-[#047857] dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    <i className="fa-solid fa-building-columns" />
+                  </div>
+                  <div>
+                    <span className="font-black text-slate-900 dark:text-white block text-xs">INV-2026-0605 (Budi Santoso)</span>
+                    <span className="text-[9px] text-slate-500 font-medium">BCA Virtual Account • Terverifikasi Otomatis</span>
+                  </div>
+                </div>
+                <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">+Rp 3.000.000</span>
+              </div>
             </div>
           </div>
         </div>

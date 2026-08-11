@@ -143,30 +143,28 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
         {/* Main Composition: Selling 3D Typography + Villa Cutout Overlap */}
         <div className="relative w-full flex-1 flex flex-col justify-end items-center overflow-hidden">
           
-          {/* DESKTOP LAYER 1: Selling Display Typography (Original Wide Spread 100% Untouched) */}
-          <div className="hidden sm:block hero-parallax-text absolute top-5 lg:top-7 w-full max-w-7xl mx-auto px-8 z-10 pointer-events-none select-none will-change-transform">
-            <h1 className="text-[8rem] lg:text-[11rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.88] whitespace-nowrap">
-              Sewa Kos Modern
+          {/* DESKTOP LAYER 1: Selling Display Typography (Harmonious & Perfectly Aligned) */}
+          <div className="hidden sm:block hero-parallax-text absolute top-4 lg:top-6 w-full max-w-7xl mx-auto px-8 z-10 pointer-events-none select-none will-change-transform text-center sm:text-left">
+            <h1 className="text-[6.5rem] lg:text-[9.5rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.9] whitespace-nowrap drop-shadow-sm">
+              Sewa Kos <span className="text-[#047857] dark:text-emerald-400">Modern</span>
             </h1>
-            <div className="relative flex items-baseline justify-end pr-8 lg:pr-14 -mt-6 lg:-mt-8">
-              <h1 className="text-[8rem] lg:text-[11rem] font-serif italic font-light tracking-tight text-slate-800 dark:text-slate-200 leading-[0.88] whitespace-nowrap">
+            <div className="relative flex items-center justify-start gap-4 pl-4 lg:pl-12 -mt-4 lg:-mt-6">
+              <span className="w-12 lg:w-20 h-1.5 bg-[#047857] dark:bg-emerald-400 rounded-full shadow-sm" />
+              <h2 className="text-[5.5rem] lg:text-[8.5rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-[0.9] whitespace-nowrap drop-shadow-sm">
                 Siap Huni.
-              </h1>
+              </h2>
             </div>
           </div>
 
-          {/* MOBILE LAYER 1: Luxury Stacked Editorial Typography (Option A) */}
-          <div className="block sm:hidden hero-parallax-text absolute top-12 left-4 right-4 z-10 pointer-events-none select-none will-change-transform">
-            <div className="flex flex-col items-start">
-              <h1 className="text-[2.6rem] xs:text-[2.9rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.9]">
-                Sewa Kos
-              </h1>
-              <h1 className="text-[2.6rem] xs:text-[2.9rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.9]">
-                Modern
+          {/* MOBILE LAYER 1: Luxury Stacked Editorial Typography */}
+          <div className="block sm:hidden hero-parallax-text absolute top-10 left-5 right-5 z-10 pointer-events-none select-none will-change-transform">
+            <div className="flex flex-col items-start space-y-0">
+              <h1 className="text-[2.5rem] xs:text-[2.8rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.95]">
+                Sewa Kos <span className="text-[#047857] dark:text-emerald-400">Modern</span>
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <div className="w-5 h-[2px] bg-amber-500 rounded-full" />
-                <span className="text-[1.65rem] xs:text-[1.85rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
+                <div className="w-6 h-1 bg-amber-500 rounded-full" />
+                <span className="text-[1.8rem] xs:text-[2.0rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
                   Siap Huni.
                 </span>
               </div>
@@ -214,62 +212,64 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
 
         </div>
 
-        {/* LAYER 4: Floating Glassmorphic Cards Tailored for KosanKu Pro */}
-        {/* Bottom Left Card: +500 Penghuni & Rating */}
-        <div className="absolute bottom-3 sm:bottom-4 left-6 sm:left-16 lg:left-24 z-40 max-w-[200px] sm:max-w-[220px] p-3.5 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/15 rounded-2xl shadow-lg shadow-slate-900/5 text-slate-900 dark:text-white hidden sm:block hover:translate-y-[-2px] transition-transform">
+        {/* LAYER 4: 100% NEUMORPHIC FLOATING WIDGET CARDS */}
+        {/* Bottom Left Card: +500 Penghuni & Rating (Full Neumorphic Extruded & Inset) */}
+        <div className="absolute bottom-3 sm:bottom-5 left-6 sm:left-14 lg:left-20 z-40 max-w-[210px] sm:max-w-[230px] p-4 neu-card rounded-3xl border border-white/80 dark:border-white/10 shadow-2xl text-slate-900 dark:text-white hidden sm:block hover:translate-y-[-3px] transition-all">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">500+</h3>
-            <span className="text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-200/60 dark:border-amber-500/20">
+            <div className="px-2.5 py-1 neu-inset rounded-2xl text-xl sm:text-2xl font-black text-[#047857] dark:text-emerald-400 shadow-inner">
+              500+
+            </div>
+            <span className="text-[10px] font-black neu-card-sm text-amber-600 dark:text-amber-300 px-2.5 py-1 rounded-xl border border-amber-500/20">
               ★ 4.9 / 5.0
             </span>
           </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug font-medium">
+          <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 mt-2 leading-snug font-bold">
             Penghuni &amp; pemilik kos mempercayai KosanKuPro
           </p>
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-white/10">
+          <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-slate-200/60 dark:border-white/10">
             <div className="flex -space-x-1.5">
               <img src="/images/avatar1.png" alt="Avatar" className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 object-cover" />
-              <div className="w-6 h-6 rounded-full bg-emerald-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">EK</div>
+              <div className="w-6 h-6 rounded-full bg-[#047857] border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">EK</div>
               <div className="w-6 h-6 rounded-full bg-indigo-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">AR</div>
             </div>
-            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">96% Terisi</span>
+            <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-extrabold neu-inset px-2.5 py-0.5 rounded-full">96% Terisi</span>
           </div>
         </div>
 
-        {/* Center Right Card: Smart Property Status */}
+        {/* Center Right Card: Smart Property Status (Full Neumorphic Extruded & Inset) */}
         {!dismissCard && (
-          <div className="absolute top-[38%] sm:top-[40%] right-8 sm:right-16 lg:right-28 z-40 w-52 sm:w-60 p-3.5 sm:p-4 bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/80 dark:border-white/15 rounded-2xl shadow-lg shadow-slate-900/5 text-slate-900 dark:text-white hidden sm:block animate-scale-in hover:translate-y-[-2px] transition-transform">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2 text-[11px] font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="absolute top-[36%] sm:top-[38%] right-8 sm:right-14 lg:right-24 z-40 w-56 sm:w-64 p-4 sm:p-5 neu-card rounded-3xl border border-white/80 dark:border-white/10 shadow-2xl text-slate-900 dark:text-white hidden sm:block animate-scale-in hover:translate-y-[-3px] transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-[11px] font-black text-slate-800 dark:text-slate-200">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-sm" />
                 <span>Smart System Status</span>
               </div>
               <button
                 onClick={() => setDismissCard(true)}
-                className="w-5 h-5 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-[10px] text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+                className="w-6 h-6 rounded-full neu-btn flex items-center justify-center text-[10px] text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Tutup Widget"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-2.5">
-              <div>
-                <div className="text-[10px] text-slate-400 font-medium">Tingkat Okupansi</div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">98.4%</span>
-                  <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">
+            <div className="space-y-3">
+              <div className="p-3 neu-inset rounded-2xl">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Tingkat Okupansi</div>
+                <div className="flex items-baseline justify-between mt-1">
+                  <span className="text-xl sm:text-2xl font-black text-[#047857] dark:text-emerald-400 font-mono">98.4%</span>
+                  <span className="text-[9px] font-black text-emerald-800 dark:text-emerald-300 neu-card-sm border border-emerald-500/20 px-2 py-0.5 rounded-xl">
                     ↑ 4 Tersedia
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/10 text-xs">
+              <div className="flex items-center justify-between pt-1 text-xs">
                 <div>
-                  <div className="text-[10px] text-slate-400 font-medium">Smart Keyless Lock</div>
-                  <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">● Active & Secure</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Smart Keyless Lock</div>
+                  <div className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">● Active &amp; Secure</div>
                 </div>
-                <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs">
+                <div className="w-8 h-8 rounded-2xl neu-inset text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs shadow-inner">
                   <i className="fa-solid fa-shield-halved" />
                 </div>
               </div>

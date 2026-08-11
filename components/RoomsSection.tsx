@@ -249,9 +249,9 @@ export default function RoomsSection({ onLogin }: { onLogin: () => void }) {
       .catch(() => {});
   }, []);
 
-  const filtered = filter === 'all' ? rooms : rooms.filter((r) => r.status === filter);
-  const available = rooms.filter((r) => r.status === 'AVAILABLE');
-  const top3 = available.slice(0, 3).map((r, i) => ({
+  const filtered = filter === 'all' ? rooms : rooms.filter((r) => r.status.toUpperCase() === filter.toUpperCase());
+  const available = rooms.filter((r) => r.status.toUpperCase() === 'AVAILABLE');
+  const top3 = (filter === 'OCCUPIED' ? filtered : available).slice(0, 3).map((r, i) => ({
     ...r,
     badge: i === 0 ? '👑 #1 Best Choice' : i === 1 ? '⭐ #2 Populer' : '🔥 #3 Favorite',
     badgeClass: i === 0 ? 'bg-amber-400 text-slate-900 font-extrabold' : 'bg-purple-600 text-white font-bold',

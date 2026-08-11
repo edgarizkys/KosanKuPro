@@ -204,10 +204,10 @@ export default function EmployeeDashboard({
             </div>
             <button
               onClick={submitSOReport}
-              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-purple-600 hover:opacity-90 text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 w-fit"
+              className="px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-2 w-fit"
             >
               <i className="fa-solid fa-paper-plane" />
-              <span>📤 Kirim Laporan SO ke Owner</span>
+              <span>Kirim Laporan SO ke Owner</span>
             </button>
           </div>
           {/* 📸 Verification Photo Upload with Realtime Watermark */}

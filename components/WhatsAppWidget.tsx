@@ -107,27 +107,28 @@ export default function WhatsAppWidget() {
 
           {/* Quick actions */}
           {messages.length <= 1 && (
-            <div className="px-4 py-2 space-y-1.5 shrink-0">
+            <div className="px-4 py-3 space-y-3 shrink-0 border-t border-slate-200/40 dark:border-white/5">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block px-1">Pertanyaan Populer:</span>
               <button
                 onClick={() => sendMessage('Kamar apa saja yang tersedia?')}
-                className="w-full text-left px-3.5 py-2 neu-btn rounded-xl text-[11px] text-slate-700 dark:text-slate-300 font-medium transition-all flex items-center gap-2 cursor-pointer"
+                className="w-full text-left px-4 py-2.5 neu-btn rounded-2xl text-[11px] text-slate-800 dark:text-slate-200 font-bold transition-all flex items-center gap-3 cursor-pointer hover:scale-[1.01]"
               >
-                <span className="w-6 h-6 rounded-lg neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-[10px]"><i className="fa-solid fa-bed" /></span>
-                Lihat Kamar Tersedia
+                <span className="w-7 h-7 rounded-xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-xs shrink-0"><i className="fa-solid fa-bed" /></span>
+                <span>Lihat Kamar Tersedia</span>
               </button>
               <button
                 onClick={() => sendMessage('Berapa harga kamar yang ada?')}
-                className="w-full text-left px-3.5 py-2 neu-btn rounded-xl text-[11px] text-slate-700 dark:text-slate-300 font-medium transition-all flex items-center gap-2 cursor-pointer"
+                className="w-full text-left px-4 py-2.5 neu-btn rounded-2xl text-[11px] text-slate-800 dark:text-slate-200 font-bold transition-all flex items-center gap-3 cursor-pointer hover:scale-[1.01]"
               >
-                <span className="w-6 h-6 rounded-lg neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-[10px]"><i className="fa-solid fa-tag" /></span>
-                Info Harga & Fasilitas
+                <span className="w-7 h-7 rounded-xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-xs shrink-0"><i className="fa-solid fa-tag" /></span>
+                <span>Info Harga &amp; Fasilitas</span>
               </button>
               <button
                 onClick={() => sendMessage('Bagaimana cara booking kamar?')}
-                className="w-full text-left px-3.5 py-2 neu-btn rounded-xl text-[11px] text-slate-700 dark:text-slate-300 font-medium transition-all flex items-center gap-2 cursor-pointer"
+                className="w-full text-left px-4 py-2.5 neu-btn rounded-2xl text-[11px] text-slate-800 dark:text-slate-200 font-bold transition-all flex items-center gap-3 cursor-pointer hover:scale-[1.01]"
               >
-                <span className="w-6 h-6 rounded-lg neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-[10px]"><i className="fa-solid fa-calendar-check" /></span>
-                Cara Booking
+                <span className="w-7 h-7 rounded-xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-xs shrink-0"><i className="fa-solid fa-calendar-check" /></span>
+                <span>Cara Booking</span>
               </button>
             </div>
           )}
