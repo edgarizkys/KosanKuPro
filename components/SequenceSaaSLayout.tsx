@@ -214,8 +214,9 @@ export default function SequenceSaaSLayout({
           title: 'KosanKu Executive Hub',
           items: [
             { id: 'financial', label: 'Laporan P&L', icon: 'fa-solid fa-chart-pie' },
+            { id: 'reports', label: 'Pusat Laporan & Ekspor', icon: 'fa-solid fa-file-invoice', highlight: true },
             { id: 'deposit', label: 'Escrow & Fee', icon: 'fa-solid fa-vault' },
-            { id: 'users', label: 'Manajemen User', icon: 'fa-solid fa-users-gear', highlight: true },
+            { id: 'users', label: 'Manajemen User', icon: 'fa-solid fa-users-gear' },
             { id: 'master_data', label: 'Master Setting', icon: 'fa-solid fa-sliders' },
             { id: 'inventory', label: 'Audit Stock (SO)', icon: 'fa-solid fa-boxes-packing' },
             { id: 'autopilot', label: 'Auto-Pilot AI', icon: 'fa-solid fa-wand-magic-sparkles' },

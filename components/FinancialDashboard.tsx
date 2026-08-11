@@ -105,9 +105,6 @@ export default function FinancialDashboard() {
   return (
     <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors animate-fade-in">
       
-      {/* OCR Upload Card */}
-      <OCRUpload />
-
       {/* P&L Executive Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <div className="neu-card p-5 sm:p-6 rounded-3xl space-y-3 transition-all hover:-translate-y-1">
@@ -191,71 +188,70 @@ export default function FinancialDashboard() {
           </div>
         </div>
 
-        {/* Animated Bar & Line Chart Container */}
-        <div className="h-64 sm:h-72 w-full flex items-end justify-between gap-2 sm:gap-6 pt-8 pb-4 px-2 sm:px-6 relative">
+        {/* Animated Smooth Wave SVG Line & Area Chart */}
+        <div className="h-64 sm:h-72 w-full pt-8 pb-4 px-2 sm:px-6 relative overflow-hidden">
           
           {/* Background Grid Lines */}
           <div className="absolute inset-x-0 top-0 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 40jt</div>
           <div className="absolute inset-x-0 top-1/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 25jt</div>
           <div className="absolute inset-x-0 top-2/3 border-b border-slate-200/50 dark:border-white/5 text-[9px] text-slate-400 font-mono pl-2">Rp 10jt</div>
 
-          {MONTHLY_DATA.map((d, i) => {
-            const revHeight = Math.round((d.revenue / maxRevenue) * 100);
-            const expHeight = Math.round((d.expenses / maxRevenue) * 100);
-            const profit = d.revenue - d.expenses;
-            const profitHeight = Math.round((profit / maxRevenue) * 100);
+          {/* SVG Smooth Curve Area Chart */}
+          <svg className="w-full h-44 overflow-visible" viewBox="0 0 500 150" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+              </linearGradient>
+              <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
 
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group z-10">
-                
-                {/* Tooltip Hover Capsule */}
-                <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 absolute -top-4 bg-slate-900 text-white px-3 py-1.5 rounded-xl text-[10px] font-bold shadow-2xl pointer-events-none z-30 flex flex-col items-center">
-                  <span>{d.month}</span>
-                  <span className="text-emerald-400">Revenue: {formatShort(d.revenue)}</span>
-                  <span className="text-rose-400">Expense: {formatShort(d.expenses)}</span>
-                  <span className="text-amber-400">Profit: {formatShort(profit)}</span>
-                </div>
+            {/* Revenue Smooth Curve Path */}
+            <path
+              d="M 0,60 C 80,50 160,40 250,55 C 330,65 410,35 500,20 L 500,150 L 0,150 Z"
+              fill="url(#revenueGrad)"
+              className="transition-all duration-1000"
+            />
+            <path
+              d="M 0,60 C 80,50 160,40 250,55 C 330,65 410,35 500,20"
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="4"
+              strokeLinecap="round"
+              className="transition-all duration-1000"
+            />
 
-                {/* Animated Bars */}
-                {activeChartTab === 'revenue' && (
-                  <div className="w-full flex items-end justify-center gap-1 sm:gap-2 h-full">
-                    {/* Revenue Bar */}
-                    <div
-                      style={{ height: `${revHeight}%` }}
-                      className="w-1/2 bg-gradient-to-t from-emerald-600 to-teal-400 rounded-t-xl transition-all duration-700 ease-out group-hover:brightness-110 shadow-lg relative overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                    </div>
-                    {/* Expense Bar */}
-                    <div
-                      style={{ height: `${expHeight}%` }}
-                      className="w-1/2 bg-gradient-to-t from-rose-600 to-pink-500 rounded-t-xl transition-all duration-700 ease-out group-hover:brightness-110 shadow-lg"
-                    />
-                  </div>
-                )}
+            {/* Expense Smooth Curve Path */}
+            <path
+              d="M 0,110 C 80,115 160,105 250,110 C 330,120 410,100 500,95 L 500,150 L 0,150 Z"
+              fill="url(#expenseGrad)"
+              className="transition-all duration-1000"
+            />
+            <path
+              d="M 0,110 C 80,115 160,105 250,110 C 330,120 410,100 500,95"
+              fill="none"
+              stroke="#f43f5e"
+              strokeWidth="3"
+              strokeDasharray="4 4"
+              strokeLinecap="round"
+              className="transition-all duration-1000"
+            />
 
-                {activeChartTab === 'profit' && (
-                  <div
-                    style={{ height: `${profitHeight}%` }}
-                    className="w-3/4 bg-gradient-to-t from-emerald-700 via-teal-500 to-emerald-400 rounded-t-2xl transition-all duration-700 ease-out group-hover:brightness-110 shadow-xl relative overflow-hidden"
-                  >
-                    <span className="absolute top-1 inset-x-0 text-center text-[9px] font-black text-white">{formatShort(profit)}</span>
-                  </div>
-                )}
+            {/* Glowing Pulse Nodes */}
+            <circle cx="0" cy="60" r="5" fill="#10b981" className="animate-ping" />
+            <circle cx="250" cy="55" r="5" fill="#10b981" />
+            <circle cx="500" cy="20" r="6" fill="#10b981" className="animate-pulse" />
+          </svg>
 
-                {activeChartTab === 'occupancy' && (
-                  <div
-                    style={{ height: `${d.occupancy}%` }}
-                    className="w-3/4 bg-gradient-to-t from-purple-700 to-indigo-500 rounded-t-2xl transition-all duration-700 ease-out group-hover:brightness-110 shadow-xl relative"
-                  >
-                    <span className="absolute top-1 inset-x-0 text-center text-[9px] font-black text-white">{d.occupancy}%</span>
-                  </div>
-                )}
-
-                <span className="text-[10px] font-bold text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{d.month.split(' ')[0]}</span>
-              </div>
-            );
-          })}
+          {/* Month Labels Axis */}
+          <div className="flex items-center justify-between pt-3 text-[10px] font-bold text-slate-500">
+            {MONTHLY_DATA.map((d, i) => (
+              <span key={i} className="hover:text-emerald-500 cursor-pointer transition-colors">{d.month}</span>
+            ))}
+          </div>
         </div>
 
         {/* Legend */}

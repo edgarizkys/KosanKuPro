@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import ReportsHub from './ReportsHub';
 import FinancialDashboard from './FinancialDashboard';
 import MasterDataSettings from './MasterDataSettings';
 import SecurityDepositEscrow from './SecurityDepositEscrow';
@@ -281,6 +282,26 @@ export default function OwnerDashboard({
       <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors">
         {/* Active Selected Tab Module Content */}
         {activeTab === 'financial' && <FinancialDashboard />}
+        {(activeTab as string) === 'reports' && (
+          <ReportsHub
+            totalRevenue={34500000}
+            totalExpenses={8900000}
+            netProfit={25600000}
+            margin={74}
+            expenses={[
+              { category: 'listrik', description: 'Token PLN Juli 2026', amount: 4200000, date: '2026-07-01' },
+              { category: 'air', description: 'Tagihan Air PDAM Juli 2026', amount: 850000, date: '2026-07-02' },
+              { category: 'internet', description: 'Langganan Wi-Fi IndiHome', amount: 1200000, date: '2026-07-03' },
+              { category: 'perbaikan', description: 'Ganti kran kamar B-202', amount: 350000, date: '2026-07-05' },
+              { category: 'lain_lain', description: 'Kebersihan & sampah', amount: 500000, date: '2026-07-06' },
+            ]}
+            revenues={[
+              { id: 'REV-2026-001', source: 'Sewa Bulanan Kamar Deluxe', tenantName: 'Budi Santoso', roomNumber: 'A-101', amount: 2500000, method: 'QRIS Midtrans', date: '2026-08-01' },
+              { id: 'REV-2026-002', source: 'Deposit Garansi Kerusakan', tenantName: 'Rian Pratama', roomNumber: 'C-302', amount: 1000000, method: 'BCA VA', date: '2026-08-02' },
+              { id: 'REV-2026-003', source: 'Sewa Bulanan VIP Balcony', tenantName: 'Siti Rahma', roomNumber: 'B-201', amount: 3000000, method: 'Mandiri VA', date: '2026-08-03' },
+            ]}
+          />
+        )}
 
         {/* Tab: Deposit Escrow & Late Fee */}
         {activeTab === 'deposit' && <SecurityDepositEscrow />}
