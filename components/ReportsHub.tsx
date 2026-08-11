@@ -335,87 +335,112 @@ export default function ReportsHub({
         </div>
       </div>
 
-      {/* Tab Switcher Navigation */}
-      <div className="flex items-center gap-2 neu-inset p-1.5 rounded-2xl overflow-x-auto scrollbar-none max-w-full text-xs font-bold whitespace-nowrap">
-        <button
-          onClick={() => setActiveReportTab('all')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'all' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-layer-group" />
-          <span>Semua Laporan (Konsolidasi Master)</span>
-        </button>
+      {/* Mobile-Friendly Native Dropdown (Mobile) & Pill Navigation Grid (Desktop) */}
+      <div className="space-y-3 max-w-full">
+        {/* Mobile View: Native Select Menu (Ultra Mobile Friendly) */}
+        <div className="block sm:hidden neu-card p-3 rounded-2xl">
+          <label className="text-[10px] font-extrabold uppercase text-slate-400 block mb-1.5 flex items-center gap-1.5">
+            <i className="fa-solid fa-[#047857] fa-filter" />
+            <span>Pilih Kategori Laporan:</span>
+          </label>
+          <select
+            value={activeReportTab}
+            onChange={(e) => setActiveReportTab(e.target.value as any)}
+            className="w-full neu-input py-3 px-3.5 rounded-xl text-xs font-black outline-none border border-emerald-500/40 text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800/80 cursor-pointer"
+          >
+            <option value="all">📊 Semua Laporan (Konsolidasi Master)</option>
+            <option value="financial">📈 Ringkasan Eksekutif P&amp;L</option>
+            <option value="incomes">🟢 Rincian Penerimaan ({revenues.length})</option>
+            <option value="expenses">🔴 Rincian Pengeluaran ({expenses.length})</option>
+            <option value="occupancy">🏢 Status Okupansi Kamar ({occupancyData.length})</option>
+            <option value="inventory">📦 Audit Stok Inventori ({inventoryAuditData.length})</option>
+            <option value="vendor">🏪 History Mitra Vendor ({vendorHistoryData.length})</option>
+            <option value="employee">👷‍♂️ Performa Karyawan ({employeeTaskData.length})</option>
+          </select>
+        </div>
 
-        <button
-          onClick={() => setActiveReportTab('financial')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'financial' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-chart-pie" />
-          <span>Ringkasan P&amp;L</span>
-        </button>
+        {/* Tablet & Desktop View: Responsive Flex/Grid Pills */}
+        <div className="hidden sm:flex flex-wrap items-center gap-2 neu-inset p-2 rounded-2xl text-xs font-bold">
+          <button
+            onClick={() => setActiveReportTab('all')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'all' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-layer-group" />
+            <span>Semua Laporan</span>
+          </button>
 
-        <button
-          onClick={() => setActiveReportTab('incomes')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'incomes' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-circle-arrow-down text-emerald-500" />
-          <span>Penerimaan ({revenues.length})</span>
-        </button>
+          <button
+            onClick={() => setActiveReportTab('financial')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'financial' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-chart-pie" />
+            <span>P&amp;L</span>
+          </button>
 
-        <button
-          onClick={() => setActiveReportTab('expenses')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'expenses' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-circle-arrow-up text-rose-500" />
-          <span>Pengeluaran ({expenses.length})</span>
-        </button>
+          <button
+            onClick={() => setActiveReportTab('incomes')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'incomes' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-circle-arrow-down text-emerald-500" />
+            <span>Penerimaan ({revenues.length})</span>
+          </button>
 
-        <button
-          onClick={() => setActiveReportTab('occupancy')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'occupancy' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-door-open text-purple-500" />
-          <span>Okupansi Kamar ({occupancyData.length})</span>
-        </button>
+          <button
+            onClick={() => setActiveReportTab('expenses')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'expenses' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-circle-arrow-up text-rose-500" />
+            <span>Pengeluaran ({expenses.length})</span>
+          </button>
 
-        <button
-          onClick={() => setActiveReportTab('inventory')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'inventory' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-boxes-packing text-amber-500" />
-          <span>Stok Inventori ({inventoryAuditData.length})</span>
-        </button>
+          <button
+            onClick={() => setActiveReportTab('occupancy')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'occupancy' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-door-open text-purple-500" />
+            <span>Okupansi ({occupancyData.length})</span>
+          </button>
 
-        <button
-          onClick={() => setActiveReportTab('vendor')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'vendor' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-store text-blue-500" />
-          <span>History Vendor ({vendorHistoryData.length})</span>
-        </button>
+          <button
+            onClick={() => setActiveReportTab('inventory')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'inventory' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-boxes-packing text-amber-500" />
+            <span>Inventori ({inventoryAuditData.length})</span>
+          </button>
 
-        <button
-          onClick={() => setActiveReportTab('employee')}
-          className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
-            activeReportTab === 'employee' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <i className="fa-solid fa-user-check text-emerald-500" />
-          <span>Performa Karyawan ({employeeTaskData.length})</span>
-        </button>
+          <button
+            onClick={() => setActiveReportTab('vendor')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'vendor' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-store text-blue-500" />
+            <span>Vendor ({vendorHistoryData.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveReportTab('employee')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'employee' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-user-check text-emerald-500" />
+            <span>Karyawan ({employeeTaskData.length})</span>
+          </button>
+        </div>
       </div>
 
       {/* ===== SECTION 1: P&L SUMMARY ===== */}
