@@ -734,7 +734,7 @@ export default function ReportsHub({
                   <th className="py-3 px-4">TANGGAL</th>
                   <th className="py-3 px-4">STAF</th>
                   <th className="py-3 px-4">PENUGASAN</th>
-                  <th className="py-3 px-4">OLES HENDRA (OWNER)</th>
+                  <th className="py-3 px-4">DITUGASKAN OLEH</th>
                   <th className="py-3 px-4">STATUS</th>
                 </tr>
               </thead>

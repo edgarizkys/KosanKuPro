@@ -111,23 +111,42 @@ export default function SequenceSaaSLayout({
     showToast('✓ Akun pengguna berhasil dihapus.');
   };
 
-  // Find active user profile or fallback
+  // Find active user profile or fallback to session
+  const [activeSessionUser, setActiveSessionUser] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('kosanku_user_session');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          setActiveSessionUser(parsed);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }, [role]);
+
   const currentUser: UserProfile =
+    (activeSessionUser && activeSessionUser.role?.toLowerCase() === role
+      ? {
+          id: activeSessionUser.id || 'USR-ACT-01',
+          name: activeSessionUser.name || 'User KosanKu',
+          email: activeSessionUser.email || '',
+          phone: '0812-3456-7890',
+          role: role,
+          title: activeSessionUser.role === 'SUPERADMIN' ? '👑 Super Admin SaaS' : activeSessionUser.role === 'ADMIN' ? '🛡️ Admin Operasional' : 'Pemilik Properti KosanKu',
+          avatar: activeSessionUser.role === 'SUPERADMIN' ? '👑' : activeSessionUser.role === 'ADMIN' ? '🛡️' : '👑',
+          avatarBg: activeSessionUser.role === 'SUPERADMIN' ? 'bg-amber-500' : 'bg-emerald-600',
+          branchId: activeBranch,
+          branchName: 'Konsolidasi Semua Cabang',
+          status: 'ACTIVE',
+          joinDate: '01 Jan 2024',
+        }
+      : null) ||
     users.find((u) => u.role === role) ||
-    users[0] || {
-      id: 'USR-ACT-01',
-      name: 'Bapak Hendra Gunawan',
-      email: 'owner@kosanku.com',
-      phone: '0811-9988-7766',
-      role: role,
-      title: 'Pemilik Properti KosanKu',
-      avatar: '👑',
-      avatarBg: 'bg-amber-500',
-      branchId: activeBranch,
-      branchName: 'Konsolidasi Semua Cabang',
-      status: 'ACTIVE',
-      joinDate: '01 Jan 2024',
-    };
+    users[0];
 
   const handleSwitchUserProfile = (targetUser: UserProfile) => {
     onSwitchRole(targetUser.role);
