@@ -429,54 +429,32 @@ export default function SequenceSaaSLayout({
               </button>
             </div>
 
-            {/* Profile Row: [Garis 3 Menu] + [Foto Profil User] + [Nama & Title] */}
+            {/* Profile Row: [Foto Profil User] + [Nama & Title] */}
             {!sidebarCollapsed ? (
-              <div className="flex items-center gap-2.5 pt-1">
-                {/* 1. Garis 3 Menu Button (Paling Kiri) */}
-                <button
-                  onClick={() => setSidebarCollapsed(true)}
-                  className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-emerald-500 transition-all cursor-pointer shrink-0"
-                  title="Perkecil Navigasi"
-                >
-                  <i className="fa-solid fa-bars text-xs" />
-                </button>
-
-                {/* 2. Foto User Avatar (Disamping Garis 3 Menu) */}
-                <div 
-                  onClick={() => setShowProfileModal(true)}
-                  className="flex items-center gap-2.5 overflow-hidden cursor-pointer group flex-1"
-                  title="Klik untuk lihat rincian profil"
-                >
-                  <div className={`w-10 h-10 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-base shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
-                    {currentUser?.avatar || '👤'}
-                  </div>
-                  <div className="truncate flex-1">
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
-                      {currentUser?.title || role.toUpperCase()}
-                    </span>
-                    <span className="font-black text-xs text-slate-900 dark:text-white block truncate leading-tight group-hover:text-emerald-500 transition-colors">
-                      {currentUser?.name || 'User KosanKu'}
-                    </span>
-                  </div>
+              <div 
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-3 pt-1 cursor-pointer group"
+                title="Klik untuk lihat rincian profil"
+              >
+                <div className={`w-11 h-11 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                  {currentUser?.avatar || '👤'}
+                </div>
+                <div className="truncate flex-1">
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block truncate">
+                    {currentUser?.title || role.toUpperCase()}
+                  </span>
+                  <span className="font-black text-sm text-slate-900 dark:text-white block truncate leading-tight group-hover:text-emerald-500 transition-colors">
+                    {currentUser?.name || 'User KosanKu'}
+                  </span>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2 pt-1">
-                {/* 1. Garis 3 Menu Button */}
-                <button
-                  onClick={() => setSidebarCollapsed(false)}
-                  className="w-9 h-9 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-emerald-500 transition-all cursor-pointer"
-                  title="Perbesar Navigasi"
-                >
-                  <i className="fa-solid fa-bars text-xs" />
-                </button>
-
-                {/* 2. Foto User Avatar */}
-                <div 
-                  onClick={() => setShowProfileModal(true)}
-                  className={`w-9 h-9 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-sm shadow-md hover:scale-105 transition-transform cursor-pointer`}
-                  title={`${currentUser?.name} (${currentUser?.title})`}
-                >
+              <div 
+                onClick={() => setShowProfileModal(true)}
+                className="flex flex-col items-center pt-1 cursor-pointer"
+                title={`${currentUser?.name} (${currentUser?.title})`}
+              >
+                <div className={`w-10 h-10 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-base shadow-md hover:scale-105 transition-transform`}>
                   {currentUser?.avatar || '👤'}
                 </div>
               </div>
