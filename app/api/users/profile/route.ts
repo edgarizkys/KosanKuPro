@@ -9,9 +9,23 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get('email')?.toLowerCase().trim();
+    const all = searchParams.get('all');
 
-    if (!email) {
-      return NextResponse.json({ error: 'Email wajib diisi' }, { status: 400 });
+    if (all === 'true' || !email) {
+      const dbUsers = await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          avatar: true,
+          avatarUrl: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      return NextResponse.json({ data: dbUsers });
     }
 
     const user = await prisma.user.findUnique({
@@ -24,6 +38,7 @@ export async function GET(req: NextRequest) {
         role: true,
         avatar: true,
         avatarUrl: true,
+        createdAt: true,
       },
     });
 

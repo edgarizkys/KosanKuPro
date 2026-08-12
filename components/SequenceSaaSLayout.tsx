@@ -82,7 +82,50 @@ export default function SequenceSaaSLayout({
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
-    setUsers(getStoredUserProfiles());
+    // 1. Immediate local cache load
+    const localProfiles = getStoredUserProfiles();
+    setUsers(localProfiles);
+
+    // 2. Live database sync from API for cross-browser consistency
+    fetch('/api/users/profile?all=true')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          const dbUsers: UserProfile[] = json.data.map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            phone: u.phone || '0812-3456-7890',
+            role: u.role?.toLowerCase() as any,
+            title: `${u.role} KosanKu`,
+            avatar: u.avatar || '👤',
+            avatarUrl: u.avatarUrl,
+            branchId: 'jkt',
+            branchName: 'KosanKu Pro Residence',
+            status: 'ACTIVE',
+            joinDate: 'Terverifikasi DB',
+          }));
+
+          const mergedMap = new Map<string, UserProfile>();
+          localProfiles.forEach((p) => mergedMap.set(p.email.toLowerCase(), p));
+          dbUsers.forEach((p) => {
+            const existing = mergedMap.get(p.email.toLowerCase());
+            mergedMap.set(p.email.toLowerCase(), {
+              ...existing,
+              ...p,
+              name: p.name || existing?.name || p.email,
+              phone: p.phone || existing?.phone || '0812-3456-7890',
+              avatarUrl: p.avatarUrl !== undefined ? p.avatarUrl : existing?.avatarUrl,
+              avatar: p.avatar || existing?.avatar,
+            });
+          });
+
+          const mergedList = Array.from(mergedMap.values());
+          setUsers(mergedList);
+          saveStoredUserProfiles(mergedList);
+        }
+      })
+      .catch((err) => console.warn('[SequenceSaaSLayout] Failed to load DB profiles:', err));
   }, []);
 
   const handleAddUser = (newUser: UserProfile) => {
