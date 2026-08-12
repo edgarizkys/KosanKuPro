@@ -12,6 +12,30 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
   const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSsoModal, setShowSsoModal] = useState(false);
+  const [ssoInputEmail, setSsoInputEmail] = useState('rahmat.hidayat99@gmail.com');
+  const [ssoError, setSsoError] = useState<string | null>(null);
+
+  const handleGoogleSsoSubmit = () => {
+    if (!ssoInputEmail) return;
+    setLoading(true);
+    setSsoError(null);
+    setTimeout(() => {
+      const clean = ssoInputEmail.toLowerCase().trim();
+      if (clean.includes('budi') || clean.includes('owner') || clean.includes('admin') || clean.includes('staf') || clean.includes('vendor')) {
+        setShowSsoModal(false);
+        onLogin({
+          id: `usr_sso_${Date.now().toString().slice(-4)}`,
+          name: clean.split('@')[0].toUpperCase() + ' (Google SSO)',
+          email: clean,
+          role: clean.includes('owner') ? 'owner' : clean.includes('admin') ? 'admin' : clean.includes('staf') ? 'employee' : clean.includes('vendor') ? 'vendor' : 'tenant',
+        });
+      } else {
+        setSsoError('PENDING_APPROVAL');
+      }
+      setLoading(false);
+    }, 800);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,268 +97,248 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
         </button>
       </header>
 
-      {/* Main SaaS Card Container */}
-      <main className="max-w-4xl w-full mx-auto my-auto z-10 py-8">
-        <div className="neu-card rounded-3xl p-6 sm:p-10 shadow-2xl border border-white/80 dark:border-white/10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center animate-scale-in">
+      {/* Main SaaS Card Container (Compact Centered Card) */}
+      <main className="max-w-md w-full mx-auto my-auto z-10 py-4">
+        <div className="neu-card rounded-3xl p-6 sm:p-7 shadow-2xl border border-white/80 dark:border-white/10 space-y-5 animate-scale-in">
           
-          {/* Left Hero & Info Column */}
-          <div className="md:col-span-5 space-y-6 md:border-r border-slate-200/60 dark:border-white/10 md:pr-8">
-            <div className="space-y-3">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#047857] dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider inline-block">
-                🔒 Enterprise Authentication
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                Selamat Datang Kembali di Portal SaaS
-              </h1>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Kelola ekosistem kosan berbasis Auto-Pilot AI, pembukuan P&L multi-cabang, escrow deposit, dan integrasi WhatsApp otomatis.
-              </p>
+          {/* Header & Title */}
+          <div className="text-center space-y-1">
+            <div className="w-12 h-12 rounded-2xl bg-[#047857] text-white flex items-center justify-center text-xl font-black mx-auto neu-card-sm shadow-md mb-2">
+              <i className="fa-solid fa-cubes-stacked" />
             </div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+              Portal SaaS KosanKuPro
+            </h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
+              Autentikasi Akun Multi-Role &amp; Google SSO
+            </p>
+          </div>
 
-            {/* Platform Highlights */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-start gap-3 p-3 neu-card-sm rounded-2xl">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs shrink-0 neu-inset">
-                  👑
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white">Multi-Role Executive Hub</h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Akses khusus Owner, Admin, Staf Staf, Vendor, & Tenant</p>
-                </div>
-              </div>
+          {error && (
+            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+              <i className="fa-solid fa-circle-exclamation" />
+              <span>{error}</span>
+            </div>
+          )}
 
-              <div className="flex items-start gap-3 p-3 neu-card-sm rounded-2xl">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0 neu-inset">
-                  ⚡
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-slate-900 dark:text-white">Midtrans QRIS &amp; Escalation AI</h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Pembayaran otomatis real-time &amp; late fee escrow</p>
-                </div>
-              </div>
+          {/* Quick Role Selector Pills */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-slate-400 block tracking-wider text-center">
+              Pilih Role Akses Demo:
+            </label>
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              {[
+                { label: '👑 Owner', email: 'owner@kosanku.pro', role: 'owner', id: 'usr_owner_01', name: 'Bapak Hendra (Owner)' },
+                { label: '🛡️ Admin', email: 'admin@kosanku.pro', role: 'admin', id: 'usr_admin_01', name: 'Pak Admin Operasional' },
+                { label: '👷 Staf', email: 'staf@kosanku.pro', role: 'employee', id: 'usr_staf_01', name: 'Bambang (Staf)' },
+                { label: '🏪 Vendor', email: 'vendor@kosanku.pro', role: 'vendor', id: 'usr_vendor_01', name: 'Depot Suci (Vendor)' },
+                { label: '👤 Tenant', email: 'tenant@kosanku.pro', role: 'tenant', id: 'usr_tenant_01', name: 'Rian Pratama' },
+              ].map((item) => (
+                <button
+                  key={item.email}
+                  type="button"
+                  onClick={() => {
+                    selectPreset(item.email);
+                    onLogin({ id: item.id, name: item.name, email: item.email, role: item.role });
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer ${
+                    email === item.email
+                      ? 'bg-[#047857] text-white shadow-xs scale-105'
+                      : 'neu-btn text-slate-700 dark:text-slate-200 hover:text-emerald-500'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Right Form & Presets Column */}
-          <div className="md:col-span-7 space-y-6">
-            <div className="space-y-1">
-              <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <i className="fa-solid fa-user-lock text-[#047857] dark:text-emerald-400" />
-                Pilih Akun Demo Multi-Role
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Klik salah satu role di bawah untuk mengisi kredensial secara otomatis:
-              </p>
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Email Terdaftar</label>
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                className="w-full p-3 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Password Access</label>
+              <input
+                required
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full p-3 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
+              />
             </div>
 
-            {error && (
-              <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
-                <i className="fa-solid fa-circle-exclamation text-sm" />
-                <span>{error}</span>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-2xl shadow-md hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs flex items-center justify-center gap-2"
+            >
+              {loading ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-right-to-bracket" />}
+              <span>Masuk ke Dashboard Pro</span>
+            </button>
+
+            {/* Google SSO Login Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowSsoModal(true);
+                setSsoError(null);
+              }}
+              className="w-full py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-extrabold rounded-2xl border border-slate-300 dark:border-slate-700 shadow-xs cursor-pointer text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+            >
+              <i className="fa-brands fa-google text-rose-500 text-sm" />
+              <span>Masuk dengan Google (Google SSO)</span>
+            </button>
+          </form>
+        </div>
+      </main>
+
+      {/* Modern Custom Google SSO Modal (No Browser Prompt/Alert) */}
+      {showSsoModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowSsoModal(false)}
+        >
+          <div
+            className="w-full max-w-md neu-card rounded-3xl p-6 sm:p-7 space-y-5 border border-white/20 shadow-2xl animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xl shrink-0">
+                  <i className="fa-brands fa-google text-rose-500" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    Masuk Akun Google SSO
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
+                    Autentikasi akun aman via Google OAuth
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSsoModal(false)}
+                className="w-8 h-8 rounded-xl neu-btn flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+              >
+                <i className="fa-solid fa-xmark text-sm" />
+              </button>
+            </div>
+
+            {/* Quick Test Preset Buttons */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">
+                Pilih Email Google Simulasi:
+              </span>
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSsoInputEmail('rahmat.hidayat99@gmail.com')}
+                  className={`p-3 rounded-2xl text-left border transition-all cursor-pointer flex items-center justify-between ${
+                    ssoInputEmail === 'rahmat.hidayat99@gmail.com'
+                      ? 'border-amber-500 bg-amber-500/10'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <div>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">
+                      rahmat.hidayat99@gmail.com
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-bold block">Pendaftar Bebas (Belum Terverifikasi)</span>
+                  </div>
+                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-md text-[9px] font-black">
+                    ⚠️ PENDING
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSsoInputEmail('budi@kosanku.pro')}
+                  className={`p-3 rounded-2xl text-left border transition-all cursor-pointer flex items-center justify-between ${
+                    ssoInputEmail === 'budi@kosanku.pro'
+                      ? 'border-emerald-500 bg-emerald-500/10'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <div>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">
+                      budi@kosanku.pro
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-bold block">Penghuni Kamar A-101 (Terdaftar)</span>
+                  </div>
+                  <span className="px-2 py-0.5 bg-emerald-500/20 text-[#047857] dark:text-emerald-400 rounded-md text-[9px] font-black">
+                    ✓ ACTIVE
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Input */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 block">
+                Atau Ketik Email Google Lain:
+              </label>
+              <div className="relative">
+                <i className="fa-brands fa-google text-slate-400 absolute left-3.5 top-3.5 text-xs" />
+                <input
+                  type="email"
+                  value={ssoInputEmail}
+                  onChange={(e) => {
+                    setSsoInputEmail(e.target.value);
+                    setSsoError(null);
+                  }}
+                  placeholder="nama.anda@gmail.com"
+                  className="w-full pl-9 pr-3 py-3 neu-input rounded-2xl text-xs font-mono text-slate-900 dark:text-white outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Feedback Alert Banner */}
+            {ssoError && (
+              <div className="p-3.5 bg-amber-500/15 border border-amber-500/30 rounded-2xl text-amber-700 dark:text-amber-300 text-xs space-y-1 animate-fade-in">
+                <div className="flex items-center gap-2 font-black">
+                  <i className="fa-solid fa-triangle-exclamation text-amber-500" />
+                  <span>Status: PENDING APPROVAL</span>
+                </div>
+                <p className="text-[11px] font-medium leading-relaxed">
+                  Email <span className="font-mono font-bold">{ssoInputEmail}</span> terdaftar via Google SSO, namun belum memiliki Link Undangan Kamar. Permintaan telah dikirim ke Dashboard Admin Kosan untuk diverifikasi.
+                </p>
               </div>
             )}
 
-            {/* 5 Quick Preset Accounts Grid */}
-            <div className="grid grid-cols-2 gap-2.5">
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60 dark:border-white/10">
               <button
                 type="button"
-                onClick={() => {
-                  selectPreset('owner@kosanku.pro');
-                  onLogin({
-                    id: 'usr_owner_01',
-                    name: 'Bapak Hendra (Property Owner)',
-                    email: 'owner@kosanku.pro',
-                    role: 'owner',
-                  });
-                }}
-                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'owner@kosanku.pro'
-                    ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
-                    : 'neu-card-sm hover:scale-[1.02]'
-                }`}
+                onClick={() => setShowSsoModal(false)}
+                className="px-4 py-2.5 neu-btn text-slate-600 dark:text-slate-300 font-bold rounded-2xl text-xs cursor-pointer"
               >
-                <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                  👑 Owner Kosan
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">owner@kosanku.pro</span>
-                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Executive &amp; P&L</span>
+                Batal
               </button>
-
               <button
                 type="button"
-                onClick={() => {
-                  selectPreset('superadmin@kosanku.pro');
-                  onLogin({
-                    id: 'usr_superadmin_01',
-                    name: 'Superadmin Master SaaS',
-                    email: 'superadmin@kosanku.pro',
-                    role: 'superadmin',
-                  });
-                }}
-                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'superadmin@kosanku.pro'
-                    ? 'neu-inset border-2 border-purple-500 bg-purple-500/10'
-                    : 'neu-card-sm hover:scale-[1.02]'
-                }`}
+                disabled={loading || !ssoInputEmail}
+                onClick={handleGoogleSsoSubmit}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-extrabold rounded-2xl text-xs shadow-md cursor-pointer flex items-center gap-2"
               >
-                <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-                  👑 Super Admin SaaS
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">superadmin@kosanku.pro</span>
-                <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold block mt-0.5">Provisioning &amp; Leads</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  selectPreset('admin@kosanku.pro');
-                  onLogin({
-                    id: 'usr_admin_01',
-                    name: 'Pak Admin Operasional',
-                    email: 'admin@kosanku.pro',
-                    role: 'admin',
-                  });
-                }}
-                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'admin@kosanku.pro'
-                    ? 'neu-inset border-2 border-[#047857] bg-[#047857]/10'
-                    : 'neu-card-sm hover:scale-[1.02]'
-                }`}
-              >
-                <span className="text-xs font-black text-[#047857] dark:text-emerald-300 flex items-center gap-1.5">
-                  🛡️ Admin Operasional
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">admin@kosanku.pro</span>
-                <span className="text-[9px] text-[#047857] dark:text-emerald-400 font-bold block mt-0.5">Kamar, Billing &amp; Tiket</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  selectPreset('staf@kosanku.pro');
-                  onLogin({
-                    id: 'usr_staf_01',
-                    name: 'Bambang (Staf Maintenance)',
-                    email: 'staf@kosanku.pro',
-                    role: 'employee',
-                  });
-                }}
-                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'staf@kosanku.pro'
-                    ? 'neu-inset border-2 border-blue-500 bg-blue-500/10'
-                    : 'neu-card-sm hover:scale-[1.02]'
-                }`}
-              >
-                <span className="text-xs font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
-                  🪪 Staf / Karyawan
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">staf@kosanku.pro</span>
-                <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold block mt-0.5">Tugas &amp; Maintenance</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  selectPreset('vendor@kosanku.pro');
-                  onLogin({
-                    id: 'usr_vendor_01',
-                    name: 'Depot Air & Gas Suci (Vendor Mitra)',
-                    email: 'vendor@kosanku.pro',
-                    role: 'vendor',
-                  });
-                }}
-                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                  email === 'vendor@kosanku.pro'
-                    ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
-                    : 'neu-card-sm hover:scale-[1.02]'
-                }`}
-              >
-                <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-                  🏪 Vendor Mitra
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">vendor@kosanku.pro</span>
-                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Order Laundry/Gas</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  selectPreset('tenant@kosanku.pro');
-                  onLogin({
-                    id: 'usr_tenant_01',
-                    name: 'Rian Pratama',
-                    email: 'tenant@kosanku.pro',
-                    role: 'tenant',
-                  });
-                }}
-                className={`p-3 rounded-2xl transition-all text-left cursor-pointer col-span-2 ${
-                  email === 'tenant@kosanku.pro'
-                    ? 'neu-inset border-2 border-emerald-500 bg-emerald-500/10'
-                    : 'neu-card-sm hover:scale-[1.02]'
-                }`}
-              >
-                <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                  👤 Tenant (Penghuni Kos)
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">tenant@kosanku.pro</span>
+                {loading ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-brands fa-google" />}
+                <span>Lanjutkan dengan Google</span>
               </button>
             </div>
-
-            {/* Direct Form Submission */}
-            <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Email Terdaftar</label>
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  className="w-full p-3.5 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Password Access</label>
-                <input
-                  required
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  className="w-full p-3.5 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-2xl shadow-xl hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs flex items-center justify-center gap-2"
-              >
-                {loading ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-right-to-bracket" />}
-                <span>Masuk ke Dashboard Pro</span>
-              </button>
-
-              <div className="pt-2 text-center border-t border-slate-200 dark:border-white/10 mt-4">
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2">
-                  Pemilik Kos Baru? Berminat Menggunakan KosanKu Pro?
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if ((window as any).__openOwnerRegister) {
-                      (window as any).__openOwnerRegister();
-                    }
-                  }}
-                  className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold rounded-2xl shadow-lg hover:scale-[1.01] transition-all cursor-pointer text-xs flex items-center justify-center gap-2"
-                >
-                  <i className="fa-solid fa-handshake" />
-                  <span>Minta Penawaran &amp; Setting Kosan Baru</span>
-                </button>
-              </div>
-            </form>
           </div>
         </div>
-      </main>
+      )}
 
       {/* SaaS Footer */}
       <footer className="max-w-7xl w-full mx-auto text-center py-3 z-10 border-t border-slate-200/50 dark:border-white/5">

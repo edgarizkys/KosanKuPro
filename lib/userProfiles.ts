@@ -12,9 +12,12 @@ export interface UserProfile {
   branchName: string;
   roomNumber?: string;
   department?: string;
-  status: 'ACTIVE' | 'SUSPENDED';
+  status: 'ACTIVE' | 'SUSPENDED' | 'PENDING_APPROVAL' | 'REJECTED';
   joinDate: string;
   bio?: string;
+  verificationSource?: 'INVITE_LINK' | 'MANUAL_ADMIN' | 'GOOGLE_SSO_DIRECT' | 'SELF_REGISTRATION';
+  invitedRoomNumber?: string;
+  registeredAt?: string;
 }
 
 export const INITIAL_USER_PROFILES: UserProfile[] = [
@@ -33,6 +36,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
     status: 'ACTIVE',
     joinDate: '01 Jan 2024',
     bio: 'Founder & Pengelola jaringan KosanKu Pro Indonesia.',
+    verificationSource: 'MANUAL_ADMIN',
   },
   {
     id: 'USR-ADM-01',
@@ -49,6 +53,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
     status: 'ACTIVE',
     joinDate: '15 Feb 2024',
     bio: 'Kepala administrasi, billing Midtrans, dan pengawasan sistem kos.',
+    verificationSource: 'MANUAL_ADMIN',
   },
   {
     id: 'USR-EMP-01',
@@ -65,6 +70,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
     status: 'ACTIVE',
     joinDate: '10 Mar 2024',
     bio: 'Penanggung jawab audit inventori fisik, keluhan AC, dan cek-in kamar.',
+    verificationSource: 'MANUAL_ADMIN',
   },
   {
     id: 'USR-EMP-02',
@@ -81,6 +87,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
     status: 'ACTIVE',
     joinDate: '01 Apr 2024',
     bio: 'Admin operasional harian cabang Bandung & rekapitulasi tenant.',
+    verificationSource: 'MANUAL_ADMIN',
   },
   {
     id: 'USR-VND-01',
@@ -97,6 +104,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
     status: 'ACTIVE',
     joinDate: '20 Jan 2024',
     bio: 'Mitra resmi pengiriman air minum galon dan gas untuk penghuni kos.',
+    verificationSource: 'MANUAL_ADMIN',
   },
   {
     id: 'USR-TNT-01',
@@ -114,6 +122,7 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
     status: 'ACTIVE',
     joinDate: '01 Mei 2024',
     bio: 'Penyewa aktif kamar A-101 dengan pembayaran auto-debit QRIS.',
+    verificationSource: 'INVITE_LINK',
   },
   {
     id: 'USR-OWN-02',
@@ -130,6 +139,45 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
     status: 'ACTIVE',
     joinDate: '15 Feb 2024',
     bio: 'Pemegang 30% saham bagi hasil operasional cabang Dago Bandung.',
+    verificationSource: 'MANUAL_ADMIN',
+  },
+  {
+    id: 'USR-PND-01',
+    name: 'Rahmat Hidayat (Google SSO)',
+    email: 'rahmat.hidayat99@gmail.com',
+    phone: '0857-1122-3344',
+    role: 'tenant',
+    title: 'Mendaftar via Google SSO Mandiri',
+    avatar: '🔍',
+    avatarBg: 'bg-amber-600',
+    branchId: 'jkt',
+    branchName: 'KosanKu Pro - Jakarta Selatan (Utama)',
+    roomNumber: 'Menunggu Alokasi Kamar',
+    department: 'Calon Penghuni Kos',
+    status: 'PENDING_APPROVAL',
+    joinDate: 'Hari Ini (Baru)',
+    bio: 'Login Google SSO tanpa Link Undangan — Menunggu Verifikasi Admin Kos.',
+    verificationSource: 'GOOGLE_SSO_DIRECT',
+    registeredAt: 'Baru saja (10 menit lalu)',
+  },
+  {
+    id: 'USR-PND-02',
+    name: 'Dimas Prasetya (Pendaftar Bebas)',
+    email: 'dimas_p@yahoo.com',
+    phone: '0812-9988-1122',
+    role: 'tenant',
+    title: 'Mendaftar dari Form Landing Page',
+    avatar: '❓',
+    avatarBg: 'bg-orange-600',
+    branchId: 'jkt',
+    branchName: 'KosanKu Pro - Jakarta Selatan (Utama)',
+    roomNumber: 'Kamar B-202 (Mencari Sewa)',
+    department: 'Mahasiswa / Pekerja',
+    status: 'PENDING_APPROVAL',
+    joinDate: 'Hari Ini (Baru)',
+    bio: 'Mendaftar mandiri dari formulir web — Membutuhkan konfirmasi Owner.',
+    verificationSource: 'SELF_REGISTRATION',
+    registeredAt: 'Baru saja (25 menit lalu)',
   },
 ];
 

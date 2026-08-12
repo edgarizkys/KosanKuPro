@@ -36,7 +36,7 @@ const INITIAL_PROSPECTS: LeadProspect[] = [
   },
 ];
 
-export default function SuperadminDashboard() {
+export default function SuperadminDashboard({ onLogout }: { onLogout?: () => void }) {
   const [prospects, setProspects] = useState<LeadProspect[]>(INITIAL_PROSPECTS);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -95,6 +95,16 @@ export default function SuperadminDashboard() {
               </span>
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prospect Baru</span>
             </div>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="px-4 py-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500 text-rose-600 hover:text-white border border-rose-500/30 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shrink-0"
+                title="Keluar dari Akun Superadmin"
+              >
+                <i className="fa-solid fa-arrow-right-from-bracket" />
+                <span className="hidden sm:inline">Keluar</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { UserProfile } from '@/lib/userProfiles';
 import type { RoleType } from '@/app/page';
+import SecurityMonitoringView from './SecurityMonitoringView';
 
 interface UserManagementViewProps {
   users?: UserProfile[];
@@ -19,6 +20,7 @@ export default function UserManagementView({
   onDeleteUser = () => {},
   onSwitchUser,
 }: UserManagementViewProps) {
+  const [subTab, setSubTab] = useState<'users' | 'security'>('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -123,24 +125,87 @@ export default function UserManagementView({
     setFormBio('');
   };
 
+  const handleApproveUser = (target: UserProfile) => {
+    const updated: UserProfile = {
+      ...target,
+      status: 'ACTIVE',
+      title: target.title.includes('Mendaftar') ? 'Penghuni Kos Terverifikasi' : target.title,
+    };
+    onUpdateUser(updated);
+  };
+
+  const handleRejectUser = (target: UserProfile) => {
+    const updated: UserProfile = {
+      ...target,
+      status: 'REJECTED',
+    };
+    onUpdateUser(updated);
+  };
+
+  const pendingCount = users.filter((u) => u.status === 'PENDING_APPROVAL').length;
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Module Action Header */}
+      {/* Module Action Header & Sub-Tab Switcher */}
       <div className="neu-card p-5 sm:p-7 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white">
-            Manajemen Akun &amp; Role
+            Manajemen Akun &amp; Keamanan Akses
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+            Pengelolaan profil pengguna, otorisasi role, dan monitoring persetujuan Google SSO
+          </p>
         </div>
 
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-5 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-2xl text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer shrink-0"
-        >
-          <i className="fa-solid fa-user-plus text-xs" />
-          <span>+ Tambah User &amp; Profil Baru</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Sub-tab switcher */}
+          <div className="neu-inset p-1 rounded-2xl flex items-center gap-1">
+            <button
+              onClick={() => setSubTab('users')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+                subTab === 'users' ? 'neu-card text-[#047857] dark:text-emerald-400 shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <i className="fa-solid fa-users text-xs" />
+              <span>Daftar User &amp; Role</span>
+            </button>
+
+            <button
+              onClick={() => setSubTab('security')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 relative ${
+                subTab === 'security' ? 'neu-card text-amber-500 dark:text-amber-400 shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <i className="fa-solid fa-shield-halved text-xs text-amber-500" />
+              <span>Monitoring &amp; Approval</span>
+              {pendingCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-900 text-[10px] font-black flex items-center justify-center animate-pulse">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {subTab === 'users' && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-2xl text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer shrink-0"
+            >
+              <i className="fa-solid fa-user-plus text-xs" />
+              <span>+ Tambah User</span>
+            </button>
+          )}
+        </div>
       </div>
+
+      {subTab === 'security' ? (
+        <SecurityMonitoringView
+          users={users}
+          onApproveUser={handleApproveUser}
+          onRejectUser={handleRejectUser}
+        />
+      ) : (
+        <>
 
       {/* Role Stats Counters */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -468,6 +533,8 @@ export default function UserManagementView({
             </form>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

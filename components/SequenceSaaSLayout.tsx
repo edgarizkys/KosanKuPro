@@ -101,6 +101,11 @@ export default function SequenceSaaSLayout({
       const newSession = {
         ...activeSessionUser,
         name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        title: updatedUser.title,
+        department: updatedUser.department,
+        bio: updatedUser.bio,
         avatarUrl: updatedUser.avatarUrl,
         avatar: updatedUser.avatar,
         avatarBg: updatedUser.avatarBg,
@@ -111,7 +116,7 @@ export default function SequenceSaaSLayout({
       }
     }
 
-    // Persist avatarUrl to database via API
+    // Persist profile changes to database via API
     if (updatedUser.email) {
       fetch('/api/users/profile', {
         method: 'PATCH',
@@ -185,20 +190,27 @@ export default function SequenceSaaSLayout({
     joinDate: '01 Jan 2024',
   };
 
+  const matchedUserInStore = users.find(
+    (u) => activeSessionUser && (u.id === activeSessionUser.id || u.email?.toLowerCase() === activeSessionUser.email?.toLowerCase())
+  );
+
   const currentUser: UserProfile =
+    matchedUserInStore ||
     (activeSessionUser && activeSessionUser.role?.toLowerCase() === (role || 'owner')
       ? {
           id: activeSessionUser.id || 'USR-ACT-01',
           name: activeSessionUser.name || 'User KosanKu',
           email: activeSessionUser.email || '',
-          phone: '0812-3456-7890',
+          phone: activeSessionUser.phone || '0812-3456-7890',
           role: role || 'owner',
-          title: activeSessionUser.role === 'SUPERADMIN' ? '👑 Super Admin SaaS' : activeSessionUser.role === 'ADMIN' ? '🛡️ Admin Operasional' : 'Pemilik Properti KosanKu',
+          title: activeSessionUser.title || (activeSessionUser.role === 'SUPERADMIN' ? '👑 Super Admin SaaS' : activeSessionUser.role === 'ADMIN' ? '🛡️ Admin Operasional' : 'Pemilik Properti KosanKu'),
           avatar: activeSessionUser.avatar || (activeSessionUser.role === 'SUPERADMIN' ? '👑' : activeSessionUser.role === 'ADMIN' ? '🛡️' : '👑'),
           avatarBg: activeSessionUser.avatarBg || (activeSessionUser.role === 'SUPERADMIN' ? 'bg-amber-500' : 'bg-emerald-600'),
           avatarUrl: activeSessionUser.avatarUrl,
           branchId: activeBranch || 'all',
           branchName: 'Konsolidasi Semua Cabang',
+          department: activeSessionUser.department,
+          bio: activeSessionUser.bio,
           status: 'ACTIVE',
           joinDate: '01 Jan 2024',
         }
@@ -868,15 +880,6 @@ export default function SequenceSaaSLayout({
               </span>
             </button>
 
-            {/* Export Button */}
-            <button
-              onClick={() => showToast('📥 Laporan Keuangan & Audit Fisik Berhasil Diekspor!')}
-              className="px-3 py-2 neu-btn text-slate-800 dark:text-slate-200 font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Export Laporan Excel & PDF"
-            >
-              <i className="fa-solid fa-download text-xs text-[#047857] dark:text-emerald-400" />
-              <span className="hidden xl:inline">Export</span>
-            </button>
 
             {/* Logout Button */}
             <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { UserProfile } from '@/lib/userProfiles';
 import type { RoleType } from '@/app/page';
 
@@ -58,6 +58,13 @@ export default function UserProfileModal({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Sync editForm only when modal opens or user switches (not while active editing)
+  useEffect(() => {
+    if (open && !isEditing) {
+      setEditForm(currentUser);
+    }
+  }, [open, isEditing, currentUser.id]);
+
   if (!open) return null;
 
   const handleSave = async (e: React.FormEvent) => {
@@ -100,7 +107,7 @@ export default function UserProfileModal({
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/5 dark:bg-black/20 backdrop-blur-xs animate-fade-in" onClick={onClose}>
-      <div className="w-full max-w-xl neu-card rounded-3xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-black/5 dark:border-white/10 shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg neu-card rounded-3xl p-5 sm:p-6 space-y-4 max-h-[88vh] overflow-y-auto border border-black/5 dark:border-white/10 shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
         
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-4">

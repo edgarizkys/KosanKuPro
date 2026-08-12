@@ -128,32 +128,42 @@ export default function Home() {
     try {
       const rawProfiles = localStorage.getItem('kosanku_user_profiles_v2');
       if (rawProfiles) {
-        const profiles: Array<{ email: string; avatarUrl?: string; avatar?: string; avatarBg?: string }> = JSON.parse(rawProfiles);
+        const profiles: Array<any> = JSON.parse(rawProfiles);
         const matchedProfile = profiles.find(
-          (p) => p.email?.toLowerCase() === userData.email?.toLowerCase()
+          (p) => p.email?.toLowerCase() === userData.email?.toLowerCase() || p.id === userData.id
         );
         if (matchedProfile) {
-          if (matchedProfile.avatarUrl && !mergedUserData.avatarUrl) mergedUserData = { ...mergedUserData, avatarUrl: matchedProfile.avatarUrl };
-          if (matchedProfile.avatar && !mergedUserData.avatar) mergedUserData = { ...mergedUserData, avatar: matchedProfile.avatar };
-          if (matchedProfile.avatarBg && !mergedUserData.avatarBg) mergedUserData = { ...mergedUserData, avatarBg: matchedProfile.avatarBg };
+          mergedUserData = {
+            ...mergedUserData,
+            name: matchedProfile.name || mergedUserData.name,
+            phone: matchedProfile.phone || mergedUserData.phone,
+            title: matchedProfile.title || mergedUserData.title,
+            department: matchedProfile.department || mergedUserData.department,
+            bio: matchedProfile.bio || mergedUserData.bio,
+            roomNumber: matchedProfile.roomNumber || mergedUserData.roomNumber,
+            avatar: matchedProfile.avatar || mergedUserData.avatar,
+            avatarBg: matchedProfile.avatarBg || mergedUserData.avatarBg,
+            avatarUrl: matchedProfile.avatarUrl || mergedUserData.avatarUrl,
+          };
         }
       }
     } catch (e) {
       // ignore
     }
 
-    // Await DB fetch FIRST — get avatarUrl before navigating to dashboard
-    // This prevents the race condition where SequenceSaaSLayout reads localStorage
-    // before the async DB fetch completes.
+    // Await DB fetch FIRST — get name, phone, avatarUrl before navigating to dashboard
     if (userData.email) {
       try {
         const res = await fetch(`/api/users/profile?email=${encodeURIComponent(userData.email)}`);
         const json = await res.json();
-        if (json?.data?.avatarUrl) {
-          mergedUserData = { ...mergedUserData, avatarUrl: json.data.avatarUrl };
-        }
-        if (json?.data?.avatar && !mergedUserData.avatar) {
-          mergedUserData = { ...mergedUserData, avatar: json.data.avatar };
+        if (json?.data) {
+          mergedUserData = {
+            ...mergedUserData,
+            ...(json.data.name ? { name: json.data.name } : {}),
+            ...(json.data.phone ? { phone: json.data.phone } : {}),
+            ...(json.data.avatarUrl ? { avatarUrl: json.data.avatarUrl } : {}),
+            ...(json.data.avatar ? { avatar: json.data.avatar } : {}),
+          };
         }
       } catch {
         // DB optional — use what we have
@@ -242,7 +252,7 @@ export default function Home() {
           />
         )}
         {view === 'superadmin' && (
-          <SuperadminDashboard />
+          <SuperadminDashboard onLogout={handleLogout} />
         )}
         {view === 'admin' && (
           <AdminDashboard
