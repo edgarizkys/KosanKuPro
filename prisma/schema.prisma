@@ -218,3 +218,19 @@ model StockOpnameAudit {
   @@index([branchId, createdAt])
 }
 
+model SupplyOrder {
+  id            String   @id @default(uuid())
+  tenantName    String
+  roomNumber    String
+  category      String   @default("CUSTOM")
+  item          String
+  notes         String?
+  status        String   @default("PENDING_DISPATCH")
+  assignedStaff String?
+  vendorName    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
