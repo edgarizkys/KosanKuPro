@@ -69,9 +69,28 @@ export async function POST(req: NextRequest) {
     // Check demo accounts first for quick role switching test
     if (DEMO_USERS[cleanEmail]) {
       const demoUser = DEMO_USERS[cleanEmail];
+
+      // Try to fetch avatarUrl from DB for this demo user
+      let avatarUrl: string | null = null;
+      let avatar: string | null = null;
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: cleanEmail },
+          select: { avatarUrl: true, avatar: true },
+        });
+        if (dbUser) {
+          avatarUrl = dbUser.avatarUrl;
+          avatar = dbUser.avatar;
+        }
+      } catch {
+        // DB optional — ignore
+      }
+
       return NextResponse.json({
         data: {
           ...demoUser,
+          ...(avatarUrl ? { avatarUrl } : {}),
+          ...(avatar ? { avatar } : {}),
           token: Buffer.from(`${demoUser.id}:${demoUser.role}:${Date.now()}`).toString('base64'),
         },
       });

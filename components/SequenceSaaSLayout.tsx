@@ -96,8 +96,39 @@ export default function SequenceSaaSLayout({
     const updated = users.map((u) => (u.id === updatedUser.id ? updatedUser : u));
     setUsers(updated);
     saveStoredUserProfiles(updated);
+
+    if (activeSessionUser && (activeSessionUser.id === updatedUser.id || activeSessionUser.email === updatedUser.email)) {
+      const newSession = {
+        ...activeSessionUser,
+        name: updatedUser.name,
+        avatarUrl: updatedUser.avatarUrl,
+        avatar: updatedUser.avatar,
+        avatarBg: updatedUser.avatarBg,
+      };
+      setActiveSessionUser(newSession);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('kosanku_user_session', JSON.stringify(newSession));
+      }
+    }
+
+    // Persist avatarUrl to database via API (fire and forget)
+    if (updatedUser.email) {
+      fetch('/api/users/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: updatedUser.email,
+          name: updatedUser.name,
+          phone: updatedUser.phone,
+          avatar: updatedUser.avatar,
+          avatarUrl: updatedUser.avatarUrl,
+        }),
+      }).catch((err) => console.warn('[handleUpdateUser] DB sync failed:', err));
+    }
+
     showToast(`✓ Profil ${updatedUser.name} berhasil diperbarui!`);
   };
+
 
   const handleDeleteUser = (userId: string) => {
     const userToDelete = users.find((u) => u.id === userId);
@@ -152,8 +183,9 @@ export default function SequenceSaaSLayout({
           phone: '0812-3456-7890',
           role: role || 'owner',
           title: activeSessionUser.role === 'SUPERADMIN' ? '👑 Super Admin SaaS' : activeSessionUser.role === 'ADMIN' ? '🛡️ Admin Operasional' : 'Pemilik Properti KosanKu',
-          avatar: activeSessionUser.role === 'SUPERADMIN' ? '👑' : activeSessionUser.role === 'ADMIN' ? '🛡️' : '👑',
-          avatarBg: activeSessionUser.role === 'SUPERADMIN' ? 'bg-amber-500' : 'bg-emerald-600',
+          avatar: activeSessionUser.avatar || (activeSessionUser.role === 'SUPERADMIN' ? '👑' : activeSessionUser.role === 'ADMIN' ? '🛡️' : '👑'),
+          avatarBg: activeSessionUser.avatarBg || (activeSessionUser.role === 'SUPERADMIN' ? 'bg-amber-500' : 'bg-emerald-600'),
+          avatarUrl: activeSessionUser.avatarUrl,
           branchId: activeBranch || 'all',
           branchName: 'Konsolidasi Semua Cabang',
           status: 'ACTIVE',
@@ -488,10 +520,20 @@ export default function SequenceSaaSLayout({
               <div className="flex flex-col items-center gap-3 pt-1">
                 <div 
                   onClick={() => setShowProfileModal(true)}
-                  className={`w-10 h-10 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-base shadow-md hover:scale-105 transition-transform cursor-pointer`}
+                  className="hover:scale-105 transition-transform cursor-pointer"
                   title={`${currentUser?.name} (${currentUser?.title})`}
                 >
-                  {currentUser?.avatar || '👤'}
+                  {currentUser?.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.name}
+                      className="w-10 h-10 rounded-full object-cover shadow-md border border-emerald-500"
+                    />
+                  ) : (
+                    <div className={`w-10 h-10 rounded-full ${currentUser?.avatarBg || 'bg-amber-500'} text-white flex items-center justify-center font-bold text-base shadow-md`}>
+                      {currentUser?.avatar || '👤'}
+                    </div>
+                  )}
                 </div>
 
                 {/* Large Chevron Circle Button (Expanded view trigger) */}
@@ -507,7 +549,7 @@ export default function SequenceSaaSLayout({
           </div>
 
           {/* Dynamic Time-Based Greeting Card for All Roles */}
-          {!sidebarCollapsed ? (
+          {!sidebarCollapsed && (
             <div className="p-3.5 neu-card-sm rounded-2xl space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black text-[#047857] dark:text-emerald-400 uppercase tracking-wider block">
@@ -520,10 +562,6 @@ export default function SequenceSaaSLayout({
               <span className="text-xs font-black text-slate-900 dark:text-white block truncate">
                 {currentUser.name}
               </span>
-            </div>
-          ) : (
-            <div className="w-11 h-11 mx-auto rounded-2xl neu-card-sm flex items-center justify-center text-lg shadow-sm" title={`${getDynamicGreeting()} • ${currentUser.name}`}>
-              <span>{currentUser.avatar}</span>
             </div>
           )}
 
@@ -635,9 +673,17 @@ export default function SequenceSaaSLayout({
               title="Buka Profil Akun & Beralih Pengguna"
             >
               <div className="flex items-center gap-2.5 overflow-hidden">
-                <div className={`w-8 h-8 rounded-2xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center font-bold text-xs shrink-0 neu-card-sm`}>
-                  {currentUser.avatar}
-                </div>
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.name}
+                    className="w-8 h-8 rounded-2xl object-cover shrink-0 border border-emerald-500 shadow-sm"
+                  />
+                ) : (
+                  <div className={`w-8 h-8 rounded-2xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center font-bold text-xs shrink-0 neu-card-sm`}>
+                    {currentUser.avatar}
+                  </div>
+                )}
                 <div className="truncate">
                   <span className="font-black text-slate-900 dark:text-white block truncate text-xs">{currentUser.name}</span>
                   <span className="text-[10px] font-bold text-[#047857] dark:text-emerald-400 block truncate">{currentUser.title}</span>
@@ -658,10 +704,20 @@ export default function SequenceSaaSLayout({
             <div className="flex flex-col items-center gap-2">
               <div 
                 onClick={() => setShowProfileModal(true)}
-                className={`w-9 h-9 rounded-2xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center font-bold text-xs neu-card-sm cursor-pointer hover:scale-105 transition-all`} 
+                className="cursor-pointer hover:scale-105 transition-all" 
                 title={`${currentUser.name} (${currentUser.title}) - Klik untuk buka profil`}
               >
-                {currentUser.avatar}
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.name}
+                    className="w-9 h-9 rounded-2xl object-cover border border-emerald-500 shadow-md"
+                  />
+                ) : (
+                  <div className={`w-9 h-9 rounded-2xl ${currentUser.avatarBg || 'bg-[#047857]'} text-white flex items-center justify-center font-bold text-xs neu-card-sm`}>
+                    {currentUser.avatar}
+                  </div>
+                )}
               </div>
               <button onClick={onLogout} title="Keluar dari Sesi" className="w-9 h-9 rounded-2xl neu-btn text-rose-500 hover:text-rose-700 flex items-center justify-center cursor-pointer">
                 <i className="fa-solid fa-arrow-right-from-bracket text-xs" />

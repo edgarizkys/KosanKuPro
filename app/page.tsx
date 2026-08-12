@@ -32,6 +32,9 @@ interface LoggedUser {
   email: string;
   role: string;
   rooms?: any[];
+  avatarUrl?: string;
+  avatar?: string;
+  avatarBg?: string;
 }
 
 export default function Home() {
@@ -116,16 +119,52 @@ export default function Home() {
   }, []);
 
   const handleLogin = (userData: LoggedUser) => {
-    setUser(userData);
     const assignedRole = (userData.role.toLowerCase() as RoleType) || 'admin';
     setRole(assignedRole);
     setView(assignedRole);
 
-    // Save session to localStorage
-    localStorage.setItem('kosanku_user_session', JSON.stringify(userData));
+    // Start with what the API/quick-login gave us (may already have avatarUrl from login API)
+    let mergedUserData = { ...userData };
+
+    // Also check localStorage profiles as an immediate fallback
+    try {
+      const rawProfiles = localStorage.getItem('kosanku_user_profiles_v2');
+      if (rawProfiles) {
+        const profiles: Array<{ email: string; avatarUrl?: string; avatar?: string; avatarBg?: string }> = JSON.parse(rawProfiles);
+        const matchedProfile = profiles.find(
+          (p) => p.email?.toLowerCase() === userData.email?.toLowerCase()
+        );
+        if (matchedProfile) {
+          if (matchedProfile.avatarUrl && !mergedUserData.avatarUrl) mergedUserData = { ...mergedUserData, avatarUrl: matchedProfile.avatarUrl };
+          if (matchedProfile.avatar && !mergedUserData.avatar) mergedUserData = { ...mergedUserData, avatar: matchedProfile.avatar };
+          if (matchedProfile.avatarBg && !mergedUserData.avatarBg) mergedUserData = { ...mergedUserData, avatarBg: matchedProfile.avatarBg };
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Save session immediately so UI shows up
+    setUser(mergedUserData);
+    localStorage.setItem('kosanku_user_session', JSON.stringify(mergedUserData));
     localStorage.setItem('kosanku_user_role', assignedRole);
     localStorage.setItem('kosanku_current_view', assignedRole);
+
+    // Async: fetch fresh avatarUrl from DB (source of truth) and update session if different
+    if (userData.email) {
+      fetch(`/api/users/profile?email=${encodeURIComponent(userData.email)}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json?.data?.avatarUrl) {
+            const freshSession = { ...mergedUserData, avatarUrl: json.data.avatarUrl };
+            setUser(freshSession);
+            localStorage.setItem('kosanku_user_session', JSON.stringify(freshSession));
+          }
+        })
+        .catch(() => { /* DB optional — ignore */ });
+    }
   };
+
 
   const switchRole = (newRole: RoleType) => {
     setRole(newRole);
