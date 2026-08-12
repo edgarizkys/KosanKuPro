@@ -148,6 +148,57 @@ export default function EmployeeDashboard({
   const [activeBranch, setActiveBranch] = useState('all');
   const completedCount = tasks.filter((t) => t.completed).length;
 
+  useEffect(() => {
+    const fetchEmployeeTasks = async () => {
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data?.length) {
+            const plottedOrders = json.data.map((item: any) => ({
+              id: item.id,
+              title: `Plotting dari Owner: ${item.item}`,
+              room: `Kamar ${item.roomNumber || 'A-101'} (${item.tenantName})`,
+              category: 'OWNER_PLOTTED' as const,
+              assignedTo: 'Bambang (Staf Maintenance)',
+              dueTime: 'Segera',
+              completed: item.status === 'COMPLETED' || item.status === 'DELIVERED',
+              ownerInstruction: item.notes || 'Segera proses pesanan ini.',
+              connectedVendor: 'Vendor Terkait',
+            }));
+
+            setTasks((prev) => {
+              const existingIds = new Set(prev.map((t) => t.id));
+              const newItems = plottedOrders.filter((t: any) => !existingIds.has(t.id));
+              if (newItems.length > 0) {
+                showToast(`🔔 ${newItems.length} TUGAS BARU DITUGASKAN UNTUK KARYAWAN!`);
+              }
+              return [...newItems, ...prev];
+            });
+          }
+        }
+      } catch (err) {}
+    };
+
+    fetchEmployeeTasks();
+    const interval = setInterval(fetchEmployeeTasks, 2500);
+
+    const handleSwitchTab = (e: any) => {
+      if (e.detail?.tab) {
+        if (e.detail.tab === 'complaints' || e.detail.tab === 'tenant_requests') setActiveTab('tasks');
+        else if (e.detail.tab === 'inventory') setActiveTab('stock_opname');
+        else if (e.detail.tab === 'approval') setActiveTab('checkin');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('switch_dashboard_tab', handleSwitchTab);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('switch_dashboard_tab', handleSwitchTab);
+    };
+  }, []);
+
   return (
     <SequenceSaaSLayout
       role="employee"

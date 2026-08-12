@@ -288,95 +288,31 @@ export default function MasterDataSettings() {
         </div>
       </div>
 
-      {/* Sub Tabs (Spacious Neumorphic Inset Dock) */}
-      <div className="my-6 p-2.5 neu-inset rounded-2xl w-full sm:w-fit flex items-center gap-3 overflow-x-auto scrollbar-none text-xs font-bold shadow-inner">
-        <button
-          onClick={() => setActiveSubTab('users')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer font-black whitespace-nowrap ${
-            activeSubTab === 'users'
-              ? 'bg-[#047857] text-white shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          👤 Profil &amp; Akun Pengguna ({userProfiles.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('property')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'property'
-              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          🏨 Identitas &amp; Bank Kosan
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('employees')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'employees'
-              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          🪪 Master Karyawan ({employees.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('owners')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'owners'
-              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          👑 Master Owner ({owners.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('inventory')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'inventory'
-              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          📦 Master Inventori ({inventoryMaster.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('vendors')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'vendors'
-              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          🏪 Master Vendor ({vendors.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('categories')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'categories'
-              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          🏷️ Kategori Pengeluaran
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('facilities')}
-          className={`px-4 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-            activeSubTab === 'facilities'
-              ? 'bg-[#047857] text-white font-black shadow-md scale-[1.02]'
-              : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          🏨 Master Fasilitas ({facilities.length})
-        </button>
+      {/* Sub Tabs — 2-col grid on mobile, horizontal row on sm+ */}
+      <div className="my-6 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-2 text-xs font-bold">
+        {[
+          { id: 'users',      icon: '👤', label: 'Akun Pengguna',  count: userProfiles.length },
+          { id: 'property',   icon: '🏨', label: 'Identitas Kosan',count: null },
+          { id: 'employees',  icon: '🪪', label: 'Karyawan',       count: employees.length },
+          { id: 'owners',     icon: '👑', label: 'Owner',           count: owners.length },
+          { id: 'inventory',  icon: '📦', label: 'Inventori',       count: inventoryMaster.length },
+          { id: 'vendors',    icon: '🏪', label: 'Vendor',          count: vendors.length },
+          { id: 'categories', icon: '🏷️', label: 'Kategori',       count: null },
+          { id: 'facilities', icon: '🛎️', label: 'Fasilitas',      count: facilities.length },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveSubTab(tab.id as typeof activeSubTab)}
+            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+              activeSubTab === tab.id
+                ? 'bg-[#047857] text-white font-black shadow-md'
+                : 'neu-btn text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.label}{tab.count !== null ? ` (${tab.count})` : ''}</span>
+          </button>
+        ))}
       </div>
 
       {/* SubTab 0: Manajemen Pengguna & Profil */}

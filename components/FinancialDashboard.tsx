@@ -76,7 +76,9 @@ export default function FinancialDashboard() {
   const [activeChartTab, setActiveChartTab] = useState<'revenue' | 'profit' | 'occupancy'>('revenue');
 
   useEffect(() => {
-    fetch('/api/expenses')
+    fetch('/api/expenses', {
+      headers: { 'x-user-role': 'owner' },
+    })
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (json?.data?.length) setExpenses(json.data);
@@ -174,7 +176,7 @@ export default function FinancialDashboard() {
         
         {/* Main Chart Card (2 Cols) */}
         <div className="lg:col-span-2 neu-card p-5 sm:p-6 rounded-3xl space-y-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-3">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/80 pb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">P&amp;L Analytics</span>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">Arus Kas Bulanan</h3>

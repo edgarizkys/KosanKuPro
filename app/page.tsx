@@ -65,15 +65,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    (window as any).__toggleNotifDrawer = () => {
+    const handleToggle = () => {
       setShowNotif((prev) => !prev);
     };
+
+    (window as any).__toggleNotifDrawer = handleToggle;
+    window.addEventListener('toggle_notif_drawer', handleToggle);
+
     (window as any).__navigateToBookingPage = (roomObj?: RoomForBooking) => {
       setSelectedBookingRoom(roomObj || null);
       setView('booking');
     };
     (window as any).__openOwnerRegister = () => {
       setShowRegisterOwner(true);
+    };
+
+    return () => {
+      window.removeEventListener('toggle_notif_drawer', handleToggle);
     };
   }, []);
 
@@ -242,7 +250,7 @@ export default function Home() {
       )}
 
       {/* Rincian Notification Drawer Slide-over */}
-      <NotificationDrawer open={showNotif} onClose={() => setShowNotif(false)} />
+      <NotificationDrawer open={showNotif} onClose={() => setShowNotif(false)} role={user?.role || role} />
 
       {/* SaaS Partnership Lead Offer Modal */}
       {showRegisterOwner && (

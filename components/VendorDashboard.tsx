@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface VendorOrder {
   id: string;
@@ -94,10 +94,20 @@ export default function VendorDashboard({
   const [addOnNote, setAddOnNote] = useState('');
   const [addOnCost, setAddOnCost] = useState('');
 
-  const updateOrderStatus = (id: string, newStatus: 'PROCESSING' | 'DELIVERED' | 'SETTLED') => {
+  const updateOrderStatus = async (id: string, newStatus: 'PROCESSING' | 'DELIVERED' | 'SETTLED') => {
     setOrders((prev) =>
       prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
     );
+
+    // Sync to Server API live
+    try {
+      await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+    } catch (err) {}
+
     const order = orders.find((o) => o.id === id);
     const statusMsg =
       newStatus === 'PROCESSING'
@@ -148,6 +158,61 @@ export default function VendorDashboard({
 
   const billedOrders = orders.filter((o) => o.addOnBilled);
   const unbilledOrders = orders.filter((o) => !o.addOnBilled);
+
+  useEffect(() => {
+    const fetchVendorOrders = async () => {
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data?.length) {
+            const mappedOrders = json.data.map((item: any) => ({
+              id: item.id,
+              tenantName: item.tenantName,
+              roomNumber: item.roomNumber,
+              item: item.item,
+              category: item.category === 'GALON' ? 'WATER_GAS' : item.category === 'LAUNDRY' ? 'LAUNDRY' : 'WARUNG',
+              amount: 25000,
+              assignedStaff: 'Bambang',
+              status: item.status === 'PENDING_DISPATCH' ? 'NEW' : item.status,
+              orderTime: 'Baru saja',
+              extraDetails: item.notes,
+            }));
+
+            setOrders((prev) => {
+              const existingIds = new Set(prev.map((o) => o.id));
+              const newItems = mappedOrders.filter((o: any) => !existingIds.has(o.id));
+              if (newItems.length > 0) {
+                setToast(`🔔 ${newItems.length} PESANAN BARU DITUGASKAN OLEH OWNER!`);
+                setTimeout(() => setToast(null), 4000);
+              }
+              // Merge status updates for existing orders
+              return prev.map((oldOrder) => {
+                const updated = mappedOrders.find((m: any) => m.id === oldOrder.id);
+                return updated ? { ...oldOrder, status: updated.status } : oldOrder;
+              }).concat(newItems);
+            });
+          }
+        }
+      } catch (err) {}
+    };
+
+    fetchVendorOrders();
+    const interval = setInterval(fetchVendorOrders, 2500);
+
+    const handleSwitchTab = (e: any) => {
+      if (e.detail?.tab) {
+        setActiveTab(e.detail.tab);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('switch_dashboard_tab', handleSwitchTab);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('switch_dashboard_tab', handleSwitchTab);
+    };
+  }, []);
 
   return (
     <SequenceSaaSLayout
@@ -249,15 +314,26 @@ export default function VendorDashboard({
                       </button>
                     )}
                     <div className="flex items-center gap-2 ml-auto">
+                      {/* Vendor: hanya bisa Siapkan & Antar. Konfirmasi Selesai ada di sisi Tenant */}
                       {order.status === 'NEW' && (
-                        <button onClick={() => updateOrderStatus(order.id, 'PROCESSING')} className="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-2xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
-                          <i className="fa-solid fa-gears" /> Proses
+                        <button onClick={() => updateOrderStatus(order.id, 'PROCESSING')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+                          <i className="fa-solid fa-box-open" /> Siapkan
                         </button>
                       )}
                       {order.status === 'PROCESSING' && (
-                        <button onClick={() => updateOrderStatus(order.id, 'DELIVERED')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
-                          <i className="fa-solid fa-circle-check" /> Selesai
+                        <button onClick={() => updateOrderStatus(order.id, 'DELIVERED')} className="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+                          <i className="fa-solid fa-motorcycle" /> Sudah Diantar
                         </button>
+                      )}
+                      {order.status === 'DELIVERED' && (
+                        <span className="px-4 py-2 rounded-xl text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 flex items-center gap-1.5">
+                          <i className="fa-solid fa-clock-rotate-left" /> Menunggu Konfirmasi Tenant
+                        </span>
+                      )}
+                      {order.status === 'SETTLED' && (
+                        <span className="px-4 py-2 rounded-xl text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 flex items-center gap-1.5">
+                          <i className="fa-solid fa-circle-check" /> Diterima Tenant
+                        </span>
                       )}
                     </div>
                   </div>
@@ -277,37 +353,89 @@ export default function VendorDashboard({
                 <i className="fa-solid fa-truck-fast text-emerald-600 dark:text-emerald-400" />
                 Status Pengantaran Kurir
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pantau progres pengiriman semua pesanan secara realtime.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tracking pengiriman realtime — seperti Grab/Gojek.</p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {DELIVERY_TRACKING.map((delivery) => {
-                const st = STATUS_LABEL[delivery.status] || STATUS_LABEL['NEW'];
+                // step index: 0=NEW, 1=PROCESSING, 2=DELIVERED/SETTLED
+                const stepIndex = delivery.status === 'NEW' ? 0 : delivery.status === 'PROCESSING' ? 1 : 2;
+                const steps = [
+                  { key: 'NEW',       label: 'Disiapkan', icon: 'fa-solid fa-box-open',       desc: 'Vendor sedang menyiapkan pesanan' },
+                  { key: 'PROCESSING',label: 'Diantar',   icon: 'fa-solid fa-motorcycle',      desc: `Kurir: ${delivery.courier}` },
+                  { key: 'DELIVERED', label: 'Selesai',   icon: 'fa-solid fa-circle-check',    desc: 'Pesanan sudah diterima' },
+                ];
+
                 return (
-                  <div key={delivery.id} className="neu-card-sm rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:scale-[1.01] transition-all">
-                    <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                          #{delivery.id}
-                        </span>
-                        <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full ${st.color}`}>
-                          {st.label}
-                        </span>
+                  <div key={delivery.id} className="neu-card-sm rounded-2xl p-5 space-y-4">
+                    {/* Order header */}
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                            #{delivery.id}
+                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                            Kamar <strong className="text-slate-800 dark:text-slate-200">{delivery.roomNumber}</strong> · {delivery.tenantName}
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">{delivery.item}</p>
                       </div>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{delivery.item}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Kamar <strong className="text-slate-800 dark:text-slate-200">{delivery.roomNumber}</strong> · {delivery.tenantName} · Kurir: <strong className="text-emerald-600 dark:text-emerald-400">{delivery.courier}</strong>
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-[10px] text-slate-400 block">Update terakhir</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{delivery.updatedAt}</span>
                       {delivery.status !== 'DELIVERED' && delivery.status !== 'SETTLED' && (
-                        <div className="mt-1.5 px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-700 dark:text-blue-300 text-center">
-                          ETA: {delivery.eta}
+                        <div className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1 shrink-0">
+                          <i className="fa-solid fa-clock" /> ETA {delivery.eta}
                         </div>
                       )}
                     </div>
+
+                    {/* ── Gojek/Grab Progress Tracker ── */}
+                    <div className="flex items-center w-full gap-0">
+                      {steps.map((step, idx) => {
+                        const isDone    = idx <= stepIndex;
+                        const isActive  = idx === stepIndex;
+                        const isLast    = idx === steps.length - 1;
+                        return (
+                          <div key={step.key} className="flex items-center flex-1">
+                            {/* Step node */}
+                            <div className="flex flex-col items-center gap-1.5 shrink-0">
+                              <div className={`relative w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all duration-500 ${
+                                isDone
+                                  ? 'bg-[#047857] text-white'
+                                  : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
+                              }`}>
+                                <i className={`${step.icon} text-sm`} />
+                                {isActive && delivery.status !== 'DELIVERED' && delivery.status !== 'SETTLED' && (
+                                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 animate-ping" />
+                                )}
+                                {isActive && delivery.status !== 'DELIVERED' && delivery.status !== 'SETTLED' && (
+                                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900" />
+                                )}
+                              </div>
+                              <div className="text-center" style={{ minWidth: '60px' }}>
+                                <span className={`text-[10px] font-black block leading-tight ${
+                                  isActive ? 'text-[#047857] dark:text-emerald-400' : isDone ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600'
+                                }`}>{step.label}</span>
+                                <span className="text-[9px] text-slate-400 dark:text-slate-500 leading-tight block">{step.desc}</span>
+                              </div>
+                            </div>
+                            {/* Connector line */}
+                            {!isLast && (
+                              <div className="flex-1 mx-1 h-1 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 relative -translate-y-4">
+                                <div
+                                  className="h-full rounded-full bg-[#047857] transition-all duration-700"
+                                  style={{ width: idx < stepIndex ? '100%' : '0%' }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Update time footer */}
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 text-right">
+                      Terakhir diperbarui: <span className="font-bold">{delivery.updatedAt}</span>
+                    </p>
                   </div>
                 );
               })}
@@ -415,11 +543,23 @@ export default function VendorDashboard({
           </div>
         )}
 
-        {/* Toast Notification */}
+        {/* Toast Notification (Bottom Right - Fixed 2 Lines Container) */}
         {toast && (
-          <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
-            <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
-            <span>{toast}</span>
+          <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] max-w-xs sm:max-w-md px-4 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-900 dark:text-emerald-200 border border-emerald-500/40 shadow-2xl animate-scale-in flex items-start gap-2.5">
+            <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-sm shrink-0 mt-0.5" />
+            <span
+              className="leading-snug flex-1"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                wordBreak: 'break-word',
+              }}
+            >
+              {toast}
+            </span>
           </div>
         )}
       </div>

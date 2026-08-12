@@ -187,7 +187,27 @@ export default function AdminDashboard({
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 2500);
+
+    const handleSwitchTab = (e: any) => {
+      if (e.detail?.tab) {
+        if (e.detail.tab === 'invoices' || e.detail.tab === 'financial') setTab('financial');
+        else if (e.detail.tab === 'complaints') setTab('complaints');
+        else if (e.detail.tab === 'master_data') setTab('master_data');
+        else if (e.detail.tab === 'users') setTab('tenants');
+        else setTab('overview');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('switch_dashboard_tab', handleSwitchTab);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('switch_dashboard_tab', handleSwitchTab);
+    };
+  }, [fetchData]);
 
   // Fitur 2: Push Notification to Mobile App
   const triggerMobilePush = (invoice: InvoiceData) => {

@@ -377,11 +377,11 @@ export default function SequenceSaaSLayout({
         <div className="flex items-center gap-2 shrink-0">
           {/* Notification Bell Trigger */}
           <button
-            onClick={() => {
-              if ((window as any).__toggleNotifDrawer) {
-                (window as any).__toggleNotifDrawer();
-              } else {
-                showToast('🔔 3 Notifikasi Kosan Baru');
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('toggle_notif_drawer'));
               }
             }}
             className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 transition-all relative"
@@ -785,11 +785,11 @@ export default function SequenceSaaSLayout({
 
             {/* Executive Notification Bell Trigger */}
             <button
-              onClick={() => {
-                if ((window as any).__toggleNotifDrawer) {
-                  (window as any).__toggleNotifDrawer();
-                } else {
-                  showToast('🔔 3 Notifikasi Kosan Baru');
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('toggle_notif_drawer'));
                 }
               }}
               className="w-9 h-9 rounded-xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all relative cursor-pointer text-xs"
@@ -1204,11 +1204,23 @@ export default function SequenceSaaSLayout({
         onUpdateUser={handleUpdateUser}
       />
 
-      {/* Toast Notification (Bottom Right) */}
+      {/* Toast Notification (Bottom Right - Fixed 2 Lines Container) */}
       {toast && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
-          <span>{toast}</span>
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] max-w-xs sm:max-w-md px-4 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-900 dark:text-emerald-200 border border-emerald-500/40 shadow-2xl animate-scale-in flex items-start gap-2.5">
+          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-sm shrink-0 mt-0.5" />
+          <span
+            className="leading-snug flex-1"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              wordBreak: 'break-word',
+            }}
+          >
+            {toast}
+          </span>
         </div>
       )}
     </div>

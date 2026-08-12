@@ -5,6 +5,7 @@ import ReportsHub from './ReportsHub';
 import FinancialDashboard from './FinancialDashboard';
 import MasterDataSettings from './MasterDataSettings';
 import SecurityDepositEscrow from './SecurityDepositEscrow';
+import UserManagementView from './UserManagementView';
 import SequenceSaaSLayout from './SequenceSaaSLayout';
 import type { RoleType } from '@/app/page';
 
@@ -206,15 +207,80 @@ export default function OwnerDashboard({
   const [selectedVendor, setSelectedVendor] = useState(VENDOR_LIST[0]);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
-  // Sync latest Stock Opname from localStorage if submitted by staff
+  // Sync latest Stock Opname & Tenant Supply Requests (Server API + Realtime Cross-Tab Sync)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('kosanku_latest_stock_opname');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed?.items?.length) setSoAudit(parsed);
+    const loadSharedRequests = async () => {
+      try {
+        // 1. Fetch from Production Server API (/api/orders)
+        const res = await fetch('/api/orders');
+        let serverData: any[] = [];
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data?.length) serverData = json.data;
+        }
+
+        // 2. Fetch from LocalStorage fallback
+        let localData: any[] = [];
+        const savedTenantReqs = localStorage.getItem('kosanku_shared_supply_requests');
+        if (savedTenantReqs) {
+          localData = JSON.parse(savedTenantReqs);
+        }
+
+        const combinedReqs = [...serverData, ...localData];
+        if (combinedReqs.length) {
+          setSupplyRequests((prev) => {
+            const existingIds = new Set(prev.map((r) => r.id));
+            const newItems = combinedReqs.filter((r: any) => !existingIds.has(r.id));
+            if (newItems.length > 0) {
+              const latestOrder = newItems[0];
+              const detailMsg = latestOrder.item ? `${latestOrder.tenantName} (${latestOrder.roomNumber || 'A-101'}) memesan: ${latestOrder.item}` : `${newItems.length} pesanan baru dari tenant!`;
+              showToast(`🔔 PESANAN BARU: ${detailMsg}`);
+            }
+            return [...newItems, ...prev];
+          });
+        }
+      } catch (err) {}
+    };
+
+    loadSharedRequests();
+
+    // 1. Cross-Tab Storage Event Listener
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'kosanku_shared_supply_requests') {
+        loadSharedRequests();
       }
-    } catch {}
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // 2. BroadcastChannel for instant same-browser cross-window sync
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('kosanku_order_channel');
+      bc.onmessage = (msg) => {
+        if (msg.data?.type === 'NEW_TENANT_ORDER') {
+          loadSharedRequests();
+        }
+      };
+    }
+
+    // 3. Fallback Interval Polling to Server API (every 2.5s)
+    const interval = setInterval(loadSharedRequests, 2500);
+
+    // 4. Switch Dashboard Tab Event Listener (Triggered by Notification Drawer click)
+    const handleSwitchTab = (e: any) => {
+      if (e.detail?.tab) {
+        setActiveTab(e.detail.tab);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('switch_dashboard_tab', handleSwitchTab);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('switch_dashboard_tab', handleSwitchTab);
+      if (bc) bc.close();
+      clearInterval(interval);
+    };
   }, []);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -305,6 +371,9 @@ export default function OwnerDashboard({
 
         {/* Tab: Deposit Escrow & Late Fee */}
         {activeTab === 'deposit' && <SecurityDepositEscrow />}
+
+        {/* Tab: Manajemen Users */}
+        {(activeTab as string) === 'users' && <UserManagementView />}
 
         {/* Tab: ⚙️ Master Data & Setting Kosan */}
         {activeTab === 'master_data' && <MasterDataSettings />}
@@ -740,13 +809,25 @@ export default function OwnerDashboard({
           </div>
         )}
 
-        {/* Toast Notification (Bottom Right) */}
+        {/* Toast Notification (Bottom Right - Fixed 2 Lines Container) */}
         {toast && (
-          <div className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card border shadow-2xl animate-scale-in flex items-center gap-2 ${
-            toast.type === 'success' ? 'text-emerald-800 dark:text-emerald-300 border-emerald-500/30' : 'text-rose-800 dark:text-rose-300 border-rose-500/30'
+          <div className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] max-w-xs sm:max-w-md px-4 py-3 rounded-2xl text-xs font-bold neu-card border shadow-2xl animate-scale-in flex items-start gap-2.5 ${
+            toast.type === 'success' ? 'text-emerald-900 dark:text-emerald-200 border-emerald-500/40' : 'text-rose-900 dark:text-rose-200 border-rose-500/40'
           }`}>
-            <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-rose-600 dark:text-rose-400'}`} />
-            <span>{toast.msg}</span>
+            <i className={`fa-solid text-sm shrink-0 mt-0.5 ${toast.type === 'success' ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-rose-600 dark:text-rose-400'}`} />
+            <span
+              className="leading-snug flex-1"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                wordBreak: 'break-word',
+              }}
+            >
+              {toast.msg}
+            </span>
           </div>
         )}
       </div>
