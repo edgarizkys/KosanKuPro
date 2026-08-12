@@ -5,18 +5,18 @@ import type { UserProfile } from '@/lib/userProfiles';
 import type { RoleType } from '@/app/page';
 
 interface UserManagementViewProps {
-  users: UserProfile[];
-  onAddUser: (u: UserProfile) => void;
-  onUpdateUser: (u: UserProfile) => void;
-  onDeleteUser: (id: string) => void;
+  users?: UserProfile[];
+  onAddUser?: (u: UserProfile) => void;
+  onUpdateUser?: (u: UserProfile) => void;
+  onDeleteUser?: (id: string) => void;
   onSwitchUser?: (u: UserProfile) => void;
 }
 
 export default function UserManagementView({
-  users,
-  onAddUser,
-  onUpdateUser,
-  onDeleteUser,
+  users = [],
+  onAddUser = () => {},
+  onUpdateUser = () => {},
+  onDeleteUser = () => {},
   onSwitchUser,
 }: UserManagementViewProps) {
   const [searchQuery, setSearchQuery] = useState('');

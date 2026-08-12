@@ -828,7 +828,7 @@ export default function SequenceSaaSLayout({
           <>
             {/* 2. DYNAMIC HERO CARD (100% Signature Neumorphic Master Card) */}
             <section className="neu-card rounded-3xl p-6 sm:p-8 relative space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/50 dark:border-white/5 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
                 <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
                   <i className="fa-solid fa-wallet text-[#047857] dark:text-emerald-400" />
                   {role === 'owner' && 'TOTAL BALANCE (AGGREGATED KOSAN REVENUE)'}
@@ -1090,7 +1090,7 @@ export default function SequenceSaaSLayout({
             </section>
 
             {/* Dynamic Children Content (Active Selected Tab Module) */}
-            <section className="pt-4 border-t border-[#e2e8f0]">
+            <section className="pt-2">
               {children}
             </section>
           </>
