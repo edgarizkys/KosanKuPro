@@ -116,7 +116,7 @@ export default function SequenceSaaSLayout({
               name: p.name || existing?.name || p.email,
               phone: p.phone || existing?.phone || '0812-3456-7890',
               avatarUrl: p.avatarUrl !== undefined ? p.avatarUrl : existing?.avatarUrl,
-              avatar: p.avatar || existing?.avatar,
+              avatar: p.avatar || existing?.avatar || '👤',
             });
           });
 
