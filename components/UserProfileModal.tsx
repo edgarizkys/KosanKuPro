@@ -4,6 +4,38 @@ import { useState } from 'react';
 import type { UserProfile } from '@/lib/userProfiles';
 import type { RoleType } from '@/app/page';
 
+/**
+ * Compress image to max 400x400px and 80% JPEG quality.
+ * Returns a smaller base64 data URL suitable for DB storage.
+ */
+async function compressImage(file: File, maxSize = 400, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width;
+        let h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = Math.round((h * maxSize) / w); w = maxSize; }
+          else { w = Math.round((w * maxSize) / h); h = maxSize; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas not supported'));
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 interface UserProfileModalProps {
   open: boolean;
   onClose: () => void;
@@ -23,13 +55,29 @@ export default function UserProfileModal({
 }: UserProfileModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<UserProfile>(currentUser);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (!open) return null;
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdateUser(editForm);
-    setIsEditing(false);
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      // If there's an avatarUrl from file upload (base64), check size
+      if (editForm.avatarUrl && editForm.avatarUrl.startsWith('data:') && editForm.avatarUrl.length > 800_000) {
+        setSaveError('⚠️ Foto terlalu besar (>600KB). Pilih foto yang lebih kecil atau gunakan link URL foto.');
+        setIsSaving(false);
+        return;
+      }
+      onUpdateUser(editForm);
+      setIsEditing(false);
+    } catch (err) {
+      setSaveError('Gagal menyimpan profil. Silakan coba lagi.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getRoleBadge = (role: RoleType) => {
@@ -293,14 +341,21 @@ export default function UserProfileModal({
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setEditForm({ ...editForm, avatarUrl: reader.result as string });
-                          };
-                          reader.readAsDataURL(file);
+                          setSaveError(null);
+                          try {
+                            const compressed = await compressImage(file, 400, 0.82);
+                            setEditForm({ ...editForm, avatarUrl: compressed });
+                          } catch {
+                            // Fallback to direct FileReader if canvas fails
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setEditForm({ ...editForm, avatarUrl: reader.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
                         }
                       }}
                     />
@@ -339,19 +394,27 @@ export default function UserProfileModal({
               />
             </div>
 
+            {saveError && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+                <i className="fa-solid fa-circle-exclamation" />
+                <span>{saveError}</span>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200/60 dark:border-white/10">
               <button
                 type="button"
-                onClick={() => setIsEditing(false)}
+                onClick={() => { setIsEditing(false); setSaveError(null); }}
                 className="px-4 py-2.5 neu-btn text-slate-600 dark:text-slate-300 font-bold rounded-2xl cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl shadow-md cursor-pointer"
+                disabled={isSaving}
+                className="px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] disabled:opacity-60 text-white font-extrabold rounded-2xl shadow-md cursor-pointer flex items-center gap-2"
               >
-                Simpan Perubahan
+                {isSaving ? <><i className="fa-solid fa-spinner fa-spin" /> Menyimpan...</> : 'Simpan Perubahan'}
               </button>
             </div>
           </form>

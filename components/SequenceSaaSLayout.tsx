@@ -111,7 +111,7 @@ export default function SequenceSaaSLayout({
       }
     }
 
-    // Persist avatarUrl to database via API (fire and forget)
+    // Persist avatarUrl to database via API
     if (updatedUser.email) {
       fetch('/api/users/profile', {
         method: 'PATCH',
@@ -123,7 +123,18 @@ export default function SequenceSaaSLayout({
           avatar: updatedUser.avatar,
           avatarUrl: updatedUser.avatarUrl,
         }),
-      }).catch((err) => console.warn('[handleUpdateUser] DB sync failed:', err));
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const json = await res.json().catch(() => ({}));
+            if (res.status === 413) {
+              showToast(`⚠️ Foto terlalu besar — disimpan lokal saja. Gunakan URL foto atau file <600KB untuk simpan ke DB.`);
+            } else {
+              console.warn('[handleUpdateUser] DB sync failed:', res.status, json);
+            }
+          }
+        })
+        .catch((err) => console.warn('[handleUpdateUser] DB sync network error:', err));
     }
 
     showToast(`✓ Profil ${updatedUser.name} berhasil diperbarui!`);

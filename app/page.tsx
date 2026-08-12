@@ -118,15 +118,13 @@ export default function Home() {
     }
   }, []);
 
-  const handleLogin = (userData: LoggedUser) => {
+  const handleLogin = async (userData: LoggedUser) => {
     const assignedRole = (userData.role.toLowerCase() as RoleType) || 'admin';
-    setRole(assignedRole);
-    setView(assignedRole);
 
-    // Start with what the API/quick-login gave us (may already have avatarUrl from login API)
+    // Start with what the API/quick-login gave us
     let mergedUserData = { ...userData };
 
-    // Also check localStorage profiles as an immediate fallback
+    // Merge from localStorage profiles as immediate fallback
     try {
       const rawProfiles = localStorage.getItem('kosanku_user_profiles_v2');
       if (rawProfiles) {
@@ -144,26 +142,33 @@ export default function Home() {
       // ignore
     }
 
-    // Save session immediately so UI shows up
+    // Await DB fetch FIRST — get avatarUrl before navigating to dashboard
+    // This prevents the race condition where SequenceSaaSLayout reads localStorage
+    // before the async DB fetch completes.
+    if (userData.email) {
+      try {
+        const res = await fetch(`/api/users/profile?email=${encodeURIComponent(userData.email)}`);
+        const json = await res.json();
+        if (json?.data?.avatarUrl) {
+          mergedUserData = { ...mergedUserData, avatarUrl: json.data.avatarUrl };
+        }
+        if (json?.data?.avatar && !mergedUserData.avatar) {
+          mergedUserData = { ...mergedUserData, avatar: json.data.avatar };
+        }
+      } catch {
+        // DB optional — use what we have
+      }
+    }
+
+    // NOW save session and navigate — localStorage is complete before SequenceSaaSLayout mounts
     setUser(mergedUserData);
     localStorage.setItem('kosanku_user_session', JSON.stringify(mergedUserData));
     localStorage.setItem('kosanku_user_role', assignedRole);
     localStorage.setItem('kosanku_current_view', assignedRole);
-
-    // Async: fetch fresh avatarUrl from DB (source of truth) and update session if different
-    if (userData.email) {
-      fetch(`/api/users/profile?email=${encodeURIComponent(userData.email)}`)
-        .then((res) => res.json())
-        .then((json) => {
-          if (json?.data?.avatarUrl) {
-            const freshSession = { ...mergedUserData, avatarUrl: json.data.avatarUrl };
-            setUser(freshSession);
-            localStorage.setItem('kosanku_user_session', JSON.stringify(freshSession));
-          }
-        })
-        .catch(() => { /* DB optional — ignore */ });
-    }
+    setRole(assignedRole);
+    setView(assignedRole);
   };
+
 
 
   const switchRole = (newRole: RoleType) => {
