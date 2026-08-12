@@ -31,6 +31,11 @@ interface LoggedUser {
   name: string;
   email: string;
   role: string;
+  phone?: string;
+  title?: string;
+  department?: string;
+  bio?: string;
+  roomNumber?: string;
   rooms?: any[];
   avatarUrl?: string;
   avatar?: string;
