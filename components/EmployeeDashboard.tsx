@@ -166,18 +166,9 @@ export default function EmployeeDashboard({
       {/* Staff Header Banner (Soft Raised Neumorphic Card) */}
       <div className="neu-card p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300 text-[10px] font-bold border border-blue-300 dark:border-blue-500/30 flex items-center gap-1.5">
-              <i className="fa-solid fa-id-badge text-blue-500 text-[9px]" /> Staff &amp; Operational Portal
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Karyawan Lapangan &amp; Stock Opname Audit</span>
-          </div>
-          <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+          <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white">
             Dashboard Operasional Karyawan
           </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xl">
-            Input perhitungan fisik **Stock Opname (SO)** barang pasokan Owner, terima tugas plotting, dan laporkan hasil audit ke Owner.
-          </p>
         </div>
 
         <button

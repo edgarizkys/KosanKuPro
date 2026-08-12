@@ -128,20 +128,9 @@ export default function UserManagementView({
       {/* Module Action Header */}
       <div className="neu-card p-5 sm:p-7 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full neu-inset text-[#047857] dark:text-emerald-400 text-[10px] font-black">
-              👥 Modul Manajemen User
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-              {users.length} Akun Terdaftar
-            </span>
-          </div>
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white mt-1">
-            Manajemen Akun, Profil &amp; Hak Akses Role
+          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white">
+            Manajemen Akun &amp; Role
           </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Kelola profil Owner, Admin, Karyawan Lapangan, Vendor Mitra, dan Tenant Penghuni
-          </p>
         </div>
 
         <button

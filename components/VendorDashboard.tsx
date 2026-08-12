@@ -63,6 +63,20 @@ function formatIDR(n: number) {
 import SequenceSaaSLayout from './SequenceSaaSLayout';
 import type { RoleType } from '@/app/page';
 
+// --- Delivery tracking data ---
+const DELIVERY_TRACKING = [
+  { id: 'V-101', tenantName: 'Budi Santoso', roomNumber: 'A-101', item: 'Laundry Cuci Kiloan 7.5 Kg', courier: 'Bambang', status: 'PROCESSING', eta: '30 menit', updatedAt: '15 menit lalu' },
+  { id: 'V-102', tenantName: 'Siti Rahma', roomNumber: 'B-201', item: 'Refill Galon Aqua 19L + Gas LPG 3kg', courier: 'Bambang', status: 'NEW', eta: '1 jam', updatedAt: '45 menit lalu' },
+  { id: 'V-103', tenantName: 'Rian Pratama', roomNumber: 'C-302', item: 'Nasi Goreng Spesial + Es Teh', courier: 'Budi', status: 'DELIVERED', eta: '-', updatedAt: '3 jam lalu' },
+];
+
+const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+  NEW:        { label: 'Menunggu Pickup',   color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' },
+  PROCESSING: { label: 'Dalam Pengantaran', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' },
+  DELIVERED:  { label: 'Sudah Diterima',    color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  SETTLED:    { label: 'Lunas',             color: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
+};
+
 export default function VendorDashboard({
   onSwitchRole = () => {},
   onLogout = () => {},
@@ -71,6 +85,7 @@ export default function VendorDashboard({
   onLogout?: () => void;
 }) {
   const [activeBranch, setActiveBranch] = useState('all');
+  const [activeTab, setActiveTab] = useState('tenant_requests');
   const [orders, setOrders] = useState<VendorOrder[]>(INITIAL_VENDOR_ORDERS);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -109,7 +124,6 @@ export default function VendorDashboard({
       )
     );
 
-    // Save to window / localStorage for instant sync with TenantDashboard!
     const existingAddons = JSON.parse(localStorage.getItem('kosanku_tenant_addons') || '[]');
     existingAddons.push({
       id: selectedOrderForAddOn.id,
@@ -121,9 +135,7 @@ export default function VendorDashboard({
     });
     localStorage.setItem('kosanku_tenant_addons', JSON.stringify(existingAddons));
 
-    setToast(
-      `✅ Add-On BIAYA KELEBIHAN Rp ${cost.toLocaleString('id-ID')} (${note}) BERHASIL DITAMBAHKAN KE TAGIHAN BULANAN TENANT [${selectedOrderForAddOn.tenantName} - Kamar ${selectedOrderForAddOn.roomNumber}]!`
-    );
+    setToast(`✅ Add-On Rp ${cost.toLocaleString('id-ID')} berhasil masuk tagihan ${selectedOrderForAddOn.tenantName}!`);
     setSelectedOrderForAddOn(null);
     setAddOnNote('');
     setAddOnCost('');
@@ -134,6 +146,9 @@ export default function VendorDashboard({
     .filter((o) => o.status === 'DELIVERED' || o.status === 'SETTLED')
     .reduce((s, o) => s + o.amount, 0);
 
+  const billedOrders = orders.filter((o) => o.addOnBilled);
+  const unbilledOrders = orders.filter((o) => !o.addOnBilled);
+
   return (
     <SequenceSaaSLayout
       role="vendor"
@@ -141,173 +156,273 @@ export default function VendorDashboard({
       onBranchChange={setActiveBranch}
       onSwitchRole={onSwitchRole}
       onLogout={onLogout}
-      activeTab="tenant_requests"
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
     >
       <div className="space-y-6 sm:space-y-8 text-slate-900 dark:text-white transition-colors">
-      {/* Vendor Partner Banner (Soft Raised Neumorphic Card) */}
-      <div className="neu-card p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1.5">
-              <i className="fa-solid fa-store text-emerald-500 text-[9px]" /> Mitra Vendor Resmi Kosan
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Automatic Add-On Billing Enabled</span>
-          </div>
-          <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
-            Portal Mitra Vendor KosanKu Pro
-          </h2>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xl">
-            Terima pesanan kebutuhan tenant (Galon, Gas, Laundry Kiloan, Makanan), timbang kelebihan kuota, dan **secara otomatis akumulasikan biaya kelebihan sebagai Add-On tagihan bulanan tenant**.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <div className="p-4 neu-card-sm rounded-2xl text-center">
-            <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">Rekap Pencairan Bulan Ini</span>
+        {/* ── Banner ── */}
+        <div className="neu-card p-5 sm:p-7 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              Portal Mitra Vendor
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {activeTab === 'tenant_requests' && 'Kelola dan proses order pesanan masuk dari tenant.'}
+              {activeTab === 'inventory' && 'Pantau status pengantaran kurir secara real-time.'}
+              {activeTab === 'invoices' && 'Rekap biaya kelebihan yang telah ditagihkan ke tenant.'}
+            </p>
+          </div>
+          <div className="p-4 neu-card-sm rounded-2xl text-center shrink-0">
+            <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">Pencairan Bulan Ini</span>
             <span className="text-lg font-black text-emerald-800 dark:text-emerald-300">{formatIDR(totalMonthlyPayout)}</span>
           </div>
         </div>
-      </div>
 
-      {/* Orders List Table */}
-      <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
-          <div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <i className="fa-solid fa-truck-ramp-box text-emerald-600 dark:text-emerald-400" />
-              Pesanan Masuk &amp; Penimbangan Kelebihan Kuota ({orders.length} Order)
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Biaya kelebihan laundry/galon otomatis di-charge ke tagihan sewa tenant</p>
+        {/* ══════════════════════════════════════════════════
+            TAB 1: ORDER PESANAN MASUK (tenant_requests)
+        ══════════════════════════════════════════════════ */}
+        {activeTab === 'tenant_requests' && (
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <i className="fa-solid fa-truck-ramp-box text-emerald-600 dark:text-emerald-400" />
+                Order Pesanan Masuk ({orders.length} Order)
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div key={order.id} className="neu-card-sm rounded-2xl p-5 space-y-4 transition-all hover:scale-[1.01]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-mono text-[10px] font-bold">
+                        #{order.id}
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg neu-inset text-[#047857] dark:text-emerald-400 font-bold text-[10px]">
+                        Kamar {order.roomNumber} · {order.tenantName}
+                      </span>
+                    </div>
+                    <div>
+                      {order.addOnBilled ? (
+                        <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                          💳 Tagihan Masuk
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+                          ⏳ Belum Di-charge
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{order.item}</p>
+
+                  <div className="p-3.5 neu-inset rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-600 dark:text-slate-400 block">
+                        Waktu: <strong className="text-slate-900 dark:text-white">{order.orderTime}</strong> · Staf: <strong className="text-emerald-600 dark:text-emerald-400">{order.assignedStaff}</strong>
+                      </span>
+                      {order.extraDetails && (
+                        <span className="text-[11px] text-[#047857] dark:text-emerald-400 font-bold block mt-1">
+                          📌 {order.extraDetails}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm font-black text-slate-900 dark:text-white whitespace-nowrap">
+                      <span className="text-emerald-600 dark:text-emerald-400">{formatIDR(order.amount)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    {!order.addOnBilled && (
+                      <button
+                        onClick={() => {
+                          setSelectedOrderForAddOn(order);
+                          setAddOnCost(String(order.amount));
+                          setAddOnNote(order.extraDetails || '');
+                        }}
+                        className="px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-2"
+                      >
+                        <i className="fa-solid fa-plus-circle" />
+                        <span>Add-On ke Tagihan Tenant</span>
+                      </button>
+                    )}
+                    <div className="flex items-center gap-2 ml-auto">
+                      {order.status === 'NEW' && (
+                        <button onClick={() => updateOrderStatus(order.id, 'PROCESSING')} className="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-2xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+                          <i className="fa-solid fa-gears" /> Proses
+                        </button>
+                      )}
+                      {order.status === 'PROCESSING' && (
+                        <button onClick={() => updateOrderStatus(order.id, 'DELIVERED')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5">
+                          <i className="fa-solid fa-circle-check" /> Selesai
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="neu-card-sm rounded-2xl p-5 space-y-4 transition-all hover:scale-[1.01]"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-mono text-[10px] font-bold">
-                    #{order.id}
-                  </span>
-                  <span className="px-2.5 py-1 rounded-lg neu-inset text-[#047857] dark:text-emerald-400 font-bold text-[10px]">
-                    Kamar {order.roomNumber} ({order.tenantName})
-                  </span>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{order.item}</h4>
-                </div>
-                <div className="flex items-center gap-2">
-                  {order.addOnBilled ? (
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                      💳 Add-On Masuk Tagihan Tenant
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30">
-                      ⏳ Belum Di-charge
-                    </span>
-                  )}
-                </div>
+        {/* ══════════════════════════════════════════════════
+            TAB 2: STATUS PENGANTARAN KURIR (inventory)
+        ══════════════════════════════════════════════════ */}
+        {activeTab === 'inventory' && (
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+            <div className="border-b border-slate-200/60 dark:border-white/5 pb-5">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <i className="fa-solid fa-truck-fast text-emerald-600 dark:text-emerald-400" />
+                Status Pengantaran Kurir
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pantau progres pengiriman semua pesanan secara realtime.</p>
+            </div>
+
+            <div className="space-y-4">
+              {DELIVERY_TRACKING.map((delivery) => {
+                const st = STATUS_LABEL[delivery.status] || STATUS_LABEL['NEW'];
+                return (
+                  <div key={delivery.id} className="neu-card-sm rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:scale-[1.01] transition-all">
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                          #{delivery.id}
+                        </span>
+                        <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full ${st.color}`}>
+                          {st.label}
+                        </span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{delivery.item}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Kamar <strong className="text-slate-800 dark:text-slate-200">{delivery.roomNumber}</strong> · {delivery.tenantName} · Kurir: <strong className="text-emerald-600 dark:text-emerald-400">{delivery.courier}</strong>
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] text-slate-400 block">Update terakhir</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{delivery.updatedAt}</span>
+                      {delivery.status !== 'DELIVERED' && delivery.status !== 'SETTLED' && (
+                        <div className="mt-1.5 px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-700 dark:text-blue-300 text-center">
+                          ETA: {delivery.eta}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════
+            TAB 3: ADD-ON BILLING TENANT (invoices)
+        ══════════════════════════════════════════════════ */}
+        {activeTab === 'invoices' && (
+          <div className="space-y-6">
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="neu-card p-4 rounded-2xl text-center">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Tagihan</span>
+                <span className="text-lg font-black text-slate-900 dark:text-white">{orders.length}</span>
+              </div>
+              <div className="neu-card p-4 rounded-2xl text-center">
+                <span className="text-[10px] font-bold text-emerald-600 uppercase block">Sudah Di-charge</span>
+                <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">{billedOrders.length}</span>
+              </div>
+              <div className="neu-card p-4 rounded-2xl text-center col-span-2 sm:col-span-1">
+                <span className="text-[10px] font-bold text-amber-600 uppercase block">Belum Di-charge</span>
+                <span className="text-lg font-black text-amber-700 dark:text-amber-400">{unbilledOrders.length}</span>
+              </div>
+            </div>
+
+            <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+              <div className="border-b border-slate-200/60 dark:border-white/5 pb-5">
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <i className="fa-solid fa-receipt text-emerald-600 dark:text-emerald-400" />
+                  Add-On Billing Tenant ({orders.length} Item)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Rekap biaya kelebihan yang akan / sudah masuk tagihan tenant.</p>
               </div>
 
-              <div className="p-3.5 neu-inset rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="space-y-3">
+                {orders.map((order) => (
+                  <div key={order.id} className="neu-card-sm rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:scale-[1.005] transition-all">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[10px] font-bold text-emerald-700 dark:text-emerald-400">#{order.id}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Kamar {order.roomNumber} · {order.tenantName}</span>
+                      </div>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{order.item}</p>
+                      {order.extraDetails && <p className="text-[11px] text-slate-500 dark:text-slate-400">{order.extraDetails}</p>}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-sm font-black text-emerald-700 dark:text-emerald-300">{formatIDR(order.amount)}</span>
+                      {order.addOnBilled ? (
+                        <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
+                          ✅ Tertagih
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedOrderForAddOn(order);
+                            setAddOnCost(String(order.amount));
+                            setAddOnNote(order.extraDetails || '');
+                          }}
+                          className="px-3 py-1.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl text-[10px] shadow-sm transition-all cursor-pointer whitespace-nowrap"
+                        >
+                          + Charge Sekarang
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add-On Billing Modal Dialog */}
+        {selectedOrderForAddOn && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedOrderForAddOn(null)}>
+            <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
+                <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Add-On ke Tagihan Tenant</h3>
+                <button onClick={() => setSelectedOrderForAddOn(null)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
+              </div>
+
+              <div className="p-3.5 neu-inset rounded-2xl text-xs space-y-1">
+                <span className="font-bold block text-[#047857] dark:text-emerald-400">Penerima Tagihan:</span>
+                <p className="text-slate-900 dark:text-white font-black text-sm">{selectedOrderForAddOn.tenantName} (Kamar {selectedOrderForAddOn.roomNumber})</p>
+                <p className="text-slate-600 dark:text-slate-300">{selectedOrderForAddOn.item}</p>
+              </div>
+
+              <form onSubmit={handleAddOnBilling} className="space-y-4 text-xs">
                 <div>
-                  <span className="text-slate-600 dark:text-slate-400 block">
-                    Waktu Pesan: <strong className="text-slate-900 dark:text-white">{order.orderTime}</strong> • Staf: <strong className="text-emerald-600 dark:text-emerald-400">{order.assignedStaff}</strong>
-                  </span>
-                  {order.extraDetails && (
-                    <span className="text-[11px] text-[#047857] dark:text-emerald-400 font-bold block mt-1">
-                      📌 Catatan Kelebihan: {order.extraDetails}
-                    </span>
-                  )}
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nominal Biaya Kelebihan (IDR) *</label>
+                  <input required type="number" value={addOnCost} onChange={(e) => setAddOnCost(e.target.value)} placeholder="20000" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
                 </div>
-                <div className="text-sm font-black text-slate-900 dark:text-white">
-                  Biaya Kelebihan: <span className="text-emerald-600 dark:text-emerald-400">{formatIDR(order.amount)}</span>
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Rincian Kelebihan / Catatan *</label>
+                  <input required value={addOnNote} onChange={(e) => setAddOnNote(e.target.value)} placeholder="cth: Over-limit Laundry +2.5kg @ Rp 8.000" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-2 pt-1">
-                {!order.addOnBilled && (
-                  <button
-                    onClick={() => {
-                      setSelectedOrderForAddOn(order);
-                      setAddOnCost(String(order.amount));
-                      setAddOnNote(order.extraDetails || '');
-                    }}
-                    className="px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-2"
-                  >
-                    <i className="fa-solid fa-plus-circle" />
-                    <span>Masukkan Add-On ke Tagihan Bulanan Tenant</span>
-                  </button>
-                )}
-
-                <div className="flex items-center gap-2 ml-auto">
-                  {order.status === 'NEW' && (
-                    <button
-                      onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
-                      className="px-4 py-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-1.5"
-                    >
-                      <i className="fa-solid fa-gears" /> Proses Pesanan
-                    </button>
-                  )}
-                  {order.status === 'PROCESSING' && (
-                    <button
-                      onClick={() => updateOrderStatus(order.id, 'DELIVERED')}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
-                    >
-                      <i className="fa-solid fa-circle-check" /> Selesai Diantar
-                    </button>
-                  )}
+                <div className="flex gap-3 pt-2 border-t border-slate-200/60 dark:border-white/10">
+                  <button type="button" onClick={() => setSelectedOrderForAddOn(null)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
+                  <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl shadow-md transition-all cursor-pointer">Akumulasikan ke Tagihan</button>
                 </div>
-              </div>
+              </form>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Add-On Billing Modal Dialog */}
-      {selectedOrderForAddOn && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedOrderForAddOn(null)}>
-          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white shadow-2xl border border-white/80 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Tambah Add-On ke Tagihan Tenant</h3>
-              <button onClick={() => setSelectedOrderForAddOn(null)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-800 dark:text-slate-200 font-bold hover:text-red-500 transition-colors cursor-pointer" title="Tutup Modal">✕</button>
-            </div>
-
-            <div className="p-3.5 neu-inset rounded-2xl text-xs space-y-1">
-              <span className="font-bold block text-[#047857] dark:text-emerald-400">Penerima Tagihan:</span>
-              <p className="text-slate-900 dark:text-white font-black text-sm">{selectedOrderForAddOn.tenantName} (Kamar {selectedOrderForAddOn.roomNumber})</p>
-              <p className="text-slate-600 dark:text-slate-300">{selectedOrderForAddOn.item}</p>
-            </div>
-
-            <form onSubmit={handleAddOnBilling} className="space-y-4 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nominal Biaya Kelebihan (IDR) *</label>
-                <input required type="number" value={addOnCost} onChange={(e) => setAddOnCost(e.target.value)} placeholder="20000" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Rincian Kelebihan / Catatan *</label>
-                <input required value={addOnNote} onChange={(e) => setAddOnNote(e.target.value)} placeholder="cth: Over-limit Laundry +2.5kg @ Rp 8.000" className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white" />
-              </div>
-
-              <div className="flex gap-3 pt-2 border-t border-slate-200/60 dark:border-white/10">
-                <button type="button" onClick={() => setSelectedOrderForAddOn(null)} className="flex-1 py-3 neu-btn text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-all cursor-pointer">Batal</button>
-                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl shadow-md transition-all cursor-pointer">Akumulasikan ke Tagihan</button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Toast Notification (Bottom Right) */}
-      {toast && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
-          <span>{toast}</span>
-        </div>
-      )}
-    </div>
+        {/* Toast Notification */}
+        {toast && (
+          <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
+            <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
+            <span>{toast}</span>
+          </div>
+        )}
+      </div>
     </SequenceSaaSLayout>
   );
 }

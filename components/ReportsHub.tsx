@@ -308,12 +308,7 @@ export default function ReportsHub({
       {/* Top Header Card */}
       <div className="neu-card p-5 sm:p-7 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-              📋 Master Audit
-            </span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black mt-1">Pusat Laporan</h2>
+          <h2 className="text-xl sm:text-2xl font-black">Pusat Laporan</h2>
         </div>
 
         <div className="flex items-center gap-2.5">

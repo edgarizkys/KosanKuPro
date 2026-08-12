@@ -52,18 +52,9 @@ export default function SecurityDepositEscrow() {
     <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 text-slate-900 dark:text-white">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-500/30">
-              💵 Escrow &amp; Penalty Automation
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Auto-Deduction &amp; Refund Management</span>
-          </div>
-          <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2">
-            Manajemen Deposit Jaminan (Escrow) &amp; Denda Terlambat Automatic
+          <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            Deposit Escrow &amp; Denda
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Penguncian dana jaminan kerusakan deposit saat cek-in &amp; kalkulasi denda keterlambatan Rp 50.000/hari otomatis
-          </p>
         </div>
         <div className="p-3 neu-card-sm rounded-2xl text-center">
           <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">Total Dana Escrow Terkunci</span>

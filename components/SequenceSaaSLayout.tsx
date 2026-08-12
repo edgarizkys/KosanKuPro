@@ -373,8 +373,26 @@ export default function SequenceSaaSLayout({
           </button>
         </div>
 
-        {/* RIGHT SIDE: [1. Dark/Light Mode Toggle] + [2. Logout Button] */}
+        {/* RIGHT SIDE: [1. Notification Bell] + [2. Dark/Light Mode Toggle] + [3. Logout Button] */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Notification Bell Trigger */}
+          <button
+            onClick={() => {
+              if ((window as any).__toggleNotifDrawer) {
+                (window as any).__toggleNotifDrawer();
+              } else {
+                showToast('🔔 3 Notifikasi Kosan Baru');
+              }
+            }}
+            className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer active:scale-95 transition-all relative"
+            title="Buka Panel Notifikasi"
+          >
+            <i className="fa-solid fa-bell text-sm" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-xs animate-pulse">
+              3
+            </span>
+          </button>
+
           {/* Dark / White Mode Toggle */}
           <button
             onClick={handleToggleTheme}
@@ -880,7 +898,7 @@ export default function SequenceSaaSLayout({
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-ping" />
                       <i className="fa-solid fa-arrow-up-right-dots text-[#047857] dark:text-emerald-400" />
-                      <h3 className="text-sm font-black text-slate-900 dark:text-white">Grafik Cash Flow Moving Realtime (Pendapatan vs Beban)</h3>
+                      <h3 className="text-sm font-black text-slate-900 dark:text-white">Grafik Arus Kas</h3>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="neu-inset p-1 rounded-xl flex text-xs font-bold">
@@ -934,33 +952,33 @@ export default function SequenceSaaSLayout({
                   </div>
                 </div>
 
-                <div className="space-y-4 flex flex-col justify-between">
+                <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 justify-between">
                   {/* Total Income Card */}
-                  <div className="neu-card rounded-3xl p-6 flex items-center justify-between transition-all hover:scale-[1.01]">
-                    <div className="space-y-1">
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#047857]" /> Total Income (Sewa Kos)
+                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all hover:scale-[1.01]">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                        <span className="w-2 h-2 rounded-full bg-[#047857] shrink-0" /> Total Income
                       </span>
-                      <span className="text-2xl font-black text-slate-900 dark:text-white block">Rp 34.500.000</span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-[#047857] dark:text-emerald-300 text-[10px] font-extrabold inline-block border border-emerald-300/60 dark:border-emerald-500/30">45.0% ↗ Pemasukan Arus Kas</span>
+                      <span className="text-base sm:text-2xl font-black text-slate-900 dark:text-white block truncate">Rp 34.5jt</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-[#047857] dark:text-emerald-300 text-[9px] sm:text-[10px] font-extrabold inline-block border border-emerald-300/60 dark:border-emerald-500/30 truncate max-w-full">45.0% ↗ Pemasukan</span>
                     </div>
                     {/* Inflow Icon Badge */}
-                    <div className="w-12 h-12 rounded-2xl bg-[#047857] text-white flex items-center justify-center text-xl shadow-md shrink-0" title="Cash Inflow (Uang Masuk)">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#047857] text-white flex items-center justify-center text-sm sm:text-xl shadow-md shrink-0 self-end sm:self-center" title="Cash Inflow (Uang Masuk)">
                       <i className="fa-solid fa-arrow-down-left" />
                     </div>
                   </div>
 
                   {/* Total Expense Card */}
-                  <div className="neu-card rounded-3xl p-6 flex items-center justify-between transition-all hover:scale-[1.01]">
-                    <div className="space-y-1">
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-rose-500" /> Total Expense (Operasional)
+                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all hover:scale-[1.01]">
+                    <div className="space-y-1 min-w-0">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" /> Total Expense
                       </span>
-                      <span className="text-2xl font-black text-slate-900 dark:text-white block">Rp 8.900.000</span>
-                      <span className="px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-[10px] font-extrabold inline-block border border-rose-300/60 dark:border-rose-500/30">12.5% ↘ Pengeluaran Operasional</span>
+                      <span className="text-base sm:text-2xl font-black text-slate-900 dark:text-white block truncate">Rp 8.9jt</span>
+                      <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-[9px] sm:text-[10px] font-extrabold inline-block border border-rose-300/60 dark:border-rose-500/30 truncate max-w-full">12.5% ↘ Operasional</span>
                     </div>
                     {/* Outflow Icon Badge */}
-                    <div className="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-xl shadow-md shrink-0" title="Cash Outflow (Uang Keluar)">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-500 text-white flex items-center justify-center text-sm sm:text-xl shadow-md shrink-0 self-end sm:self-center" title="Cash Outflow (Uang Keluar)">
                       <i className="fa-solid fa-arrow-up-right" />
                     </div>
                   </div>
@@ -968,24 +986,24 @@ export default function SequenceSaaSLayout({
               </section>
             )}
 
-            {/* 4. METRIC CARDS ROW (Soft Raised Neumorphic Cards) */}
-            <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* 4. METRIC CARDS ROW (Soft Raised Neumorphic Cards - 2 Cols on Mobile) */}
+            <section className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
               {role === 'owner' && (
                 <>
-                  <div className="neu-card rounded-3xl p-6 space-y-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-building-columns text-[#047857] dark:text-emerald-400" /> Rekening Operasional BCA</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">Rp 8.672.200</div>
-                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">16.0% ↗ <span className="text-slate-400 font-normal">vs Last Period</span></div>
+                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-building-columns text-[#047857] dark:text-emerald-400 shrink-0" /> Rekening BCA</span>
+                    <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">Rp 8.672.200</div>
+                    <div className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">16.0% ↗ <span className="text-slate-400 font-normal">vs Last</span></div>
                   </div>
-                  <div className="neu-card rounded-3xl p-6 space-y-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-piggy-bank text-[#047857] dark:text-emerald-400" /> Escrow Deposit Jaminan</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">Rp 3.765.350</div>
-                    <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">8.2% ↘ <span className="text-slate-400 font-normal">vs Last Period</span></div>
+                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-piggy-bank text-[#047857] dark:text-emerald-400 shrink-0" /> Escrow Deposit</span>
+                    <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">Rp 3.765.350</div>
+                    <div className="text-[10px] sm:text-[11px] font-bold text-rose-600 dark:text-rose-400 truncate">8.2% ↘ <span className="text-slate-400 font-normal">vs Last</span></div>
                   </div>
-                  <div className="neu-card rounded-3xl p-6 space-y-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-receipt text-[#047857] dark:text-emerald-400" /> Cadangan Pajak &amp; Maint</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">Rp 14.376.160</div>
-                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">35.2% ↗ <span className="text-slate-400 font-normal">vs Last Period</span></div>
+                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3 col-span-2 sm:col-span-1">
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-receipt text-[#047857] dark:text-emerald-400 shrink-0" /> Cadangan Pajak &amp; Maint</span>
+                    <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">Rp 14.376.160</div>
+                    <div className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">35.2% ↗ <span className="text-slate-400 font-normal">vs Last</span></div>
                   </div>
                 </>
               )}

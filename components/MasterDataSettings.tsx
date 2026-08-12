@@ -282,18 +282,9 @@ export default function MasterDataSettings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-500/30">
-              ⚙️ Multi-Tenant SaaS Master Engine
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">100% Dinamis Tanpa Ubah Kode Program</span>
-          </div>
-          <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2">
-            Pengaturan Master Data Properti, Owner, &amp; Karyawan
+          <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            Master Data &amp; Pengaturan
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Konfigurasi identitas kosan, akun Owner/Investor, daftar Karyawan/Staf, inventori, dan vendor mitra
-          </p>
         </div>
       </div>
 

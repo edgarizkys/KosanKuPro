@@ -189,13 +189,7 @@ export default function TenantDashboard({
         {/* Welcome Banner */}
         <div className="neu-card p-5 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300 text-[10px] font-bold border border-purple-300 dark:border-purple-500/30">
-                👤 Resident Experience Portal
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">KosanKu Pro Portal Penghuni</span>
-            </div>
-            <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+            <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white">
               Selamat Datang, {tenantName}! 👋
             </h2>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">

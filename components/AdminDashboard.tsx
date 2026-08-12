@@ -410,14 +410,7 @@ export default function AdminDashboard({
       {/* SuperAdmin Header Banner (Soft Raised Neumorphic Card) */}
       <div className="neu-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 text-[10px] font-black border border-amber-300 dark:border-amber-500/30 flex items-center gap-1.5">
-              <i className="fa-solid fa-bolt text-amber-500 text-[9px]" />
-              Super Admin System Control Hub
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold hidden sm:inline">Akses Seluruh Menu &amp; Setting Master Data Multi-Kosan</span>
-          </div>
-          <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-1">SuperAdmin Platform Master Console</h2>
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">SuperAdmin Master Console</h2>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <div className="px-3 py-1.5 neu-card-sm rounded-xl font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
