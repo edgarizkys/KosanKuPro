@@ -30,6 +30,7 @@ interface StockOpnameItem {
 }
 
 import SequenceSaaSLayout from './SequenceSaaSLayout';
+import ToastNotification from './ToastNotification';
 import type { RoleType } from '@/app/page';
 
 const INITIAL_TASKS: StaffTask[] = [
@@ -76,7 +77,7 @@ export default function EmployeeDashboard({
   const [tasks, setTasks] = useState<StaffTask[]>(INITIAL_TASKS);
   const [checklist, setChecklist] = useState<InventoryChecklist[]>(CHECKIN_ITEMS);
   const [soItems, setSoItems] = useState<StockOpnameItem[]>(INITIAL_SO_ITEMS);
-  const [activeTab, setActiveTab] = useState<'tasks' | 'stock_opname' | 'checkin'>('tasks');
+  const [activeTab, setActiveTab] = useState<'tasks' | 'stock_opname' | 'checkin' | 'expense_history'>('tasks');
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [reqTitle, setReqTitle] = useState('');
   const [reqAmount, setReqAmount] = useState('');
@@ -84,6 +85,148 @@ export default function EmployeeDashboard({
   const [toast, setToast] = useState<string | null>(null);
   const [soPhotoProof, setSoPhotoProof] = useState<string | null>(null);
   const [soPhotoMeta, setSoPhotoMeta] = useState<string | null>(null);
+  const [myExpenseRequests, setMyExpenseRequests] = useState<any[]>([]);
+
+  // Room Check-in / Check-out Inspection State
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState('A-101');
+  const [tenantNameForInspection, setTenantNameForInspection] = useState('Rian Pratama');
+  const [inspectionType, setInspectionType] = useState<'CHECK_IN' | 'CHECK_OUT'>('CHECK_IN');
+  const [inspectionNotes, setInspectionNotes] = useState('');
+  const [inspectionItems, setInspectionItems] = useState<InventoryChecklist[]>([]);
+
+  // Load Inspection items dynamically from Admin Master Data
+  useEffect(() => {
+    try {
+      const savedMaster = localStorage.getItem('kosanku_master_inspection_items');
+      if (savedMaster) {
+        const parsed = JSON.parse(savedMaster);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setInspectionItems(parsed.map((p: any) => ({ item: p.name || p.item, status: 'ADA_BAIK' })));
+          return;
+        }
+      }
+    } catch {}
+
+    // Default fallback if not yet set in Master Data
+    setInspectionItems([
+      { item: 'Kunci Kamar & Card Key Access (RFID)', status: 'ADA_BAIK' },
+      { item: 'Remote AC Original & Baterai Dingin Normal', status: 'ADA_BAIK' },
+      { item: 'Kasur Springbed, Bantal & Seprei Bersih', status: 'ADA_BAIK' },
+      { item: 'Lemari Pakaian & Cermin Dinding Mulus', status: 'ADA_BAIK' },
+      { item: 'Kran Wastafel, Shower & Water Heater Normal', status: 'ADA_BAIK' },
+      { item: 'Smart TV & Remote TV Berfungsi', status: 'ADA_BAIK' },
+      { item: 'Cat Dinding & Kebersihan Lantai Ruangan', status: 'ADA_BAIK' },
+    ]);
+  }, []);
+
+  const updateInspectionItemStatus = (idx: number, status: 'ADA_BAIK' | 'PERLU_PERBAIKAN' | 'HILANG') => {
+    setInspectionItems((prev) =>
+      prev.map((it, i) => (i === idx ? { ...it, status } : it))
+    );
+  };
+
+  const handleSubmitInspectionReport = async () => {
+    const reportEntry = {
+      id: `INSP-${Date.now().toString().slice(-4)}`,
+      roomNumber: selectedRoomNumber,
+      tenantName: tenantNameForInspection || 'Penghuni Kosan',
+      type: inspectionType, // CHECK_IN or CHECK_OUT
+      inspectedBy: 'Bambang Prasetyo (Staf Lapangan)',
+      date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      items: inspectionItems,
+      notes: inspectionNotes || (inspectionType === 'CHECK_IN' ? 'Kamar siap huni & kunci diserahkan.' : 'Kamar selesai dihuni, kunci dikembalikan.'),
+    };
+
+    // 1. Post directly to Production Server API
+    try {
+      await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType: 'ROOM_INSPECTION', payload: reportEntry }),
+      });
+    } catch {}
+
+    // 2. Save report to localStorage for Owner sync
+    try {
+      const existing = JSON.parse(localStorage.getItem('kosanku_room_inspections') || '[]');
+      const updated = [reportEntry, ...existing];
+      localStorage.setItem('kosanku_room_inspections', JSON.stringify(updated));
+    } catch {}
+
+    // 3. Broadcast to Owner in real-time across tabs/windows
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('kosanku_order_channel');
+        bc.postMessage({
+          type: 'ROOM_INSPECTION_SUBMITTED',
+          report: reportEntry,
+        });
+        bc.close();
+      } catch {}
+    }
+
+    // 4. Dispatch window events for instant same-tab/same-session responsiveness
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('notifs_updated'));
+      window.dispatchEvent(new CustomEvent('room_inspections_updated', { detail: { report: reportEntry } }));
+    }
+
+    const typeLabel = inspectionType === 'CHECK_IN' ? 'CEK-IN' : 'CEK-OUT';
+    showToast(`📋 LAPORAN ${typeLabel} KAMAR ${selectedRoomNumber} (${tenantNameForInspection}): BERHASIL DIKIRIM KE OWNER!`);
+    setInspectionNotes('');
+  };
+
+  const loadMyExpenseRequests = async () => {
+    try {
+      const res = await fetch('/api/activity?type=approvals');
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+          setMyExpenseRequests(json.data);
+          return;
+        }
+      }
+      const saved = JSON.parse(localStorage.getItem('kosanku_staff_approvals') || '[]');
+      if (Array.isArray(saved)) {
+        setMyExpenseRequests(saved);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    loadMyExpenseRequests();
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'kosanku_staff_approvals') {
+        loadMyExpenseRequests();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('kosanku_order_channel');
+      bc.onmessage = (msg) => {
+        if (msg.data?.type === 'STAFF_EXPENSE_DECIDED') {
+          loadMyExpenseRequests();
+          const { title, status, amount } = msg.data;
+          if (status === 'APPROVED') {
+            showToast(`🎉 KABAR BAIK: Pengajuan "${title}" (Rp ${Number(amount).toLocaleString('id-ID')}) telah DISETUJUI Owner! Dana siap dicairkan.`);
+          } else {
+            showToast(`⚠️ PEMBERITAHUAN: Pengajuan "${title}" DITOLAK oleh Owner.`);
+          }
+        }
+      };
+    }
+
+    const interval = setInterval(loadMyExpenseRequests, 2500);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      if (bc) bc.close();
+      clearInterval(interval);
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -120,29 +263,105 @@ export default function EmployeeDashboard({
     );
   };
 
-  const submitSOReport = () => {
-    // Save SO audit to localStorage for Owner Dashboard sync
+  const submitSOReport = async () => {
     const auditData = {
       auditDate: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      auditedBy: 'Bambang (Staf Lapangan)',
+      auditedBy: 'Bambang Prasetyo (Staf Lapangan)',
       items: soItems,
+      photoProof: soPhotoProof,
+      photoMeta: soPhotoMeta,
     };
+
+    // 1. Post to Server API
+    try {
+      await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionType: 'STOCK_OPNAME',
+          payload: auditData,
+        }),
+      });
+    } catch {}
+
+    // 2. Save SO audit to localStorage for Owner Dashboard sync
     localStorage.setItem('kosanku_latest_stock_opname', JSON.stringify(auditData));
 
-    setToast('🎉 LAPORAN STOCK OPNAME (SO) FISIK BERHASIL DIKIRIM KE OWNER!');
-    setTimeout(() => setToast(null), 4000);
+    // 3. Broadcast to Owner across tabs
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('kosanku_order_channel');
+        bc.postMessage({
+          type: 'STOCK_OPNAME_SUBMITTED',
+          audit: auditData,
+        });
+        bc.close();
+      } catch {}
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('notifs_updated'));
+      window.dispatchEvent(new CustomEvent('so_audit_updated', { detail: { audit: auditData } }));
+    }
+
+    showToast('🎉 LAPORAN STOCK OPNAME (SO) FISIK BERHASIL DIKIRIM KE OWNER!');
   };
 
-  const handleCreateExpenseRequest = (e: React.FormEvent) => {
+  const handleCreateExpenseRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reqTitle || !reqAmount || !reqReason) return;
 
-    setToast(`Pengajuan dana "${reqTitle}" sebesar Rp ${Number(reqAmount).toLocaleString('id-ID')} berhasil dikirim ke Owner untuk approval.`);
+    const amountNum = Number(reqAmount);
+    const newReqId = `APP-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newApproval = {
+      id: newReqId,
+      title: reqTitle,
+      category: 'OPERATIONAL',
+      amount: amountNum,
+      requestedBy: 'Bambang Prasetyo (Staf Lapangan)',
+      requestDate: 'Baru saja',
+      date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+      reason: reqReason,
+      status: 'PENDING',
+    };
+
+    // 1. Post directly to Production Server API
+    try {
+      await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType: 'STAFF_EXPENSE', payload: newApproval }),
+      });
+    } catch {}
+
+    // 2. Save to shared localStorage for Owner sync
+    try {
+      const existing = JSON.parse(localStorage.getItem('kosanku_staff_approvals') || '[]');
+      const updated = [newApproval, ...existing];
+      localStorage.setItem('kosanku_staff_approvals', JSON.stringify(updated));
+      setMyExpenseRequests(updated);
+    } catch {}
+
+    // 3. Broadcast to Owner via BroadcastChannel across tabs/windows
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('kosanku_order_channel');
+        bc.postMessage({ type: 'NEW_STAFF_EXPENSE', approval: newApproval });
+        bc.close();
+      } catch {}
+    }
+
+    // 4. Dispatch window events for instant same-tab/same-session responsiveness
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('notifs_updated'));
+      window.dispatchEvent(new CustomEvent('staff_expense_updated', { detail: { approval: newApproval } }));
+    }
+
+    showToast(`Pengajuan dana "${reqTitle}" sebesar Rp ${amountNum.toLocaleString('id-ID')} berhasil dikirim ke Owner untuk approval.`);
     setShowExpenseModal(false);
     setReqTitle('');
     setReqAmount('');
     setReqReason('');
-    setTimeout(() => setToast(null), 4000);
   };
 
   const [activeBranch, setActiveBranch] = useState('all');
@@ -206,9 +425,10 @@ export default function EmployeeDashboard({
       onBranchChange={setActiveBranch}
       onSwitchRole={onSwitchRole}
       onLogout={onLogout}
-      activeTab={activeTab === 'tasks' ? 'tenant_requests' : activeTab === 'stock_opname' ? 'inventory' : 'approval'}
+      activeTab={activeTab === 'tasks' ? 'tenant_requests' : activeTab === 'stock_opname' ? 'inventory' : activeTab === 'expense_history' ? 'expense_history' : 'approval'}
       onTabChange={(t) => {
         if (t === 'inventory') setActiveTab('stock_opname');
+        else if (t === 'expense_history') setActiveTab('expense_history');
         else if (t === 'approval') setActiveTab('checkin');
         else setActiveTab('tasks');
       }}
@@ -220,20 +440,45 @@ export default function EmployeeDashboard({
           <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white">
             Dashboard Operasional Karyawan
           </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Pelaksanaan tugas lapangan, inspeksi kamar masuk/keluar, dan audit berkala stok pasokan kosan.
+          </p>
         </div>
-
-        <button
-          onClick={() => setShowExpenseModal(true)}
-          className="px-5 py-3 neu-btn text-slate-900 dark:text-white font-bold rounded-2xl text-xs transition-all cursor-pointer flex items-center gap-2 w-fit"
-        >
-          <i className="fa-solid fa-file-circle-plus text-[#047857] dark:text-emerald-400" />
-          <span>+ Ajukan Dana ke Owner</span>
-        </button>
       </div>
 
       {/* Tab: Stock Opname (SO) Audit Fisik Barang */}
       {activeTab === 'stock_opname' && (
         <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+          {/* 📅 End-of-Month Audit Schedule & Reminder Banner */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4 border border-emerald-500/30 shadow-lg">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg shrink-0 border border-emerald-500/40">
+                <i className="fa-solid fa-calendar-check" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-slate-950 font-black text-[10px] uppercase tracking-wider">
+                    Jadwal Wajib Akhir Bulan
+                  </span>
+                  <span className="text-emerald-400 text-xs font-bold font-mono">
+                    Periode: {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
+                  </span>
+                </div>
+                <h4 className="text-sm sm:text-base font-extrabold text-white mt-1">
+                  Audit Fisik Berkala Tutup Buku (Akhir Bulan)
+                </h4>
+                <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                  ⏰ Sistem Auto-Pilot KosanKu otomatis mengaktifkan reminder tanggal 27-31 setiap bulan untuk memastikan akurasi stok fisik vs sistem.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+              <span className="px-3 py-1.5 rounded-xl bg-white/10 text-emerald-300 font-extrabold text-xs border border-white/10 flex items-center gap-1.5">
+                <i className="fa-solid fa-circle-check text-emerald-400" /> Reminder Aktif
+              </span>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -431,38 +676,273 @@ export default function EmployeeDashboard({
         </div>
       )}
 
-      {/* Tab: Check-in Inventory Inspection */}
+      {/* Tab: Check-in & Check-Out Inventory Inspection (Interactive Room Inspection) */}
       {activeTab === 'checkin' && (
-        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-clipboard-check text-blue-600 dark:text-blue-400" />
-                Form Inspeksi Cek-In &amp; Cek-Out Kamar
+                Inspeksi Cek-In &amp; Cek-Out Kamar Penghuni
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Verifikasi kondisi aset inventori sebelum kunci diserahkan ke tenant</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Pilih kamar dan tipe inspeksi (Penghuni Baru Masuk vs Penghuni Keluar/Selesai Sewa) untuk dilaporkan ke Owner.
+              </p>
+            </div>
+            <span className="px-3.5 py-1.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold text-xs">
+              Staf: Bambang Prasetyo
+            </span>
+          </div>
+
+          {/* 1. Selector Kamar & Tipe Inspeksi */}
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
+                Pilih Kamar yang Diinspeksi *
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                {[
+                  { number: 'A-101', type: 'Deluxe Studio', tenant: 'Rian Pratama', icon: 'fa-door-closed' },
+                  { number: 'A-102', type: 'Standard Room', tenant: 'Budi Santoso', icon: 'fa-door-closed' },
+                  { number: 'B-201', type: 'Executive Suite', tenant: 'Siti Rahma', icon: 'fa-door-closed' },
+                  { number: 'B-202', type: 'Standard Single', tenant: 'Kosong', icon: 'fa-door-open' },
+                  { number: 'C-301', type: 'Studio Balcony', tenant: 'Kosong', icon: 'fa-door-open' },
+                ].map((rm) => {
+                  const isSelected = selectedRoomNumber === rm.number;
+                  return (
+                    <button
+                      key={rm.number}
+                      type="button"
+                      onClick={() => {
+                        setSelectedRoomNumber(rm.number);
+                        setTenantNameForInspection(rm.tenant !== 'Kosong' ? rm.tenant : '');
+                      }}
+                      className={`p-3.5 rounded-2xl text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                        isSelected
+                          ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg scale-[1.02] border-2 border-emerald-400'
+                          : 'neu-card-sm text-slate-800 dark:text-slate-200 hover:scale-[1.01]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-black">{rm.number}</span>
+                        <i className={`fa-solid ${rm.icon} text-xs ${isSelected ? 'text-emerald-200' : 'text-slate-400'}`} />
+                      </div>
+                      <div>
+                        <span className={`text-[10px] block font-extrabold truncate ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {rm.type}
+                        </span>
+                        <span className={`text-[9px] block truncate ${isSelected ? 'text-emerald-100' : 'text-slate-400'}`}>
+                          {rm.tenant}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Nama Penghuni / Tenant</label>
+                <input
+                  type="text"
+                  value={tenantNameForInspection}
+                  onChange={(e) => setTenantNameForInspection(e.target.value)}
+                  placeholder="cth: Rian Pratama"
+                  className="w-full p-3 neu-input rounded-2xl outline-none text-xs font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Tipe Aktivitas *</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setInspectionType('CHECK_IN')}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      inspectionType === 'CHECK_IN'
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'neu-btn text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <i className="fa-solid fa-key" /> Cek-In (Masuk)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInspectionType('CHECK_OUT')}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      inspectionType === 'CHECK_OUT'
+                        ? 'bg-rose-600 text-white shadow-md'
+                        : 'neu-btn text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <i className="fa-solid fa-door-open" /> Cek-Out (Keluar)
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            {checklist.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between p-4 neu-card-sm rounded-2xl text-xs">
-                <span className="font-bold text-slate-900 dark:text-white">{item.item}</span>
-                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400 rounded-full font-bold">
-                  {item.status === 'ADA_BAIK' ? '✅ Ada &amp; Baik' : '⚠️ Perlu Perbaikan'}
-                </span>
+          {/* 2. Interactive Checklist Items */}
+          <div className="space-y-3 pt-2">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
+              Checklist Kondisi Fisik &amp; Fasilitas Kamar {selectedRoomNumber}:
+            </h4>
+
+            {inspectionItems.map((item, idx) => (
+              <div key={idx} className="neu-card-sm p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="space-y-0.5">
+                  <span className="font-bold text-slate-900 dark:text-white block">{item.item}</span>
+                  <span className="text-[10px] text-slate-400">Status verifikasi staf:</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => updateInspectionItemStatus(idx, 'ADA_BAIK')}
+                    className={`px-3 py-1.5 rounded-xl font-extrabold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                      item.status === 'ADA_BAIK'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'neu-btn text-slate-600 dark:text-slate-300 hover:bg-emerald-50'
+                    }`}
+                  >
+                    <i className="fa-solid fa-circle-check text-[10px]" /> Ada &amp; Baik
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateInspectionItemStatus(idx, 'PERLU_PERBAIKAN')}
+                    className={`px-3 py-1.5 rounded-xl font-extrabold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                      item.status === 'PERLU_PERBAIKAN'
+                        ? 'bg-amber-500 text-slate-900 shadow-xs'
+                        : 'neu-btn text-slate-600 dark:text-slate-300 hover:bg-amber-50'
+                    }`}
+                  >
+                    <i className="fa-solid fa-triangle-exclamation text-[10px]" /> Rusak / Perlu Perbaikan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateInspectionItemStatus(idx, 'HILANG')}
+                    className={`px-3 py-1.5 rounded-xl font-extrabold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                      item.status === 'HILANG'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'neu-btn text-slate-600 dark:text-slate-300 hover:bg-rose-50'
+                    }`}
+                  >
+                    <i className="fa-solid fa-circle-xmark text-[10px]" /> Hilang / Kurang
+                  </button>
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* 3. Catatan & Tombol Kirim Laporan ke Owner */}
+          <div className="space-y-4 pt-3 border-t border-slate-200/60 dark:border-white/5">
+            <div>
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                Catatan Kondisi Kamar &amp; Meteran Listrik/Air (Untuk Laporan Owner)
+              </label>
+              <textarea
+                value={inspectionNotes}
+                onChange={(e) => setInspectionNotes(e.target.value)}
+                rows={2}
+                placeholder="cth: Kamar sudah dibersihkan total, kran air lancar, meteran awal listrik 142 kWh, kunci diserahkan ke tenant."
+                className="w-full p-3 neu-input rounded-2xl outline-none text-xs text-slate-900 dark:text-white resize-none"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="text-xs text-slate-500">
+                <i className="fa-solid fa-shield-halved text-emerald-600 mr-1" />
+                Laporan ini akan langsung tersinkronisasi ke Dashboard &amp; Notifikasi Owner.
+              </div>
+              <button
+                type="button"
+                onClick={handleSubmitInspectionReport}
+                className="px-6 py-3.5 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-2xl text-xs shadow-lg hover:scale-[1.02] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <i className="fa-solid fa-paper-plane" />
+                <span>Kirim Hasil Inspeksi Kamar {selectedRoomNumber} ke Owner</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Toast Notification (Bottom Right) */}
-      {toast && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 shadow-2xl animate-scale-in flex items-center gap-2">
-          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400" />
-          <span>{toast}</span>
+      {/* Tab: Status Pengajuan Dana ke Owner (Full Dedicated Tab) */}
+      {activeTab === 'expense_history' && (
+        <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <i className="fa-solid fa-file-invoice-dollar text-purple-600 dark:text-purple-400" />
+                Status &amp; Konfirmasi Pengajuan Dana Operasional ke Owner
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Pantau konfirmasi persetujuan (Approve / Reject) anggaran dari Owner secara real-time.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowExpenseModal(true)}
+              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 w-fit"
+            >
+              <i className="fa-solid fa-plus" />
+              <span>+ Ajukan Dana Baru</span>
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {myExpenseRequests.map((req: any) => (
+              <div key={req.id} className="p-5 neu-card-sm rounded-2xl space-y-3 text-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
+                      #{req.id}
+                    </span>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-base">{req.title}</h4>
+                  </div>
+                  <span className={`px-3.5 py-1 rounded-full text-[10px] font-black uppercase w-fit ${
+                    req.status === 'APPROVED'
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300'
+                      : req.status === 'REJECTED'
+                      ? 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-300'
+                      : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-300 animate-pulse'
+                  }`}>
+                    {req.status === 'APPROVED' ? '✅ Disetujui Owner (Siap Cair)' : req.status === 'REJECTED' ? '❌ Ditolak Owner' : '⏳ Menunggu Approval Owner'}
+                  </span>
+                </div>
+
+                <div className="p-3.5 neu-inset rounded-xl text-slate-700 dark:text-slate-300">
+                  <span className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Kebutuhan / Urgensi:</span>
+                  <p className="italic font-medium">&quot;{req.reason}&quot;</p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/50 dark:border-white/5 text-[11px] text-slate-500">
+                  <span>Waktu Pengajuan: <strong>{req.requestDate || req.date || 'Hari ini'}</strong></span>
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Nominal Anggaran:</span>
+                    <span className="font-black text-base text-purple-700 dark:text-purple-400">
+                      Rp {Number(req.amount).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {myExpenseRequests.length === 0 && (
+              <div className="text-center py-12 text-slate-400 text-xs neu-inset rounded-2xl">
+                Belum ada riwayat pengajuan dana yang dikirim
+              </div>
+            )}
+          </div>
         </div>
+      )}
+
+      {/* Toast Notification (Luxury Glassmorphism Card) */}
+      {toast && (
+        <ToastNotification
+          msg={toast}
+          type="info"
+          onClose={() => setToast(null)}
+        />
       )}
 
       {/* Expense Request Modal */}

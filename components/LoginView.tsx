@@ -97,109 +97,268 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
         </button>
       </header>
 
-      {/* Main SaaS Card Container (Compact Centered Card) */}
-      <main className="max-w-md w-full mx-auto my-auto z-10 py-4">
-        <div className="neu-card rounded-3xl p-6 sm:p-7 shadow-2xl border border-white/80 dark:border-white/10 space-y-5 animate-scale-in">
+      {/* Main SaaS Portal Layout (Wide 2-Column Luxury Dashboard) */}
+      <main className="max-w-6xl w-full mx-auto my-auto z-10 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
-          {/* Header & Title */}
-          <div className="text-center space-y-1">
-            <div className="w-12 h-12 rounded-2xl bg-[#047857] text-white flex items-center justify-center text-xl font-black mx-auto neu-card-sm shadow-md mb-2">
-              <i className="fa-solid fa-cubes-stacked" />
+          {/* Left Column: Quick Role Test Matrix (Organized in Clean Category Cards) */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#047857]/10 text-[#047857] dark:text-emerald-400 font-extrabold text-xs">
+                <i className="fa-solid fa-users-viewfinder" />
+                <span>Multi-Account Sandbox Demo</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                Pilih Akun Uji Coba untuk Simulasi <span className="text-[#047857]">Plotting &amp; Notifikasi</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Klik salah satu profil di bawah untuk langsung login dan memverifikasi alur tugas antara Owner, Staf, dan Vendor secara real-time.
+              </p>
             </div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              Portal SaaS KosanKuPro
-            </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">
-              Autentikasi Akun Multi-Role &amp; Google SSO
-            </p>
+
+            {/* Role Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              
+              {/* Category 1: Manajemen (Owner & Admin) */}
+              <div className="neu-card p-4 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">👑</span>
+                    Owner &amp; Manajemen
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">Pusat Plotting</span>
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { label: 'Ibu Dewi Tri Oktariani', sub: 'Property Owner Utama', email: 'owner@kosanku.pro', role: 'owner', id: 'usr_owner_01' },
+                    { label: 'Pak Admin (Siti)', sub: 'Admin Operasional', email: 'admin@kosanku.pro', role: 'admin', id: 'usr_admin_01' },
+                    { label: 'Rina (Finance)', sub: 'Admin Keuangan', email: 'admin2@kosanku.pro', role: 'admin', id: 'usr_admin_02' },
+                  ].map((u) => (
+                    <button
+                      key={u.email}
+                      type="button"
+                      onClick={() => {
+                        selectPreset(u.email);
+                        onLogin({ id: u.id, name: u.label, email: u.email, role: u.role });
+                      }}
+                      className={`w-full p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between group ${
+                        email === u.email
+                          ? 'bg-[#047857] text-white shadow-md'
+                          : 'neu-btn text-slate-800 dark:text-slate-200 hover:border-emerald-500/40'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-extrabold text-xs leading-tight">{u.label}</p>
+                        <p className={`text-[10px] ${email === u.email ? 'text-emerald-100' : 'text-slate-400'}`}>{u.sub}</p>
+                      </div>
+                      <i className={`fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1 ${email === u.email ? 'text-white' : 'text-slate-400'}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category 2: Staf Lapangan */}
+              <div className="neu-card p-4 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs">👷</span>
+                    Staf Lapangan
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">Penerima Tugas</span>
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { label: 'Bambang Prasetyo', sub: 'Teknisi & Maintenance', email: 'staf@kosanku.pro', role: 'employee', id: 'usr_staf_01' },
+                    { label: 'Rudi Hartono', sub: 'Kebersihan & Kurir', email: 'staf.kebersihan@kosanku.pro', role: 'employee', id: 'usr_staf_02' },
+                  ].map((u) => (
+                    <button
+                      key={u.email}
+                      type="button"
+                      onClick={() => {
+                        selectPreset(u.email);
+                        onLogin({ id: u.id, name: u.label, email: u.email, role: u.role });
+                      }}
+                      className={`w-full p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between group ${
+                        email === u.email
+                          ? 'bg-[#047857] text-white shadow-md'
+                          : 'neu-btn text-slate-800 dark:text-slate-200 hover:border-emerald-500/40'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-extrabold text-xs leading-tight">{u.label}</p>
+                        <p className={`text-[10px] ${email === u.email ? 'text-emerald-100' : 'text-slate-400'}`}>{u.sub}</p>
+                      </div>
+                      <i className={`fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1 ${email === u.email ? 'text-white' : 'text-slate-400'}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category 3: Mitra Vendor */}
+              <div className="neu-card p-4 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">🏪</span>
+                    Mitra Vendor Suplai
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">Order Delivery</span>
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { label: 'Depot Air & Gas Suci', sub: 'Refill Galon & Gas LPG', email: 'vendor.galon@kosanku.pro', role: 'vendor', id: 'USR-VND-01' },
+                    { label: 'Laundry Express Clean', sub: 'Jasa Cuci Kiloan', email: 'vendor.laundry@kosanku.pro', role: 'vendor', id: 'USR-VND-02' },
+                    { label: 'Subur Teknik', sub: 'Supplier Sparepart', email: 'vendor.teknik@kosanku.pro', role: 'vendor', id: 'USR-VND-03' },
+                  ].map((u) => (
+                    <button
+                      key={u.email}
+                      type="button"
+                      onClick={() => {
+                        selectPreset(u.email);
+                        onLogin({ id: u.id, name: u.label, email: u.email, role: u.role });
+                      }}
+                      className={`w-full p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between group ${
+                        email === u.email
+                          ? 'bg-[#047857] text-white shadow-md'
+                          : 'neu-btn text-slate-800 dark:text-slate-200 hover:border-emerald-500/40'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-extrabold text-xs leading-tight">{u.label}</p>
+                        <p className={`text-[10px] ${email === u.email ? 'text-emerald-100' : 'text-slate-400'}`}>{u.sub}</p>
+                      </div>
+                      <i className={`fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1 ${email === u.email ? 'text-white' : 'text-slate-400'}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category 4: Tenant / Penghuni Multi-Account */}
+              <div className="neu-card p-4 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs">👤</span>
+                    Penyewa Kosan (Tenant)
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">Multi Kamar</span>
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { label: 'Rian Pratama', sub: 'Kamar A-101 (Deluxe Studio)', email: 'tenant@kosanku.pro', role: 'tenant', id: 'usr_tenant_01' },
+                    { label: 'Siti Rahma', sub: 'Kamar B-201 (Executive Balcony)', email: 'tenant2@kosanku.pro', role: 'tenant', id: 'usr_tenant_02' },
+                    { label: 'Budi Santoso', sub: 'Kamar C-302 (Standard Cosy)', email: 'tenant3@kosanku.pro', role: 'tenant', id: 'usr_tenant_03' },
+                  ].map((u) => (
+                    <button
+                      key={u.email}
+                      type="button"
+                      onClick={() => {
+                        selectPreset(u.email);
+                        onLogin({ id: u.id, name: u.label, email: u.email, role: u.role });
+                      }}
+                      className={`w-full p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between group ${
+                        email === u.email
+                          ? 'bg-[#047857] text-white shadow-md'
+                          : 'neu-btn text-slate-800 dark:text-slate-200 hover:border-emerald-500/40'
+                      }`}
+                    >
+                      <div>
+                        <p className="font-extrabold text-xs leading-tight">{u.label}</p>
+                        <p className={`text-[10px] ${email === u.email ? 'text-emerald-100' : 'text-slate-400'}`}>{u.sub}</p>
+                      </div>
+                      <i className={`fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1 ${email === u.email ? 'text-white' : 'text-slate-400'}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
           </div>
 
-          {error && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
-              <i className="fa-solid fa-circle-exclamation" />
-              <span>{error}</span>
-            </div>
-          )}
+          {/* Right Column: Sleek Glassmorphic Login Form Card */}
+          <div className="lg:col-span-5">
+            <div className="neu-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/80 dark:border-white/10 space-y-5 animate-scale-in">
+              
+              {/* Card Header */}
+              <div className="flex items-center gap-3.5 border-b border-slate-200/60 dark:border-white/10 pb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#047857] via-emerald-600 to-teal-600 text-white flex items-center justify-center text-xl font-black shadow-md shrink-0">
+                  <i className="fa-solid fa-lock" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                    Masuk ke Dashboard
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Masukkan kredensial atau klik profil cepat di samping.
+                  </p>
+                </div>
+              </div>
 
-          {/* Quick Role Selector Pills */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 block tracking-wider text-center">
-              Pilih Role Akses Demo:
-            </label>
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              {[
-                { label: '👑 Owner', email: 'owner@kosanku.pro', role: 'owner', id: 'usr_owner_01', name: 'Bapak Hendra (Owner)' },
-                { label: '🛡️ Admin', email: 'admin@kosanku.pro', role: 'admin', id: 'usr_admin_01', name: 'Pak Admin Operasional' },
-                { label: '👷 Staf', email: 'staf@kosanku.pro', role: 'employee', id: 'usr_staf_01', name: 'Bambang (Staf)' },
-                { label: '🏪 Vendor', email: 'vendor@kosanku.pro', role: 'vendor', id: 'usr_vendor_01', name: 'Depot Suci (Vendor)' },
-                { label: '👤 Tenant', email: 'tenant@kosanku.pro', role: 'tenant', id: 'usr_tenant_01', name: 'Rian Pratama' },
-              ].map((item) => (
+              {error && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+                  <i className="fa-solid fa-circle-exclamation" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Login Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block mb-1.5">
+                    Email Akun
+                  </label>
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nama@kosanku.pro"
+                    className="w-full p-3.5 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block mb-1.5">
+                    Password
+                  </label>
+                  <input
+                    required
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full p-3.5 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
+                  />
+                </div>
+
                 <button
-                  key={item.email}
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#047857] via-emerald-600 to-teal-600 hover:opacity-95 text-white font-black rounded-2xl shadow-lg hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs flex items-center justify-center gap-2"
+                >
+                  {loading ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-right-to-bracket" />}
+                  <span>Masuk ke Dashboard Sekarang</span>
+                </button>
+
+                <div className="relative flex items-center justify-center py-1">
+                  <div className="border-t border-slate-200 dark:border-white/10 w-full" />
+                  <span className="bg-transparent px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider absolute">atau</span>
+                </div>
+
+                {/* Google SSO Login Button */}
+                <button
                   type="button"
                   onClick={() => {
-                    selectPreset(item.email);
-                    onLogin({ id: item.id, name: item.name, email: item.email, role: item.role });
+                    setShowSsoModal(true);
+                    setSsoError(null);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer ${
-                    email === item.email
-                      ? 'bg-[#047857] text-white shadow-xs scale-105'
-                      : 'neu-btn text-slate-700 dark:text-slate-200 hover:text-emerald-500'
-                  }`}
+                  className="w-full py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-extrabold rounded-2xl border border-slate-300 dark:border-slate-700 shadow-xs cursor-pointer text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
-                  {item.label}
+                  <i className="fa-brands fa-google text-rose-500 text-sm" />
+                  <span>Masuk Cepat via Google SSO</span>
                 </button>
-              ))}
+              </form>
             </div>
           </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Email Terdaftar</label>
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="w-full p-3 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Password Access</label>
-              <input
-                required
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full p-3 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-2xl shadow-md hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs flex items-center justify-center gap-2"
-            >
-              {loading ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-right-to-bracket" />}
-              <span>Masuk ke Dashboard Pro</span>
-            </button>
-
-            {/* Google SSO Login Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setShowSsoModal(true);
-                setSsoError(null);
-              }}
-              className="w-full py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-extrabold rounded-2xl border border-slate-300 dark:border-slate-700 shadow-xs cursor-pointer text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
-            >
-              <i className="fa-brands fa-google text-rose-500 text-sm" />
-              <span>Masuk dengan Google (Google SSO)</span>
-            </button>
-          </form>
         </div>
       </main>
 

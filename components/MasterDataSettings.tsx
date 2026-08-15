@@ -82,6 +82,7 @@ const INITIAL_INVENTORY_MASTER: InventoryMaster[] = [
   { id: 'MST-INV-03', name: 'Bohlam Lampu LED 12W', category: 'Maintenance', unit: 'Pcs', minStock: 5 },
   { id: 'MST-INV-04', name: 'Remote AC Original', category: 'Elektronik', unit: 'Pcs', minStock: 2 },
   { id: 'MST-INV-05', name: 'Sprei Set Clean', category: 'Linen / Laundry', unit: 'Set', minStock: 4 },
+  { id: 'MST-INV-06', name: 'Kunci Duplikat Card Key', category: 'Keamanan', unit: 'Pcs', minStock: 5 },
 ];
 
 const INITIAL_EXPENSE_CATEGORIES: ExpenseCategoryMaster[] = [
@@ -122,6 +123,24 @@ const INITIAL_FACILITIES: FacilityMaster[] = [
   { id: 'FAC-10', name: 'Refill Gas LPG 3kg', category: 'LAYANAN_ADDON', icon: '🔥', isIncludedInRent: false, additionalMonthlyFee: 0, description: 'Refill gas LPG 3kg via Depot Suci, Rp 25.000/tabung' },
 ];
 
+export interface InspectionItemMaster {
+  id: string;
+  name: string;
+  category: 'KUNCI' | 'ELEKTRONIK' | 'FURNITUR' | 'SANITASI' | 'DINDING_LANTAI' | 'LAINNYA';
+  icon: string;
+  description: string;
+}
+
+export const INITIAL_INSPECTION_ITEMS: InspectionItemMaster[] = [
+  { id: 'CHK-01', name: 'Kunci Kamar & Card Key Access (RFID)', category: 'KUNCI', icon: '🔑', description: 'Kelengkapan 2 kunci fisik dan 1 card key RFID' },
+  { id: 'CHK-02', name: 'Remote AC Original & Baterai Dingin Normal', category: 'ELEKTRONIK', icon: '❄️', description: 'Remote berfungsi, display menyala, AC dingin normal' },
+  { id: 'CHK-03', name: 'Kasur Springbed, Bantal & Seprei Bersih', category: 'FURNITUR', icon: '🛏️', description: 'Kondisi busa/per utuh, sarung bantal & sprei bersih tanpa noda' },
+  { id: 'CHK-04', name: 'Lemari Pakaian & Cermin Dinding Mulus', category: 'FURNITUR', icon: '🚪', description: 'Pintu lemari lancar, kunci lemari ada, cermin tidak retak' },
+  { id: 'CHK-05', name: 'Kran Wastafel, Shower & Water Heater Normal', category: 'SANITASI', icon: '🚿', description: 'Debit air kencang, tidak ada kebocoran, air panas menyala' },
+  { id: 'CHK-06', name: 'Smart TV & Remote TV Berfungsi', category: 'ELEKTRONIK', icon: '📺', description: 'Layar jernih, remote TV ada baterai, koneksi WiFi smart TV stabil' },
+  { id: 'CHK-07', name: 'Cat Dinding & Kebersihan Lantai Ruangan', category: 'DINDING_LANTAI', icon: '🧹', description: 'Dinding bersih tanpa coretan/paku berlebih, lantai disapu & dipel' },
+];
+
 function formatIDR(n: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 }
@@ -135,11 +154,28 @@ export default function MasterDataSettings() {
   const [owners, setOwners] = useState<OwnerMaster[]>(INITIAL_OWNERS);
   
   const [facilities, setFacilities] = useState<FacilityMaster[]>(INITIAL_FACILITIES);
+  const [inspectionItems, setInspectionItems] = useState<InspectionItemMaster[]>(INITIAL_INSPECTION_ITEMS);
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
-  const [activeSubTab, setActiveSubTab] = useState<'users' | 'property' | 'employees' | 'owners' | 'inventory' | 'vendors' | 'categories' | 'facilities'>('users');
+  const [activeSubTab, setActiveSubTab] = useState<'users' | 'property' | 'employees' | 'owners' | 'inventory' | 'vendors' | 'categories' | 'facilities' | 'checkin_items'>('users');
+
+  // Inspection Checklist Form State
+  const [showAddChkModal, setShowAddChkModal] = useState(false);
+  const [newChkName, setNewChkName] = useState('');
+  const [newChkCategory, setNewChkCategory] = useState<InspectionItemMaster['category']>('FURNITUR');
+  const [newChkIcon, setNewChkIcon] = useState('📋');
+  const [newChkDesc, setNewChkDesc] = useState('');
 
   useEffect(() => {
     setUserProfiles(getStoredUserProfiles());
+    const savedChk = localStorage.getItem('kosanku_master_inspection_items');
+    if (savedChk) {
+      try {
+        const parsed = JSON.parse(savedChk);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setInspectionItems(parsed);
+        }
+      } catch {}
+    }
   }, []);
 
   // Facility form states
@@ -291,14 +327,15 @@ export default function MasterDataSettings() {
       {/* Sub Tabs — 2-col grid on mobile, horizontal row on sm+ */}
       <div className="my-6 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-2 text-xs font-bold">
         {[
-          { id: 'users',      icon: '👤', label: 'Akun Pengguna',  count: userProfiles.length },
-          { id: 'property',   icon: '🏨', label: 'Identitas Kosan',count: null },
-          { id: 'employees',  icon: '🪪', label: 'Karyawan',       count: employees.length },
-          { id: 'owners',     icon: '👑', label: 'Owner',           count: owners.length },
-          { id: 'inventory',  icon: '📦', label: 'Inventori',       count: inventoryMaster.length },
-          { id: 'vendors',    icon: '🏪', label: 'Vendor',          count: vendors.length },
-          { id: 'categories', icon: '🏷️', label: 'Kategori',       count: null },
-          { id: 'facilities', icon: '🛎️', label: 'Fasilitas',      count: facilities.length },
+          { id: 'users',         icon: '👤', label: 'Akun Pengguna',      count: userProfiles.length },
+          { id: 'property',      icon: '🏨', label: 'Identitas Kosan',    count: null },
+          { id: 'employees',     icon: '🪪', label: 'Karyawan',           count: employees.length },
+          { id: 'owners',        icon: '👑', label: 'Owner',               count: owners.length },
+          { id: 'inventory',     icon: '📦', label: 'Inventori',           count: inventoryMaster.length },
+          { id: 'vendors',       icon: '🏪', label: 'Vendor',              count: vendors.length },
+          { id: 'categories',    icon: '🏷️', label: 'Kategori',           count: null },
+          { id: 'facilities',    icon: '🛎️', label: 'Fasilitas',          count: facilities.length },
+          { id: 'checkin_items', icon: '📋', label: 'Checklist Cek-In',    count: inspectionItems.length },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -613,13 +650,32 @@ export default function MasterDataSettings() {
                 </div>
               </div>
               <div>
-                <label className="font-bold block mb-1">Jabatan / Role *</label>
-                <select value={newEmpPos} onChange={(e) => setNewEmpPos(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white font-bold cursor-pointer">
-                  <option value="Teknisi Maintenance">Teknisi Maintenance</option>
-                  <option value="Admin Operasional">Admin Operasional</option>
-                  <option value="Staf Kebersihan & Kurir">Staf Kebersihan &amp; Kurir</option>
-                  <option value="Keamanan / Security">Keamanan / Security</option>
-                </select>
+                <label className="font-bold block mb-1.5">Jabatan / Role *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'Teknisi Maintenance', label: 'Teknisi Maintenance', icon: 'fa-screwdriver-wrench' },
+                    { id: 'Admin Operasional', label: 'Admin Operasional', icon: 'fa-clipboard-user' },
+                    { id: 'Staf Kebersihan & Kurir', label: 'Kebersihan & Kurir', icon: 'fa-broom' },
+                    { id: 'Keamanan / Security', label: 'Keamanan / Security', icon: 'fa-shield-halved' },
+                  ].map((pos) => {
+                    const isSel = newEmpPos === pos.id;
+                    return (
+                      <button
+                        key={pos.id}
+                        type="button"
+                        onClick={() => setNewEmpPos(pos.id)}
+                        className={`p-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSel
+                            ? 'bg-[#047857] text-white shadow-md'
+                            : 'neu-btn text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <i className={`fa-solid ${pos.icon} text-xs`} />
+                        <span className="truncate">{pos.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div>
                 <label className="font-bold block mb-1">Gaji Pokok Bulanan (IDR)</label>
@@ -850,6 +906,186 @@ export default function MasterDataSettings() {
         </div>
       )}
 
+      {/* SubTab 8: Master Item Checklist Cek-In & Cek-Out */}
+      {activeSubTab === 'checkin_items' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-4">
+            <div>
+              <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
+                📋 Master Item Pengecekan Cek-In &amp; Cek-Out Kamar
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Konfigurasi daftar aset &amp; inventori yang harus diperiksa staf lapangan saat tenant masuk (Cek-In) atau keluar (Cek-Out).
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddChkModal(true)}
+              className="px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 self-start sm:self-auto"
+            >
+              <i className="fa-solid fa-plus" /> Tambah Item Checklist
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {inspectionItems.map((chk) => {
+              const catBadge =
+                chk.category === 'KUNCI' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' :
+                chk.category === 'ELEKTRONIK' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' :
+                chk.category === 'SANITASI' ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300' :
+                chk.category === 'DINDING_LANTAI' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300' :
+                'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
+
+              return (
+                <div key={chk.id} className="p-4 rounded-2xl neu-card-sm flex flex-col justify-between gap-3 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl shrink-0">{chk.icon}</span>
+                      <div>
+                        <h5 className="font-extrabold text-slate-900 dark:text-white text-xs">{chk.name}</h5>
+                        <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${catBadge}`}>{chk.category}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const updated = inspectionItems.filter(item => item.id !== chk.id);
+                        setInspectionItems(updated);
+                        localStorage.setItem('kosanku_master_inspection_items', JSON.stringify(updated));
+                        setToast(`✓ Item "${chk.name}" dihapus`);
+                      }}
+                      className="text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer p-1"
+                      title="Hapus Item"
+                    >
+                      <i className="fa-solid fa-trash-can text-xs" />
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed italic">
+                    &quot;{chk.description}&quot;
+                  </p>
+
+                  <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between text-[10px] text-slate-400 font-mono font-bold">
+                    <span>ID: {chk.id}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">● Wajib Diperiksa Staf</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Save All Checklist Master Button */}
+          <button
+            onClick={() => {
+              localStorage.setItem('kosanku_master_inspection_items', JSON.stringify(inspectionItems));
+              setToast('✅ MASTER ITEM CHECKLIST INSPEKSI BERHASIL DISIMPAN & SINKRON KE STAF!');
+              setTimeout(() => setToast(null), 3500);
+            }}
+            className="px-6 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+          >
+            <i className="fa-solid fa-floppy-disk" /> Simpan &amp; Terapkan ke Staf
+          </button>
+        </div>
+      )}
+
+      {/* Modal: Tambah Item Checklist Inspeksi Baru */}
+      {showAddChkModal && (
+        <div className="fixed inset-0 z-[999] bg-black/5 dark:bg-black/20 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowAddChkModal(false)}>
+          <div className="neu-card rounded-3xl p-6 sm:p-7 w-full max-w-md space-y-5 animate-scale-in text-slate-900 dark:text-white" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-3">
+              <h3 className="text-base font-black">Tambah Item Checklist Inspeksi Kamar</h3>
+              <button onClick={() => setShowAddChkModal(false)} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-500 cursor-pointer">✕</button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newChkName) return;
+                const newItem: InspectionItemMaster = {
+                  id: `CHK-${String(inspectionItems.length + 1).padStart(2, '0')}`,
+                  name: newChkName,
+                  category: newChkCategory,
+                  icon: newChkIcon || '📋',
+                  description: newChkDesc || 'Pastikan dalam kondisi baik dan berfungsi normal saat inspeksi.',
+                };
+                const updated = [...inspectionItems, newItem];
+                setInspectionItems(updated);
+                localStorage.setItem('kosanku_master_inspection_items', JSON.stringify(updated));
+                setShowAddChkModal(false);
+                setNewChkName('');
+                setNewChkDesc('');
+                setToast(`✅ Item Checklist "${newItem.name}" Berhasil Ditambahkan!`);
+              }}
+              className="space-y-4 text-xs"
+            >
+              <div>
+                <label className="font-bold block mb-1">Pilih Emoji / Ikon</label>
+                <div className="flex gap-2">
+                  {['🔑', '❄️', '🛏️', '🚪', '🚿', '📺', '🧹', '💡', '🪟', '🪑'].map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => setNewChkIcon(emoji)}
+                      className={`w-9 h-9 rounded-xl text-base flex items-center justify-center transition-all cursor-pointer ${newChkIcon === emoji ? 'bg-[#047857] text-white shadow-md' : 'neu-btn'}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold block mb-1">Kategori Item</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { id: 'KUNCI', label: 'Kunci / Akses' },
+                    { id: 'ELEKTRONIK', label: 'Elektronik' },
+                    { id: 'FURNITUR', label: 'Furnitur' },
+                    { id: 'SANITASI', label: 'Sanitasi / KM' },
+                    { id: 'DINDING_LANTAI', label: 'Fisik Kamar' },
+                    { id: 'LAINNYA', label: 'Lainnya' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setNewChkCategory(cat.id as any)}
+                      className={`p-2 rounded-xl font-bold text-xs cursor-pointer transition-all ${newChkCategory === cat.id ? 'bg-[#047857] text-white shadow' : 'neu-btn text-slate-700 dark:text-slate-300'}`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold block mb-1">Nama Item / Fasilitas *</label>
+                <input
+                  required
+                  value={newChkName}
+                  onChange={(e) => setNewChkName(e.target.value)}
+                  placeholder="cth: Bohlam Lampu Utama, Exhaust Fan KM..."
+                  className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold block mb-1">Panduan Standar Pemeriksaan Staf</label>
+                <textarea
+                  value={newChkDesc}
+                  onChange={(e) => setNewChkDesc(e.target.value)}
+                  rows={2}
+                  placeholder="cth: Pastikan menyala terang, tidak berkedip, saklar berfungsi normal..."
+                  className="w-full p-3 neu-input rounded-xl outline-none resize-none text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowAddChkModal(false)} className="flex-1 py-3 neu-btn font-bold rounded-xl cursor-pointer">Batal</button>
+                <button type="submit" className="flex-1 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl shadow-md cursor-pointer">+ Tambah Item</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal: Tambah Fasilitas Baru */}
       {showAddFacModal && (
         <div className="fixed inset-0 z-[999] bg-black/5 dark:bg-black/20 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowAddFacModal(false)}>
@@ -884,14 +1120,32 @@ export default function MasterDataSettings() {
                   <label className="font-bold block mb-1">Ikon Fasilitas (Emoji)</label>
                   <input value={newFacIcon} onChange={e => setNewFacIcon(e.target.value)} placeholder="🏠" className="w-full p-3 neu-input rounded-xl outline-none text-center text-2xl text-slate-900 dark:text-white" />
                 </div>
-                <div>
-                  <label className="font-bold block mb-1">Kategori *</label>
-                  <select value={newFacCategory} onChange={e => setNewFacCategory(e.target.value as any)} className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white">
-                    <option value="KAMAR">🛏️ Fasilitas Kamar</option>
-                    <option value="BANGUNAN">🏢 Fasilitas Bangunan</option>
-                    <option value="LAYANAN_ADDON">➕ Layanan Add-On</option>
-                  </select>
+              <div>
+                <label className="font-bold block mb-1.5">Kategori Fasilitas *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'KAMAR', label: '🛏️ Kamar' },
+                    { id: 'BANGUNAN', label: '🏢 Bangunan' },
+                    { id: 'LAYANAN_ADDON', label: '➕ Add-On' },
+                  ].map((cat) => {
+                    const isSel = newFacCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setNewFacCategory(cat.id as any)}
+                        className={`p-2 rounded-xl font-bold text-[11px] transition-all cursor-pointer truncate ${
+                          isSel
+                            ? 'bg-[#047857] text-white shadow-md'
+                            : 'neu-btn text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
               </div>
               <div>
                 <label className="font-bold block mb-1">Nama Fasilitas *</label>

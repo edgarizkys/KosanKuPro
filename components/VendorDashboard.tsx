@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import SequenceSaaSLayout from './SequenceSaaSLayout';
+import ToastNotification from './ToastNotification';
+import type { RoleType } from '@/app/page';
 
 interface VendorOrder {
   id: string;
@@ -16,52 +19,11 @@ interface VendorOrder {
   extraDetails?: string;
 }
 
-const INITIAL_VENDOR_ORDERS: VendorOrder[] = [
-  {
-    id: 'V-101',
-    tenantName: 'Budi Santoso',
-    roomNumber: 'A-101',
-    item: 'Laundry Cuci Kiloan 7.5 Kg (Kuota Kos: 5.0 Kg)',
-    category: 'LAUNDRY',
-    amount: 20000, // 2.5kg extra @ 8000
-    assignedStaff: 'Bambang (Staf Laundry)',
-    status: 'PROCESSING',
-    orderTime: '15 menit lalu',
-    addOnBilled: false,
-    extraDetails: 'Kelebihan 2.5 kg laundry dari jatah 5 kg bulanan',
-  },
-  {
-    id: 'V-102',
-    tenantName: 'Siti Rahma',
-    roomNumber: 'B-201',
-    item: 'Refill Galon Aqua 19L + Gas LPG 3kg',
-    category: 'WATER_GAS',
-    amount: 42000,
-    assignedStaff: 'Bambang (Dispatched by Owner)',
-    status: 'NEW',
-    orderTime: '45 menit lalu',
-    addOnBilled: false,
-  },
-  {
-    id: 'V-103',
-    tenantName: 'Rian Pratama',
-    roomNumber: 'C-302',
-    item: 'Nasi Goreng Spesial + Es Teh (Warung Kos)',
-    category: 'WARUNG',
-    amount: 25000,
-    assignedStaff: 'Budi (Kurir Warung)',
-    status: 'DELIVERED',
-    orderTime: '3 jam lalu',
-    addOnBilled: true,
-  },
-];
+const INITIAL_VENDOR_ORDERS: VendorOrder[] = [];
 
 function formatIDR(n: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 }
-
-import SequenceSaaSLayout from './SequenceSaaSLayout';
-import type { RoleType } from '@/app/page';
 
 // --- Delivery tracking data ---
 const DELIVERY_TRACKING = [
@@ -119,13 +81,14 @@ export default function VendorDashboard({
     setTimeout(() => setToast(null), 3500);
   };
 
-  const handleAddOnBilling = (e: React.FormEvent) => {
+  const handleAddOnBilling = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrderForAddOn) return;
 
     const cost = Number(addOnCost) || selectedOrderForAddOn.amount;
     const note = addOnNote || selectedOrderForAddOn.extraDetails || selectedOrderForAddOn.item;
 
+    // 1. Update local orders state
     setOrders((prev) =>
       prev.map((o) =>
         o.id === selectedOrderForAddOn.id
@@ -134,16 +97,45 @@ export default function VendorDashboard({
       )
     );
 
+    // 2. Add to shared Add-On ledger for Tenant & Owner
     const existingAddons = JSON.parse(localStorage.getItem('kosanku_tenant_addons') || '[]');
-    existingAddons.push({
+    const newAddonEntry = {
       id: selectedOrderForAddOn.id,
       tenantName: selectedOrderForAddOn.tenantName,
       roomNumber: selectedOrderForAddOn.roomNumber,
       description: `${selectedOrderForAddOn.item} (${note})`,
       amount: cost,
       date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-    });
-    localStorage.setItem('kosanku_tenant_addons', JSON.stringify(existingAddons));
+      vendorName: 'Mitra Vendor Kosan',
+    };
+    
+    // Check if already exists, update or push
+    const filteredAddons = existingAddons.filter((a: any) => a.id !== selectedOrderForAddOn.id);
+    filteredAddons.push(newAddonEntry);
+    localStorage.setItem('kosanku_tenant_addons', JSON.stringify(filteredAddons));
+
+    // 3. Broadcast to all open tabs (Tenant & Owner)
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('kosanku_order_channel');
+        bc.postMessage({ type: 'ADDON_BILLED', addon: newAddonEntry });
+        bc.close();
+      } catch {}
+    }
+
+    // 4. Send PUT to server to record status & trigger in-app notification to Tenant
+    try {
+      await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedOrderForAddOn.id,
+          status: 'SETTLED',
+          vendorName: 'Mitra Vendor',
+          addOnBilled: true,
+        }),
+      });
+    } catch {}
 
     setToast(`✅ Add-On Rp ${cost.toLocaleString('id-ID')} berhasil masuk tagihan ${selectedOrderForAddOn.tenantName}!`);
     setSelectedOrderForAddOn(null);
@@ -153,8 +145,12 @@ export default function VendorDashboard({
   };
 
   const totalMonthlyPayout = orders
-    .filter((o) => o.status === 'DELIVERED' || o.status === 'SETTLED')
+    .filter((o) => o.status === 'DELIVERED' || o.status === 'SETTLED' || o.addOnBilled)
     .reduce((s, o) => s + o.amount, 0);
+
+  // Active orders: orders that are NOT yet completed + billed (i.e. still in workflow)
+  const activeOrders = orders.filter((o) => !(o.status === 'SETTLED' && o.addOnBilled));
+  const completedOrders = orders.filter((o) => o.status === 'SETTLED' && o.addOnBilled);
 
   const billedOrders = orders.filter((o) => o.addOnBilled);
   const unbilledOrders = orders.filter((o) => !o.addOnBilled);
@@ -163,36 +159,53 @@ export default function VendorDashboard({
     const fetchVendorOrders = async () => {
       try {
         const res = await fetch('/api/orders');
+        let serverData: any[] = [];
         if (res.ok) {
           const json = await res.json();
-          if (json?.data?.length) {
-            const mappedOrders = json.data.map((item: any) => ({
+          if (json?.data && Array.isArray(json.data)) {
+            serverData = json.data;
+          }
+        }
+
+        let localData: any[] = [];
+        const savedTenantReqs = localStorage.getItem('kosanku_shared_supply_requests');
+        if (savedTenantReqs) {
+          try {
+            localData = JSON.parse(savedTenantReqs);
+          } catch {}
+        }
+
+        const combined = [...serverData];
+        localData.forEach((l) => {
+          if (!combined.some((c) => c.id === l.id)) {
+            combined.push(l);
+          }
+        });
+
+        if (combined.length > 0) {
+          const storedAddons = JSON.parse(localStorage.getItem('kosanku_tenant_addons') || '[]');
+          const billedIdSet = new Set(storedAddons.map((a: any) => a.id));
+
+          const mappedOrders = combined.map((item: any) => {
+            const isBilled = item.addOnBilled || billedIdSet.has(item.id);
+            return {
               id: item.id,
-              tenantName: item.tenantName,
-              roomNumber: item.roomNumber,
-              item: item.item,
+              tenantName: item.tenantName || 'Rian Pratama',
+              roomNumber: item.roomNumber || 'A-101',
+              item: item.item || item.requestItem || 'Refill Air Galon Aqua 19L',
               category: item.category === 'GALON' ? 'WATER_GAS' : item.category === 'LAUNDRY' ? 'LAUNDRY' : 'WARUNG',
-              amount: 25000,
-              assignedStaff: 'Bambang',
-              status: item.status === 'PENDING_DISPATCH' ? 'NEW' : item.status,
+              amount: item.category === 'LAUNDRY' ? 35000 : item.category === 'GAS' ? 110000 : 20000,
+              assignedStaff: item.assignedStaff || item.vendorName || 'Kurir Kos',
+              status: item.status === 'PROCESSING' ? 'PROCESSING' : item.status === 'DELIVERED' ? 'DELIVERED' : item.status === 'SETTLED' ? 'SETTLED' : (item.status === 'PENDING_DISPATCH' || item.status === 'PENDING') ? 'NEW' : 'NEW',
               orderTime: 'Baru saja',
               extraDetails: item.notes,
-            }));
+              addOnBilled: isBilled,
+            };
+          });
 
-            setOrders((prev) => {
-              const existingIds = new Set(prev.map((o) => o.id));
-              const newItems = mappedOrders.filter((o: any) => !existingIds.has(o.id));
-              if (newItems.length > 0) {
-                setToast(`🔔 ${newItems.length} PESANAN BARU DITUGASKAN OLEH OWNER!`);
-                setTimeout(() => setToast(null), 4000);
-              }
-              // Merge status updates for existing orders
-              return prev.map((oldOrder) => {
-                const updated = mappedOrders.find((m: any) => m.id === oldOrder.id);
-                return updated ? { ...oldOrder, status: updated.status } : oldOrder;
-              }).concat(newItems);
-            });
-          }
+          setOrders(mappedOrders as VendorOrder[]);
+        } else {
+          setOrders([]);
         }
       } catch (err) {}
     };
@@ -229,6 +242,11 @@ export default function VendorDashboard({
         {/* ── Banner ── */}
         <div className="neu-card p-5 sm:p-7 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-[#047857] dark:text-emerald-400 font-extrabold text-[10px] uppercase">
+                Mitra Resmi Terverifikasi
+              </span>
+            </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
               Portal Mitra Vendor
             </h2>
@@ -252,12 +270,28 @@ export default function VendorDashboard({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-truck-ramp-box text-emerald-600 dark:text-emerald-400" />
-                Order Pesanan Masuk ({orders.length} Order)
+                Order Pesanan Aktif ({activeOrders.length} Antrean)
               </h3>
+              {activeOrders.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrders([]);
+                    localStorage.removeItem('kosanku_shared_supply_requests');
+                    setToast('🧹 Seluruh antrean order vendor berhasil dibersihkan!');
+                    setTimeout(() => setToast(null), 3000);
+                  }}
+                  className="px-3.5 py-1.5 neu-btn text-[11px] font-bold text-rose-600 dark:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-all cursor-pointer flex items-center gap-1.5"
+                  title="Kosongkan daftar order"
+                >
+                  <i className="fa-solid fa-trash-can text-[10px]" />
+                  <span>Clear Testing Orders</span>
+                </button>
+              )}
             </div>
 
             <div className="space-y-4">
-              {orders.map((order) => (
+              {activeOrders.map((order) => (
                 <div key={order.id} className="neu-card-sm rounded-2xl p-5 space-y-4 transition-all hover:scale-[1.01]">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
@@ -300,18 +334,29 @@ export default function VendorDashboard({
                   </div>
 
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                    {!order.addOnBilled && (
-                      <button
-                        onClick={() => {
-                          setSelectedOrderForAddOn(order);
-                          setAddOnCost(String(order.amount));
-                          setAddOnNote(order.extraDetails || '');
-                        }}
-                        className="px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-2"
-                      >
-                        <i className="fa-solid fa-plus-circle" />
-                        <span>Add-On ke Tagihan Tenant</span>
-                      </button>
+                    {!order.addOnBilled ? (
+                      order.status === 'SETTLED' ? (
+                        <button
+                          onClick={() => {
+                            setSelectedOrderForAddOn(order);
+                            setAddOnCost(String(order.amount));
+                            setAddOnNote(order.extraDetails || '');
+                          }}
+                          className="px-4 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-2xl text-xs shadow-md hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-2"
+                        >
+                          <i className="fa-solid fa-plus-circle" />
+                          <span>Add-On ke Tagihan Tenant (Konfirmasi Diterima ✅)</span>
+                        </button>
+                      ) : (
+                        <div className="px-3.5 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-[11px] font-bold flex items-center gap-1.5">
+                          <i className="fa-solid fa-lock text-xs" />
+                          <span>Add-On Terkunci (Menunggu Tenant Konfirmasi Terima Pesanan)</span>
+                        </div>
+                      )
+                    ) : (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                        ✅ Add-On Sudah Masuk Tagihan Tenant
+                      </span>
                     )}
                     <div className="flex items-center gap-2 ml-auto">
                       {/* Vendor: hanya bisa Siapkan & Antar. Konfirmasi Selesai ada di sisi Tenant */}
@@ -339,6 +384,16 @@ export default function VendorDashboard({
                   </div>
                 </div>
               ))}
+
+              {activeOrders.length === 0 && (
+                <div className="text-center py-12 space-y-2">
+                  <div className="w-12 h-12 rounded-2xl neu-inset mx-auto flex items-center justify-center text-emerald-500 text-lg">
+                    <i className="fa-solid fa-circle-check" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Semua Pesanan Telah Selesai &amp; Ditagihkan!</p>
+                  <p className="text-xs text-slate-500">Tidak ada antrean pesanan aktif saat ini. Anda dapat melihat riwayat lengkap di menu <strong>Riwayat Pesanan Selesai</strong>.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -351,19 +406,19 @@ export default function VendorDashboard({
             <div className="border-b border-slate-200/60 dark:border-white/5 pb-5">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-truck-fast text-emerald-600 dark:text-emerald-400" />
-                Status Pengantaran Kurir
+                Status Pengantaran Kurir ({orders.length} Pesanan)
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tracking pengiriman realtime — seperti Grab/Gojek.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tracking pengiriman realtime — tersinkronisasi langsung dengan Tenant &amp; Owner.</p>
             </div>
 
             <div className="space-y-5">
-              {DELIVERY_TRACKING.map((delivery) => {
+              {orders.map((delivery) => {
                 // step index: 0=NEW, 1=PROCESSING, 2=DELIVERED/SETTLED
                 const stepIndex = delivery.status === 'NEW' ? 0 : delivery.status === 'PROCESSING' ? 1 : 2;
                 const steps = [
-                  { key: 'NEW',       label: 'Disiapkan', icon: 'fa-solid fa-box-open',       desc: 'Vendor sedang menyiapkan pesanan' },
-                  { key: 'PROCESSING',label: 'Diantar',   icon: 'fa-solid fa-motorcycle',      desc: `Kurir: ${delivery.courier}` },
-                  { key: 'DELIVERED', label: 'Selesai',   icon: 'fa-solid fa-circle-check',    desc: 'Pesanan sudah diterima' },
+                  { key: 'NEW',       label: 'Disiapkan', icon: 'fa-solid fa-box-open',       desc: 'Vendor menyiapkan' },
+                  { key: 'PROCESSING',label: 'Diantar',   icon: 'fa-solid fa-motorcycle',      desc: `Kurir: ${delivery.assignedStaff || 'Kurir Kos'}` },
+                  { key: 'DELIVERED', label: 'Selesai',   icon: 'fa-solid fa-circle-check',    desc: 'Pesanan diterima' },
                 ];
 
                 return (
@@ -373,7 +428,7 @@ export default function VendorDashboard({
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            #{delivery.id}
+                            #{delivery.id ? (delivery.id.includes('-') ? `ORD-${delivery.id.split('-').pop()?.slice(-4).toUpperCase()}` : delivery.id) : 'ORD'}
                           </span>
                           <span className="text-[10px] text-slate-500 dark:text-slate-400">
                             Kamar <strong className="text-slate-800 dark:text-slate-200">{delivery.roomNumber}</strong> · {delivery.tenantName}
@@ -383,7 +438,7 @@ export default function VendorDashboard({
                       </div>
                       {delivery.status !== 'DELIVERED' && delivery.status !== 'SETTLED' && (
                         <div className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1 shrink-0">
-                          <i className="fa-solid fa-clock" /> ETA {delivery.eta}
+                          <i className="fa-solid fa-clock" /> {delivery.status === 'PROCESSING' ? 'Sedang Diantar' : 'Menunggu Pickup'}
                         </div>
                       )}
                     </div>
@@ -420,7 +475,7 @@ export default function VendorDashboard({
                             </div>
                             {/* Connector line */}
                             {!isLast && (
-                              <div className="flex-1 mx-1 h-1 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 relative -translate-y-4">
+                              <div className="flex-1 min-w-[28px] sm:min-w-[48px] mx-1 h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 relative -translate-y-3.5">
                                 <div
                                   className="h-full rounded-full bg-[#047857] transition-all duration-700"
                                   style={{ width: idx < stepIndex ? '100%' : '0%' }}
@@ -432,13 +487,47 @@ export default function VendorDashboard({
                       })}
                     </div>
 
-                    {/* Update time footer */}
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 text-right">
-                      Terakhir diperbarui: <span className="font-bold">{delivery.updatedAt}</span>
-                    </p>
+                    {/* Action buttons to advance delivery status */}
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between">
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                        Waktu order: <span className="font-bold">{delivery.orderTime}</span>
+                      </p>
+                      <div className="flex items-center gap-2">
+                        {delivery.status === 'NEW' && (
+                          <button
+                            type="button"
+                            onClick={() => updateOrderStatus(delivery.id, 'PROCESSING')}
+                            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
+                          >
+                            <i className="fa-solid fa-motorcycle" />
+                            <span>Mulai Pengantaran Kurir</span>
+                          </button>
+                        )}
+                        {delivery.status === 'PROCESSING' && (
+                          <button
+                            type="button"
+                            onClick={() => updateOrderStatus(delivery.id, 'DELIVERED')}
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
+                          >
+                            <i className="fa-solid fa-check" />
+                            <span>Selesaikan Pengantaran (Tiba di Kamar)</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
               })}
+
+              {orders.length === 0 && (
+                <div className="text-center py-12 space-y-2">
+                  <div className="w-12 h-12 rounded-2xl neu-inset mx-auto flex items-center justify-center text-slate-400 text-lg">
+                    <i className="fa-solid fa-truck-ramp-box" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Belum ada pesanan aktif</p>
+                  <p className="text-[10px] text-slate-400">Pesanan dari tenant yang di-plotting owner akan otomatis muncul di sini secara real-time.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -447,7 +536,7 @@ export default function VendorDashboard({
             TAB 3: ADD-ON BILLING TENANT (invoices)
         ══════════════════════════════════════════════════ */}
         {activeTab === 'invoices' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in">
             {/* Summary cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="neu-card p-4 rounded-2xl text-center">
@@ -478,7 +567,7 @@ export default function VendorDashboard({
                   <div key={order.id} className="neu-card-sm rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:scale-[1.005] transition-all">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-[10px] font-bold text-emerald-700 dark:text-emerald-400">#{order.id}</span>
+                        <span className="font-mono text-[10px] font-bold text-emerald-700 dark:text-emerald-400">#{order.id ? (order.id.includes('-') ? `ORD-${order.id.split('-').pop()?.slice(-4).toUpperCase()}` : order.id) : 'ORD'}</span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400">Kamar {order.roomNumber} · {order.tenantName}</span>
                       </div>
                       <p className="text-sm font-bold text-slate-900 dark:text-white">{order.item}</p>
@@ -490,7 +579,7 @@ export default function VendorDashboard({
                         <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
                           ✅ Tertagih
                         </span>
-                      ) : (
+                      ) : order.status === 'SETTLED' ? (
                         <button
                           onClick={() => {
                             setSelectedOrderForAddOn(order);
@@ -499,13 +588,85 @@ export default function VendorDashboard({
                           }}
                           className="px-3 py-1.5 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold rounded-xl text-[10px] shadow-sm transition-all cursor-pointer whitespace-nowrap"
                         >
-                          + Charge Sekarang
+                          + Charge Sekarang (Tenant Verified ✅)
                         </button>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-bold whitespace-nowrap">
+                          🔒 Menunggu Konfirmasi Tenant
+                        </span>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════
+            TAB 4: RIWAYAT PESANAN SELESAI VENDOR (order_history)
+        ══════════════════════════════════════════════════ */}
+        {activeTab === 'order_history' && (
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <i className="fa-solid fa-clock-rotate-left text-emerald-600 dark:text-emerald-400" />
+                  Arsip Riwayat Pengantaran &amp; Transaksi Selesai
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daftar seluruh pesanan yang telah dikirim dan diselesaikan oleh vendor.</p>
+              </div>
+              <span className="px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
+                Total Arsip: {orders.length} Transaksi
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 font-bold uppercase text-[10px]">
+                    <th className="py-3 px-3">Kode Order</th>
+                    <th className="py-3 px-3">Penghuni &amp; Kamar</th>
+                    <th className="py-3 px-3">Item Pesanan</th>
+                    <th className="py-3 px-3">Kurir Penanggung Jawab</th>
+                    <th className="py-3 px-3">Nominal Transaksi</th>
+                    <th className="py-3 px-3 text-right">Status Akhir</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                  {orders.map((o) => (
+                    <tr key={o.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                      <td className="py-3.5 px-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        #{o.id ? (o.id.includes('-') ? `ORD-${o.id.split('-').pop()?.slice(-4).toUpperCase()}` : o.id) : 'ORD'}
+                      </td>
+                      <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">
+                        {o.tenantName} <span className="text-slate-400 font-normal">(Kamar {o.roomNumber})</span>
+                      </td>
+                      <td className="py-3.5 px-3 text-slate-700 dark:text-slate-300 font-medium">{o.item}</td>
+                      <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300">{o.assignedStaff || 'Kurir Kos'}</td>
+                      <td className="py-3.5 px-3 font-black text-emerald-700 dark:text-emerald-400">{formatIDR(o.amount)}</td>
+                      <td className="py-3.5 px-3 text-right">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                          o.status === 'SETTLED'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
+                            : o.status === 'DELIVERED'
+                            ? 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-300'
+                            : 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300'
+                        }`}>
+                          {o.status === 'SETTLED' ? '✅ SELESAI & LUNAS' : o.status === 'DELIVERED' ? '📦 TIBA DI KAMAR' : '🚚 SEDANG DIANTAR'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {orders.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                        Belum ada arsip riwayat pesanan selesai
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -543,24 +704,13 @@ export default function VendorDashboard({
           </div>
         )}
 
-        {/* Toast Notification (Bottom Right - Fixed 2 Lines Container) */}
+        {/* Toast Notification (All-Device Friendly) */}
         {toast && (
-          <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] max-w-xs sm:max-w-md px-4 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-900 dark:text-emerald-200 border border-emerald-500/40 shadow-2xl animate-scale-in flex items-start gap-2.5">
-            <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-sm shrink-0 mt-0.5" />
-            <span
-              className="leading-snug flex-1"
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                wordBreak: 'break-word',
-              }}
-            >
-              {toast}
-            </span>
-          </div>
+          <ToastNotification
+            msg={toast}
+            type="success"
+            onClose={() => setToast(null)}
+          />
         )}
       </div>
     </SequenceSaaSLayout>

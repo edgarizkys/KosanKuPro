@@ -19,7 +19,7 @@ export default function ReportsHub({
   expenses,
   revenues,
 }: ReportsHubProps) {
-  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'inventory' | 'tickets' | 'vendor' | 'employee'>('all');
+  const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'bookings' | 'inventory' | 'tickets' | 'vendor' | 'employee'>('all');
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
 
   function formatIDR(n: number) {
@@ -33,6 +33,12 @@ export default function ReportsHub({
     { roomNumber: 'B-201', type: 'VIP Balcony', tenant: 'Siti Rahma', status: 'OCCUPIED', rentPrice: 3000000, contractEnd: '2027-01-20' },
     { roomNumber: 'B-202', type: 'Deluxe Executive', tenant: '-', status: 'VACANT_READY', rentPrice: 2500000, contractEnd: '-' },
     { roomNumber: 'C-301', type: 'Standard Suite', tenant: 'Rian Pratama', status: 'OCCUPIED', rentPrice: 2000000, contractEnd: '2026-11-10' },
+  ];
+
+  const bookingKYCData = [
+    { id: 'BK-2026-081', startDate: '2026-09-01', name: 'Dimas Anggoro', room: 'A-102', phone: '0812-9876-5432', email: 'dimas.anggoro@gmail.com', emergency: 'Bpk. Hendrawan (0811-2233-4455)', duration: '6 Bulan', reason: 'Mahasiswa S2 ITB', dp: 500000, status: 'VERIFIED_DP' },
+    { id: 'BK-2026-082', startDate: '2026-09-15', name: 'Annisa Maharani', room: 'B-202', phone: '0813-4455-6677', email: 'annisa.m@company.id', emergency: 'Ibu Ratna (0812-3322-1100)', duration: '12 Bulan', reason: 'Karyawan Swasta', dp: 500000, status: 'VERIFIED_DP' },
+    { id: 'BK-2026-083', startDate: '2026-10-01', name: 'Fikri Haikal', room: 'C-302', phone: '0815-6677-8899', email: 'fikri.haikal@univ.ac.id', emergency: 'Bpk. Suryanto (0818-5544-3322)', duration: '3 Bulan', reason: 'Dokter Muda (Koas)', dp: 500000, status: 'VERIFIED_DP' },
   ];
 
   const inventoryAuditData = [
@@ -228,28 +234,68 @@ export default function ReportsHub({
           </tbody>
         </table>
 
-        <div class="section-title">4. AUDIT FISIK STOK INVENTORI &amp; SERVIS PEMELIHARAAN</div>
+        <div class="section-title">4. LAPORAN AUDIT STOCK OPNAME (SO) FISIK BULANAN</div>
         <table>
           <thead>
-            <tr><th>KODE INV</th><th>NAMA BARANG</th><th>LOKASI UNIT</th><th>JUMLAH STOK</th><th>KONDISI BARANG</th></tr>
+            <tr><th>KODE SO</th><th>NAMA BARANG PASOKAN</th><th>KATEGORI</th><th>STOK SISTEM</th><th>HITUNGAN FISIK</th><th>SELISIH (DISCREPANCY)</th><th>STATUS AUDIT</th></tr>
           </thead>
           <tbody>
-            ${inventoryAuditData.map(i => `
-              <tr>
-                <td><strong>${i.code}</strong></td>
-                <td>${i.item || i.name}</td>
-                <td>${i.location}</td>
-                <td>${i.qty} Unit</td>
-                <td><span class="${i.condition === 'GOOD' ? 'badge-green' : 'badge-red'}">${i.condition}</span></td>
-              </tr>
-            `).join('')}
+            <tr><td>SO-01</td><td>Refill Galon Aqua 19L</td><td>Utilitas Air</td><td>10 Galon</td><td>10 Galon</td><td><span class="badge-green">0 (Sesuai)</span></td><td>VERIFIED</td></tr>
+            <tr><td>SO-02</td><td>Tabung Gas LPG 3kg Dapur</td><td>Utilitas Gas</td><td>6 Tabung</td><td>6 Tabung</td><td><span class="badge-green">0 (Sesuai)</span></td><td>VERIFIED</td></tr>
+            <tr><td>SO-03</td><td>Bohlam Lampu LED Philips 12W</td><td>Maintenance</td><td>15 Pcs</td><td>12 Pcs</td><td><span class="badge-red">-3 Pcs (Terpakai)</span></td><td>VERIFIED</td></tr>
+            <tr><td>SO-04</td><td>Remote AC Daikin Original</td><td>Elektronik</td><td>4 Pcs</td><td>4 Pcs</td><td><span class="badge-green">0 (Sesuai)</span></td><td>VERIFIED</td></tr>
+            <tr><td>SO-05</td><td>Sprei Set Katun Clean</td><td>Linen / Laundry</td><td>20 Set</td><td>18 Set</td><td><span class="badge-red">-2 Set (Laundry)</span></td><td>VERIFIED</td></tr>
+            <tr><td>SO-06</td><td>Kunci Duplikat Card Key</td><td>Keamanan</td><td>12 Pcs</td><td>12 Pcs</td><td><span class="badge-green">0 (Sesuai)</span></td><td>VERIFIED</td></tr>
           </tbody>
         </table>
 
-        <div class="section-title">5. RIWAYAT PEMESANAN &amp; TRANSAKSI MITRA VENDOR</div>
+        <div class="section-title">5. LAPORAN INSPEKSI CEK-IN &amp; CEK-OUT PENGHUNI KAMAR</div>
         <table>
           <thead>
-            <tr><th>NO ORDER</th><th>TANGGAL</th><th>NAMA VENDOR MITRA</th><th>KATEGORI BIASA</th><th>Rincian Pesanan</th><th style="text-align:right;">TOTAL BIAYA</th></tr>
+            <tr><th>NO REF</th><th>KAMAR</th><th>NAMA PENGHUNI</th><th>TIPE INSPEKSI</th><th>AUDITOR STAF</th><th>KONDISI ASET</th><th>STATUS</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>INSP-8821</td><td>Kamar A-101</td><td>Rian Pratama</td><td><span class="badge-green">CEK-IN (MASUK)</span></td><td>Bambang Prasetyo</td><td>Semua 7 Aset Baik (RFID, AC, Kasur, KM)</td><td>SELESAI VERIFIKASI</td></tr>
+            <tr><td>INSP-7714</td><td>Kamar B-201</td><td>Siti Rahma</td><td><span class="badge-green">CEK-IN (MASUK)</span></td><td>Bambang Prasetyo</td><td>Kunci &amp; Smart TV Normal</td><td>SELESAI VERIFIKASI</td></tr>
+            <tr><td>INSP-6502</td><td>Kamar C-302</td><td>Budi Santoso</td><td><span class="badge-purple">CEK-OUT (KELUAR)</span></td><td>Rudi Hartono</td><td>Deposit Diproses Pengembalian</td><td>CLEARANCE SELESAI</td></tr>
+          </tbody>
+        </table>
+
+        <div class="section-title">6. LAPORAN REGISTRASI &amp; DATA CALON PENGHUNI (BOOKING FORM KYC)</div>
+        <table>
+          <thead>
+            <tr><th>NO BOOKING</th><th>TANGGAL MULAI</th><th>NAMA LENGKAP</th><th>KAMAR</th><th>WHATSAPP / EMAIL</th><th>KONTAK DARURAT</th><th>DURASI SEWA</th><th>ALASAN TINGGAL</th><th style="text-align:right;">DP DITERIMA</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>BK-2026-081</strong></td>
+              <td>01 Sep 2026</td>
+              <td><strong>Dimas Anggoro</strong></td>
+              <td>Kamar A-102</td>
+              <td>0812-9876-5432<br/><span style="color:#64748b; font-size:8px;">dimas.anggoro@gmail.com</span></td>
+              <td>Bpk. Hendrawan (Ayah)<br/><span style="color:#64748b; font-size:8px;">0811-2233-4455</span></td>
+              <td>6 Bulan</td>
+              <td>Mahasiswa S2 ITB</td>
+              <td style="text-align:right; font-weight:bold; color:#047857;">Rp 500.000<br/><span class="badge-green">LUNAS</span></td>
+            </tr>
+            <tr>
+              <td><strong>BK-2026-082</strong></td>
+              <td>15 Sep 2026</td>
+              <td><strong>Annisa Maharani</strong></td>
+              <td>Kamar B-202</td>
+              <td>0813-4455-6677<br/><span style="color:#64748b; font-size:8px;">annisa.m@company.id</span></td>
+              <td>Ibu Ratna (Ibu)<br/><span style="color:#64748b; font-size:8px;">0812-3322-1100</span></td>
+              <td>12 Bulan</td>
+              <td>Karyawan Swasta</td>
+              <td style="text-align:right; font-weight:bold; color:#047857;">Rp 500.000<br/><span class="badge-green">LUNAS</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="section-title">7. RIWAYAT PEMESANAN &amp; TRANSAKSI MITRA VENDOR</div>
+        <table>
+          <thead>
+            <tr><th>NO ORDER</th><th>TANGGAL</th><th>NAMA VENDOR MITRA</th><th>KATEGORI</th><th>RINCIAN PESANAN</th><th style="text-align:right;">TOTAL BIAYA</th></tr>
           </thead>
           <tbody>
             ${vendorHistoryData.map(v => `
@@ -265,7 +311,7 @@ export default function ReportsHub({
           </tbody>
         </table>
 
-        <div class="section-title">6. PERFORMA KARYAWAN &amp; AUDIT TUGAS PENUGASAN OWNER</div>
+        <div class="section-title">8. PERFORMA KARYAWAN &amp; AUDIT TUGAS PENUGASAN OWNER</div>
         <table>
           <thead>
             <tr><th>KODE TUGAS</th><th>TANGGAL</th><th>NAMA STAF / KARYAWAN</th><th>DESKRIPSI PENUGASAN OWNER</th><th>PENGATUR PENUGASAN</th><th>STATUS &amp; SKOR EVALUASI</th></tr>
@@ -345,6 +391,7 @@ export default function ReportsHub({
                 {activeReportTab === 'incomes' && `🟢 Penerimaan (${revenues.length})`}
                 {activeReportTab === 'expenses' && `🔴 Pengeluaran (${expenses.length})`}
                 {activeReportTab === 'occupancy' && `🏢 Okupansi (${occupancyData.length})`}
+                {activeReportTab === 'bookings' && `📋 Registrasi Tenant (${bookingKYCData.length})`}
                 {activeReportTab === 'inventory' && `📦 Inventori (${inventoryAuditData.length})`}
                 {activeReportTab === 'vendor' && `🏪 Vendor (${vendorHistoryData.length})`}
                 {activeReportTab === 'employee' && `👷‍♂️ Karyawan (${employeeTaskData.length})`}
@@ -362,6 +409,7 @@ export default function ReportsHub({
                 { key: 'incomes', label: `🟢 Penerimaan (${revenues.length})` },
                 { key: 'expenses', label: `🔴 Pengeluaran (${expenses.length})` },
                 { key: 'occupancy', label: `🏢 Okupansi (${occupancyData.length})` },
+                { key: 'bookings', label: `📋 Registrasi Tenant (${bookingKYCData.length})` },
                 { key: 'inventory', label: `📦 Inventori (${inventoryAuditData.length})` },
                 { key: 'vendor', label: `🏪 Vendor (${vendorHistoryData.length})` },
                 { key: 'employee', label: `👷‍♂️ Karyawan (${employeeTaskData.length})` },
@@ -436,6 +484,16 @@ export default function ReportsHub({
           >
             <i className="fa-solid fa-door-open text-purple-500" />
             <span>Okupansi ({occupancyData.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveReportTab('bookings')}
+            className={`px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
+              activeReportTab === 'bookings' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <i className="fa-solid fa-id-card text-blue-500" />
+            <span>Registrasi Tenant ({bookingKYCData.length})</span>
           </button>
 
           <button
@@ -620,6 +678,63 @@ export default function ReportsHub({
                     </td>
                     <td className="py-3.5 px-4">{o.tenant}</td>
                     <td className="py-3.5 px-4 text-right font-mono font-bold">{formatIDR(o.rentPrice)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ===== SECTION: REGISTRASI TENANT & DATA BOOKING KYC ===== */}
+      {(activeReportTab === 'all' || activeReportTab === 'bookings') && (
+        <div className="neu-card p-5 sm:p-7 rounded-3xl space-y-5">
+          <div className="border-b border-slate-200/60 dark:border-white/10 pb-3 flex items-center justify-between">
+            <h3 className="text-base font-black flex items-center gap-2">
+              <i className="fa-solid fa-id-card text-blue-500" />
+              <span>Laporan Registrasi &amp; Data Calon Penghuni (Booking Form KYC)</span>
+            </h3>
+            <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">{bookingKYCData.length} Terdaftar (DP Lunas)</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/10 text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-4">NO BOOKING</th>
+                  <th className="py-3 px-4">NAMA LENGKAP</th>
+                  <th className="py-3 px-4">KAMAR</th>
+                  <th className="py-3 px-4">WHATSAPP / EMAIL</th>
+                  <th className="py-3 px-4">KONTAK DARURAT</th>
+                  <th className="py-3 px-4">MASA SEWA &amp; ALASAN</th>
+                  <th className="py-3 px-4 text-right">DP DITERIMA</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/50 dark:divide-white/5 font-medium">
+                {bookingKYCData.map((bk) => (
+                  <tr key={bk.id} className="hover:bg-slate-100/50 dark:hover:bg-white/5">
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
+                      {bk.id}
+                      <span className="block text-[10px] text-slate-400 font-normal">Masuk: {bk.startDate}</span>
+                    </td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{bk.name}</td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-purple-600 dark:text-purple-400">Kamar {bk.room}</td>
+                    <td className="py-3.5 px-4 font-mono">
+                      <span className="font-bold text-slate-800 dark:text-slate-200 block">{bk.phone}</span>
+                      <span className="text-[10px] text-slate-400">{bk.email}</span>
+                    </td>
+                    <td className="py-3.5 px-4 text-[11px] text-slate-600 dark:text-slate-300">
+                      <i className="fa-solid fa-phone text-rose-400 mr-1 text-[9px]" />
+                      {bk.emergency}
+                    </td>
+                    <td className="py-3.5 px-4 text-[11px]">
+                      <span className="font-black text-slate-900 dark:text-white block">{bk.duration}</span>
+                      <span className="text-[10px] text-slate-400">{bk.reason}</span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                      {formatIDR(bk.dp)}
+                      <span className="block text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase">✓ DP Lunas</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

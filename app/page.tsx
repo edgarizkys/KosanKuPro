@@ -253,7 +253,7 @@ export default function Home() {
               setRole(r);
               setView(r);
             }}
-            onLogout={() => setView('landing')}
+            onLogout={handleLogout}
           />
         )}
         {view === 'superadmin' && (
@@ -265,7 +265,7 @@ export default function Home() {
               setRole(r);
               setView(r);
             }}
-            onLogout={() => setView('landing')}
+            onLogout={handleLogout}
           />
         )}
         {view === 'employee' && (
@@ -274,7 +274,7 @@ export default function Home() {
               setRole(r);
               setView(r);
             }}
-            onLogout={() => setView('landing')}
+            onLogout={handleLogout}
           />
         )}
         {view === 'vendor' && (
@@ -283,7 +283,7 @@ export default function Home() {
               setRole(r);
               setView(r);
             }}
-            onLogout={() => setView('landing')}
+            onLogout={handleLogout}
           />
         )}
         {view === 'tenant' && (
@@ -293,7 +293,7 @@ export default function Home() {
               setRole(r);
               setView(r);
             }}
-            onLogout={() => setView('landing')}
+            onLogout={handleLogout}
           />
         )}
       </main>

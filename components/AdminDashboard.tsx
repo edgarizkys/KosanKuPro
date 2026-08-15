@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import FinancialDashboard from './FinancialDashboard';
 import MasterDataSettings from './MasterDataSettings';
+import ToastNotification from './ToastNotification';
 
 interface RoomData {
   id: string;
@@ -166,7 +167,16 @@ export default function AdminDashboard({
       ]);
       if (roomsRes.ok) {
         const roomsJson = await roomsRes.json();
-        if (roomsJson.data?.length) setRooms(roomsJson.data);
+        let list = roomsJson.data && Array.isArray(roomsJson.data) ? roomsJson.data : [];
+        try {
+          const savedCustom = JSON.parse(localStorage.getItem('kosanku_custom_rooms') || '[]');
+          savedCustom.forEach((sc: any) => {
+            if (!list.some((it: any) => it.number === sc.number || it.id === sc.id)) {
+              list.push(sc);
+            }
+          });
+        } catch {}
+        if (list.length) setRooms(list);
       }
       if (invRes.ok) {
         const invJson = await invRes.json();
@@ -313,12 +323,26 @@ export default function AdminDashboard({
       });
       const json = await res.json();
       if (res.ok) {
-        setRooms((prev) => [...prev, { ...json.data, tenant: null }]);
+        const newRoomItem = { ...json.data, tenant: null };
+        setRooms((prev) => [...prev, newRoomItem]);
+
+        // Sync to shared storage & BroadcastChannel for instant frontend reaction
+        try {
+          const savedCustomRooms = JSON.parse(localStorage.getItem('kosanku_custom_rooms') || '[]');
+          localStorage.setItem('kosanku_custom_rooms', JSON.stringify([...savedCustomRooms, newRoomItem]));
+          window.dispatchEvent(new CustomEvent('kosanku_room_added', { detail: newRoomItem }));
+          if (typeof BroadcastChannel !== 'undefined') {
+            const bc = new BroadcastChannel('kosanku_room_channel');
+            bc.postMessage({ type: 'ROOM_ADDED', room: newRoomItem });
+            bc.close();
+          }
+        } catch (e) {}
+
         setShowAddRoom(false);
         setRoomForm({ number: '', type: '', price: '', floor: '1', facilities: [], imageUrl: '', videoUrl: '' });
         if (roomFileRef.current) roomFileRef.current.value = '';
         if (roomVideoRef.current) roomVideoRef.current.value = '';
-        showToast(`Kamar ${json.data.number} ditambahkan`);
+        showToast(`Kamar ${json.data.number} berhasil ditambahkan!`);
       } else {
         showToast(json.error || 'Gagal menambah kamar', 'error');
       }
@@ -890,14 +914,13 @@ export default function AdminDashboard({
       </>
       )}
 
-      {/* Toast notification (Bottom Right) */}
+      {/* Toast notification (All-Device Friendly) */}
       {toast && (
-        <div className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] px-5 py-3 rounded-2xl text-xs font-bold neu-card border shadow-2xl animate-scale-in flex items-center gap-2 ${
-          toast.type === 'success' ? 'text-emerald-800 dark:text-emerald-300 border-emerald-500/30' : 'text-rose-800 dark:text-rose-300 border-rose-500/30'
-        }`}>
-          <i className={`fa-solid ${toast.type === 'success' ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-rose-600 dark:text-rose-400'}`} />
-          <span>{toast.msg}</span>
-        </div>
+        <ToastNotification
+          msg={toast.msg}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
 
       {/* Add Room Modal */}
@@ -928,11 +951,30 @@ export default function AdminDashboard({
                 )}
               </div>
 
-              {/* 🎬 Video Tour Kamar */}
-              <div>
-                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
-                  <i className="fa-solid fa-video text-[#047857] dark:text-emerald-400" /> Video Tur Kamar <span className="text-[9px] font-normal text-slate-400">(MP4/MOV/WebM · maks. 50MB)</span>
+              {/* 🎬 Video Tour Kamar (Upload File atau Sisipkan Link Video) */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block flex items-center gap-1.5">
+                  <i className="fa-solid fa-video text-[#047857] dark:text-emerald-400" /> Video Tur Kamar <span className="text-[9px] font-normal text-slate-400">(Upload file MP4 atau Sisipkan Link URL Video)</span>
                 </label>
+
+                {/* Input Link / URL Video langsung */}
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={roomForm.videoUrl.startsWith('data:') || roomForm.videoUrl.startsWith('blob:') ? '' : roomForm.videoUrl}
+                    onChange={(e) => setRoomForm((p) => ({ ...p, videoUrl: e.target.value }))}
+                    placeholder="https://example.com/video.mp4 (atau link video langsung)"
+                    className="flex-1 p-2.5 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 font-mono"
+                  />
+                  <label
+                    htmlFor="roomVideoInput"
+                    className="px-3 py-2 neu-btn text-[#047857] dark:text-emerald-400 text-xs font-bold rounded-xl cursor-pointer flex items-center gap-1.5 shrink-0 hover:scale-105 transition-all"
+                  >
+                    <i className="fa-solid fa-upload" />
+                    <span>Upload File</span>
+                  </label>
+                </div>
+
                 <input
                   ref={roomVideoRef}
                   type="file"
@@ -941,13 +983,17 @@ export default function AdminDashboard({
                   className="hidden"
                   id="roomVideoInput"
                 />
-                {roomForm.videoUrl ? (
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/10 bg-black">
+
+                {roomForm.videoUrl && (
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200/60 dark:border-white/10 bg-black mt-2">
                     <video
                       src={roomForm.videoUrl}
                       controls
+                      autoPlay
+                      muted
+                      loop
                       playsInline
-                      className="w-full h-48 object-contain rounded-2xl"
+                      className="w-full h-44 object-contain rounded-2xl"
                     />
                     <button
                       type="button"
@@ -955,26 +1001,15 @@ export default function AdminDashboard({
                         setRoomForm((p) => ({ ...p, videoUrl: '' }));
                         if (roomVideoRef.current) roomVideoRef.current.value = '';
                       }}
-                      className="absolute top-2 right-2 w-7 h-7 bg-black/70 text-white rounded-full text-xs flex items-center justify-center hover:bg-black/90 transition-all cursor-pointer"
+                      className="absolute top-2 right-2 w-7 h-7 bg-black/70 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600 transition-all cursor-pointer"
                       title="Hapus video"
                     >
                       <i className="fa-solid fa-xmark" />
                     </button>
-                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <i className="fa-solid fa-circle-check text-emerald-400" /> Video siap di-upload
+                    <div className="absolute bottom-2 left-2 bg-emerald-600/90 text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <i className="fa-solid fa-circle-check text-white" /> Preview Video Aktif
                     </div>
                   </div>
-                ) : (
-                  <label
-                    htmlFor="roomVideoInput"
-                    className="block cursor-pointer neu-inset rounded-2xl p-5 text-center transition-all group"
-                  >
-                    <div className="w-10 h-10 rounded-xl neu-card-sm text-[#047857] dark:text-emerald-400 flex items-center justify-center text-base mx-auto mb-2 group-hover:scale-110 transition-transform">
-                      <i className="fa-solid fa-film" />
-                    </div>
-                    <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Klik untuk upload video tur kamar</p>
-                    <p className="text-[9px] text-slate-400 mt-0.5">MP4, MOV, atau WebM · Maks. 50MB</p>
-                  </label>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -1086,25 +1121,50 @@ export default function AdminDashboard({
             </div>
             <form onSubmit={addInvoice} className="space-y-4">
               <div>
-                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Penyewa *</label>
-                <select required value={invForm.userId} onChange={(e) => setInvForm({ ...invForm, userId: e.target.value })} className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors font-bold cursor-pointer">
-                  <option value="" className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">Pilih penyewa...</option>
-                  {tenants.map((t) => (
-                    <option key={t.id} value={t.id} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{t.name}</option>
-                  ))}
-                </select>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Pilih Penyewa *</label>
+                <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1">
+                  {tenants.map((t) => {
+                    const isSel = invForm.userId === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setInvForm({ ...invForm, userId: t.id })}
+                        className={`p-2.5 rounded-xl font-bold text-xs text-left transition-all cursor-pointer truncate ${
+                          isSel
+                            ? 'bg-[#047857] text-white shadow-md'
+                            : 'neu-btn text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {t.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Kamar *</label>
-                <select required value={invForm.roomId} onChange={(e) => {
-                  const room = rooms.find((r) => r.id === e.target.value);
-                  setInvForm({ ...invForm, roomId: e.target.value, amount: room ? String(room.price) : invForm.amount });
-                }} className="w-full p-3 neu-input rounded-xl text-slate-900 dark:text-white text-xs outline-none focus:border-emerald-500 transition-colors font-bold cursor-pointer">
-                  <option value="" className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">Pilih kamar...</option>
-                  {rooms.map((r) => (
-                    <option key={r.id} value={r.id} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{r.number} - {r.type}</option>
-                  ))}
-                </select>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Pilih Kamar *</label>
+                <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-1">
+                  {rooms.map((r) => {
+                    const isSel = invForm.roomId === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => {
+                          setInvForm({ ...invForm, roomId: r.id, amount: String(r.price) });
+                        }}
+                        className={`p-2.5 rounded-xl font-bold text-xs text-left transition-all cursor-pointer truncate ${
+                          isSel
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'neu-btn text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {r.number} ({formatIDR(r.price)})
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

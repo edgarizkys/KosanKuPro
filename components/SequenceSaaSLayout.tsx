@@ -5,6 +5,7 @@ import type { RoleType } from '@/app/page';
 import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from '@/lib/userProfiles';
 import UserProfileModal from './UserProfileModal';
 import UserManagementView from './UserManagementView';
+import ToastNotification from './ToastNotification';
 
 interface SequenceSaaSLayoutProps {
   role: RoleType;
@@ -41,9 +42,135 @@ export default function SequenceSaaSLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [proMode, setProMode] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' | 'info'; targetTab?: string } | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+
+  // Global Cross-Role Live Notification Listener + Server Polling for Toast Popups
+  useEffect(() => {
+    const currentRole = role.toLowerCase();
+
+    // 1. Polling new server API notifications to trigger interactive toast popup
+    const pollServerNotifsForToast = async () => {
+      try {
+        const res = await fetch(`/api/activity?type=notifs&role=${currentRole}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            const newest = json.data[0];
+            // Check if this notification has already been displayed/read in this session
+            const toastedKey = `kosanku_toasted_${currentRole}_${newest.id}`;
+            const alreadyToasted = sessionStorage.getItem(toastedKey);
+            const readIds: string[] = JSON.parse(localStorage.getItem(`kosanku_read_notifs_${currentRole}`) || '[]');
+
+            if (!alreadyToasted && !readIds.includes(newest.id)) {
+              sessionStorage.setItem(toastedKey, 'true');
+              setToast({
+                msg: `${newest.title}: ${newest.message}`,
+                type: newest.badgeColor?.includes('rose') ? 'error' : 'info',
+                targetTab: newest.targetTab,
+              });
+            }
+          }
+        }
+      } catch {}
+    };
+
+    pollServerNotifsForToast();
+    const serverInterval = setInterval(pollServerNotifsForToast, 1500);
+
+    // 2. BroadcastChannel for instant same-browser cross-window sync
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('kosanku_order_channel');
+      bc.onmessage = (msg) => {
+        // 1. Tenant Order Created -> Owner, Admin, Vendor receive toast
+        if (msg.data?.type === 'NEW_TENANT_ORDER' && (currentRole === 'owner' || currentRole === 'admin' || currentRole === 'vendor')) {
+          setToast({
+            msg: `🛒 PESANAN SUPLAI BARU: ${msg.data.order?.tenantName || 'Tenant'} memesan ${msg.data.order?.item || 'Suplai'} (Kamar ${msg.data.order?.roomNumber || 'A-101'})`,
+            type: 'info',
+            targetTab: 'tenant_requests',
+          });
+        }
+
+        // 2. Room Inspection Completed -> Owner & Admin receive toast
+        if (msg.data?.type === 'ROOM_INSPECTION_SUBMITTED' && (currentRole === 'owner' || currentRole === 'admin' || currentRole === 'superadmin')) {
+          const r = msg.data.report;
+          const typeLabel = r?.type === 'CHECK_IN' ? 'CEK-IN' : 'CEK-OUT';
+          setToast({
+            msg: `📋 LAPORAN ${typeLabel}: Kamar ${r?.roomNumber} (${r?.tenantName}) selesai diperiksa oleh ${r?.inspectedBy}.`,
+            type: 'success',
+            targetTab: 'checkin_reports',
+          });
+        }
+
+        // 3. Staff Expense Requested -> Owner & Admin receive toast
+        if (msg.data?.type === 'NEW_STAFF_EXPENSE' && (currentRole === 'owner' || currentRole === 'admin' || currentRole === 'superadmin')) {
+          const ap = msg.data.approval;
+          setToast({
+            msg: `✍️ PENGAJUAN DANA STAF: ${ap?.requestedBy} mengajukan "${ap?.title}" sebesar Rp ${Number(ap?.amount || 0).toLocaleString('id-ID')}`,
+            type: 'info',
+            targetTab: 'approval',
+          });
+        }
+
+        // 3.5. Stock Opname (SO) Audit Submitted -> Owner & Admin receive toast
+        if (msg.data?.type === 'STOCK_OPNAME_SUBMITTED' && (currentRole === 'owner' || currentRole === 'admin' || currentRole === 'superadmin')) {
+          const audit = msg.data.audit;
+          setToast({
+            msg: `📦 LAPORAN STOCK OPNAME (SO): ${audit?.auditedBy || 'Staf Lapangan'} telah menyelesaikan audit ${audit?.items?.length || 0} item pasokan fisik.`,
+            type: 'success',
+            targetTab: 'inventory',
+          });
+        }
+
+        // 3.6. New Room Booking Submitted -> Owner & Admin receive toast
+        if (msg.data?.type === 'NEW_ROOM_BOOKING' && (currentRole === 'owner' || currentRole === 'admin' || currentRole === 'superadmin')) {
+          const booking = msg.data.booking;
+          setToast({
+            msg: `🎉 BOOKING BARU MASUK: ${booking?.tenantName || 'Calon Penghuni'} memesan Kamar ${booking?.roomNumber} (DP: Rp ${Number(booking?.dpAmount || 500000).toLocaleString('id-ID')}).`,
+            type: 'success',
+            targetTab: 'rooms_ai',
+          });
+        }
+
+        // 4. Owner Decides Expense -> Employee/Staff receives toast
+        if (msg.data?.type === 'STAFF_EXPENSE_DECIDED' && currentRole === 'employee') {
+          const { title, status, amount } = msg.data;
+          setToast({
+            msg: status === 'APPROVED' 
+              ? `🎉 KABAR BAIK: Pengajuan "${title}" (Rp ${Number(amount).toLocaleString('id-ID')}) telah DISETUJUI Owner!`
+              : `⚠️ PEMBERITAHUAN: Pengajuan "${title}" DITOLAK Owner.`,
+            type: status === 'APPROVED' ? 'success' : 'error',
+            targetTab: 'expense_history',
+          });
+        }
+
+        // 5. Vendor / Staff Dispatches Order -> Tenant receives toast
+        if (msg.data?.type === 'ORDER_STATUS_CHANGED' && currentRole === 'tenant') {
+          const { item, status, courier } = msg.data;
+          if (status === 'PROCESSING' || status === 'PLOTTED') {
+            setToast({
+              msg: `🚚 PESANAN DIANTAR: ${item || 'Pesanan Anda'} sedang diantar oleh ${courier || 'Kurir'}.`,
+              type: 'info',
+              targetTab: 'tenant_requests',
+            });
+          } else if (status === 'DELIVERED') {
+            setToast({
+              msg: `📦 PESANAN TIBA: ${item || 'Pesanan Anda'} sudah sampai di depan pintu kamar!`,
+              type: 'success',
+              targetTab: 'tenant_requests',
+            });
+          }
+        }
+      };
+    }
+
+    return () => {
+      clearInterval(serverInterval);
+      if (bc) bc.close();
+    };
+  }, [role]);
 
   // Theme Sync on Mount
   useEffect(() => {
@@ -220,7 +347,7 @@ export default function SequenceSaaSLayout({
 
   const DEFAULT_FALLBACK_USER: UserProfile = {
     id: 'USR-ACT-01',
-    name: 'Bapak Hendra Gunawan',
+    name: 'Ibu Dewi Tri Oktariani',
     email: 'owner@kosanku.com',
     phone: '0811-9988-7766',
     role: role || 'owner',
@@ -298,6 +425,83 @@ export default function SequenceSaaSLayout({
   // Read stored user property name if available
   const [propertyName, setPropertyName] = useState('KosanKu Pro');
 
+  // Dynamic Unread Notification Count State
+  const [unreadNotifsCount, setUnreadNotifsCount] = useState<number>(0);
+
+  useEffect(() => {
+    const computeUnreadCount = async () => {
+      try {
+        const currentRole = (role || 'owner').toLowerCase();
+        const readIds: string[] = JSON.parse(localStorage.getItem(`kosanku_read_notifs_${currentRole}`) || '[]');
+        
+        const ROLE_DEFAULT_COUNTS: Record<string, number> = {
+          owner: 4,
+          vendor: 3,
+          tenant: 3,
+          admin: 2,
+          employee: 2,
+        };
+
+        // Fetch live server order notifications count
+        let liveCount = 0;
+        try {
+          const res = await fetch('/api/orders?type=notifications');
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.data && Array.isArray(json.data)) {
+              const liveActive = json.data.filter((d: any) => !readIds.includes(d.id));
+              liveCount = liveActive.length;
+            }
+          }
+        } catch {}
+
+        // Fetch live staff expense approvals for Owner & Staff
+        let liveStaffApprovalsCount = 0;
+        try {
+          const savedApprovals = JSON.parse(localStorage.getItem('kosanku_staff_approvals') || '[]');
+          if (currentRole === 'owner' || currentRole === 'admin') {
+            const activeApprovals = savedApprovals.filter((a: any) => a.status === 'PENDING' && !readIds.includes(`staff_exp_${a.id}`));
+            liveStaffApprovalsCount = activeApprovals.length;
+          } else if (currentRole === 'employee') {
+            const decidedApprovals = savedApprovals.filter(
+              (a: any) => (a.status === 'APPROVED' || a.status === 'REJECTED') && !readIds.includes(`staff_exp_dec_${a.id}_${a.status}`)
+            );
+            liveStaffApprovalsCount = decidedApprovals.length;
+          }
+        } catch {}
+
+        // Fetch live room inspections count for Owner
+        let liveRoomInspectionCount = 0;
+        if (currentRole === 'owner' || currentRole === 'admin') {
+          try {
+            const savedInspections = JSON.parse(localStorage.getItem('kosanku_room_inspections') || '[]');
+            const unreadInspections = savedInspections.filter((r: any) => !readIds.includes(`room_insp_${r.id}`));
+            liveRoomInspectionCount = unreadInspections.length;
+          } catch {}
+        }
+
+        const defaultBaseCount = (ROLE_DEFAULT_COUNTS[currentRole] || 3);
+        const defaultReadCount = readIds.filter((id) => !id.startsWith('live_') && !id.startsWith('staff_exp_') && !id.startsWith('supply_req_') && !id.startsWith('room_insp_')).length;
+        const totalUnread = Math.max(0, defaultBaseCount - defaultReadCount) + liveCount + liveStaffApprovalsCount + liveRoomInspectionCount;
+
+        setUnreadNotifsCount(totalUnread);
+      } catch {
+        setUnreadNotifsCount(0);
+      }
+    };
+
+    computeUnreadCount();
+    const interval = setInterval(computeUnreadCount, 3000);
+
+    const handleNotifUpdate = () => computeUnreadCount();
+    window.addEventListener('notifs_updated', handleNotifUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notifs_updated', handleNotifUpdate);
+    };
+  }, [role]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedUser = localStorage.getItem('kosanku_user_session');
@@ -318,8 +522,8 @@ export default function SequenceSaaSLayout({
 
   const selectedBranch = BRANCHES.find((b) => b.id === activeBranch) || BRANCHES[0];
 
-  const showToast = (msg: string) => {
-    setToast(msg);
+  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info', targetTab?: string) => {
+    setToast({ msg, type, targetTab });
     setTimeout(() => setToast(null), 3500);
   };
 
@@ -339,30 +543,37 @@ export default function SequenceSaaSLayout({
     return 'Selamat Malam 🌙';
   };
 
-  // Navigation sections generator based on user role
+  // Navigation sections generator based on user role (Organized by Daily Priority & Logical Groups)
   const getNavSections = () => {
     if (role === 'owner') {
       return [
         {
-          title: 'KosanKu Executive Hub',
+          title: '📋 Operasional Harian',
           items: [
-            { id: 'financial', label: 'Laporan P&L', icon: 'fa-solid fa-chart-pie' },
-            { id: 'reports', label: 'Pusat Laporan & Ekspor', icon: 'fa-solid fa-file-invoice', highlight: true },
-            { id: 'deposit', label: 'Escrow & Fee', icon: 'fa-solid fa-vault' },
-            { id: 'users', label: 'Manajemen User', icon: 'fa-solid fa-users-gear' },
-            { id: 'master_data', label: 'Master Setting', icon: 'fa-solid fa-sliders' },
-            { id: 'inventory', label: 'Audit Stock (SO)', icon: 'fa-solid fa-boxes-packing' },
-            { id: 'autopilot', label: 'Auto-Pilot AI', icon: 'fa-solid fa-wand-magic-sparkles' },
-            { id: 'tenant_requests', label: 'Permintaan Tenant', icon: 'fa-solid fa-route', badge: pendingRequestsCount },
-            { id: 'approval', label: 'Approval Dana', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
+            { id: 'tenant_requests', label: 'Permintaan Tenant', icon: 'fa-solid fa-route', badge: pendingRequestsCount, highlight: true },
+            { id: 'checkin_reports', label: 'Laporan Cek-In & Cek-Out', icon: 'fa-solid fa-clipboard-check' },
+            { id: 'order_history', label: 'Riwayat Pesanan Suplai', icon: 'fa-solid fa-clock-rotate-left' },
+            { id: 'approval', label: 'Approval Pengeluaran', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
+            { id: 'complaints', label: 'Keluhan & Komplain', icon: 'fa-solid fa-headset' },
+            { id: 'rooms_ai', label: 'Kamar & Okupansi', icon: 'fa-solid fa-door-open' },
           ],
         },
         {
-          title: 'Operasional Properti',
+          title: '📊 Finansial & Bisnis',
           items: [
-            { id: 'rooms_ai', label: 'Kamar & Pricing AI', icon: 'fa-solid fa-door-open' },
-            { id: 'invoices', label: 'Invoice & Midtrans', icon: 'fa-solid fa-file-invoice-dollar' },
-            { id: 'complaints', label: 'Tiket Keluhan', icon: 'fa-solid fa-headset' },
+            { id: 'financial', label: 'Laba Rugi (P&L)', icon: 'fa-solid fa-chart-pie' },
+            { id: 'invoices', label: 'Tagihan & Invoice', icon: 'fa-solid fa-file-invoice-dollar' },
+            { id: 'reports', label: 'Pusat Laporan & Ekspor', icon: 'fa-solid fa-file-invoice' },
+            { id: 'deposit', label: 'Deposit Escrow', icon: 'fa-solid fa-vault' },
+          ],
+        },
+        {
+          title: '⚙️ Manajemen & Sistem',
+          items: [
+            { id: 'inventory', label: 'Audit Stok (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'autopilot', label: 'Auto-Pilot AI Rules', icon: 'fa-solid fa-wand-magic-sparkles' },
+            { id: 'users', label: 'Kelola Pengguna', icon: 'fa-solid fa-users-gear' },
+            { id: 'master_data', label: 'Pengaturan Properti', icon: 'fa-solid fa-sliders' },
           ],
         },
       ];
@@ -371,25 +582,30 @@ export default function SequenceSaaSLayout({
     if (role === 'superadmin' || role === 'admin') {
       return [
         {
-          title: 'Super Admin Control Hub',
+          title: '📋 Operasional Harian',
           items: [
-            { id: 'users', label: 'Manajemen User', icon: 'fa-solid fa-users-gear', highlight: true },
-            { id: 'master_data', label: 'Master Data Kosan', icon: 'fa-solid fa-sliders' },
-            { id: 'overview', label: 'Overview Control', icon: 'fa-solid fa-gauge-high' },
-            { id: 'financial', label: 'Laporan P&L', icon: 'fa-solid fa-chart-pie' },
-            { id: 'deposit', label: 'Deposit Escrow', icon: 'fa-solid fa-vault' },
-            { id: 'inventory', label: 'Audit Stock (SO)', icon: 'fa-solid fa-boxes-packing' },
-            { id: 'autopilot', label: 'Auto-Pilot AI', icon: 'fa-solid fa-wand-magic-sparkles' },
+            { id: 'overview', label: 'Dashboard Utama', icon: 'fa-solid fa-gauge-high', highlight: true },
+            { id: 'tenant_requests', label: 'Permintaan Suplai', icon: 'fa-solid fa-route', badge: pendingRequestsCount },
+            { id: 'complaints', label: 'Pusat Keluhan', icon: 'fa-solid fa-headset', badge: 1 },
+            { id: 'invoices', label: 'Kasir & Invoice QRIS', icon: 'fa-solid fa-file-invoice-dollar' },
+            { id: 'approval', label: 'Approval Dana', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
           ],
         },
         {
-          title: 'Modul Properti & Transaksi',
+          title: '🏢 Kamar & Properti',
           items: [
-            { id: 'rooms_ai', label: 'Kamar & Pricing AI', icon: 'fa-solid fa-door-open' },
-            { id: 'invoices', label: 'Invoice QRIS', icon: 'fa-solid fa-file-invoice-dollar' },
-            { id: 'tenant_requests', label: 'Permintaan Tenant', icon: 'fa-solid fa-route', badge: pendingRequestsCount },
-            { id: 'approval', label: 'Approval Dana', icon: 'fa-solid fa-signature', badge: pendingApprovalsCount, badgeColor: 'bg-amber-500 text-slate-900' },
-            { id: 'complaints', label: 'Pusat Keluhan', icon: 'fa-solid fa-headset', badge: 1 },
+            { id: 'rooms_ai', label: 'Katalog Kamar & AI', icon: 'fa-solid fa-door-open' },
+            { id: 'inventory', label: 'Stok Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'financial', label: 'Laporan Keuangan', icon: 'fa-solid fa-chart-pie' },
+            { id: 'deposit', label: 'Deposit Escrow', icon: 'fa-solid fa-vault' },
+          ],
+        },
+        {
+          title: '⚙️ Master & Konfigurasi',
+          items: [
+            { id: 'users', label: 'Manajemen Akun User', icon: 'fa-solid fa-users-gear' },
+            { id: 'master_data', label: 'Master Data Kosan', icon: 'fa-solid fa-sliders' },
+            { id: 'autopilot', label: 'Auto-Pilot AI', icon: 'fa-solid fa-wand-magic-sparkles' },
           ],
         },
       ];
@@ -398,11 +614,17 @@ export default function SequenceSaaSLayout({
     if (role === 'employee') {
       return [
         {
-          title: 'Portal Karyawan Staf',
+          title: '📝 Tugas Harian Lapangan',
           items: [
-            { id: 'tenant_requests', label: 'Tugas & Plotting Owner', icon: 'fa-solid fa-list-check' },
-            { id: 'inventory', label: 'Audit Stock Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
+            { id: 'tenant_requests', label: 'Tugas Masuk & Dispatch', icon: 'fa-solid fa-list-check', highlight: true },
             { id: 'approval', label: 'Checklist Kamar & Cek-In', icon: 'fa-solid fa-clipboard-check' },
+            { id: 'expense_history', label: 'Status Pengajuan Dana', icon: 'fa-solid fa-file-invoice-dollar' },
+          ],
+        },
+        {
+          title: '📦 Inventaris & Logistik',
+          items: [
+            { id: 'inventory', label: 'Audit Stock Opname (SO)', icon: 'fa-solid fa-boxes-packing' },
           ],
         },
       ];
@@ -411,11 +633,17 @@ export default function SequenceSaaSLayout({
     if (role === 'vendor') {
       return [
         {
-          title: 'Portal Mitra Vendor',
+          title: '📦 Pesanan Harian Mitra',
           items: [
-            { id: 'tenant_requests', label: 'Order Pesanan Masuk', icon: 'fa-solid fa-store' },
-            { id: 'inventory', label: 'Status Pengantaran Kurir', icon: 'fa-solid fa-truck-fast' },
-            { id: 'invoices', label: 'Add-On Billing Tenant', icon: 'fa-solid fa-receipt' },
+            { id: 'tenant_requests', label: 'Pesanan Masuk Tenant', icon: 'fa-solid fa-store', highlight: true },
+            { id: 'inventory', label: 'Kurir & Pengantaran', icon: 'fa-solid fa-truck-fast' },
+            { id: 'order_history', label: 'Riwayat Pesanan Selesai', icon: 'fa-solid fa-clock-rotate-left' },
+          ],
+        },
+        {
+          title: '💰 Rekap & Keuangan',
+          items: [
+            { id: 'invoices', label: 'Add-On Tagihan Tenant', icon: 'fa-solid fa-receipt' },
           ],
         },
       ];
@@ -424,12 +652,18 @@ export default function SequenceSaaSLayout({
     // Tenant
     return [
       {
-        title: 'Portal Penghuni Tenant',
+        title: '🛎️ Layanan Harian Tenant',
         items: [
-          { id: 'invoices', label: 'Tagihan & QRIS Midtrans', icon: 'fa-solid fa-credit-card' },
-          { id: 'rooms_ai', label: 'Kamar Saya & Akses Kunci', icon: 'fa-solid fa-door-open' },
-          { id: 'tenant_requests', label: 'Add-On Galon/Laundry', icon: 'fa-solid fa-bottle-water' },
-          { id: 'complaints', label: 'Tiket Perbaikan Kamar', icon: 'fa-solid fa-headset' },
+          { id: 'tenant_requests', label: 'Pesan Galon, Gas & Laundry', icon: 'fa-solid fa-cart-shopping', highlight: true },
+          { id: 'order_history', label: 'Riwayat Pesanan Saya', icon: 'fa-solid fa-clock-rotate-left' },
+          { id: 'complaints', label: 'Lapor Kendala Kamar', icon: 'fa-solid fa-headset' },
+        ],
+      },
+      {
+        title: '🏠 Unit & Pembayaran',
+        items: [
+          { id: 'invoices', label: 'Tagihan Sewa & QRIS', icon: 'fa-solid fa-credit-card' },
+          { id: 'rooms_ai', label: 'Kamar & Akses Kunci', icon: 'fa-solid fa-door-open' },
         ],
       },
     ];
@@ -486,9 +720,11 @@ export default function SequenceSaaSLayout({
             title="Buka Panel Notifikasi"
           >
             <i className="fa-solid fa-bell text-sm" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-xs animate-pulse">
-              3
-            </span>
+            {unreadNotifsCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-xs animate-pulse">
+                {unreadNotifsCount}
+              </span>
+            )}
           </button>
 
           {/* Dark / White Mode Toggle */}
@@ -631,10 +867,10 @@ export default function SequenceSaaSLayout({
             </div>
           )}
 
-          {/* 🌟 ACCENTUATED NEUMORPHIC SIDEBAR NAVIGATION (100% UNIFORM & HARMONIOUS) */}
-          <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-none px-0.5">
+          {/* 🌟 ACCENTUATED NEUMORPHIC SIDEBAR NAVIGATION (100% UNIFORM, FULLY SCROLLABLE & NO VISIBLE SCROLLBAR) */}
+          <div className="space-y-3.5 flex-1 overflow-y-auto max-h-[calc(100vh-270px)] scrollbar-none pr-0.5">
             {navSections.map((sec, sIdx) => (
-              <div key={sIdx} className="space-y-2">
+              <div key={sIdx} className="space-y-1.5">
                 {sec.title && !sidebarCollapsed && (
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block px-2 mb-1">
                     {sec.title}
@@ -918,9 +1154,11 @@ export default function SequenceSaaSLayout({
               title="Buka Panel Rincian Notifikasi"
             >
               <i className="fa-solid fa-bell text-slate-600 dark:text-slate-300" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-xs animate-pulse">
-                3
-              </span>
+              {unreadNotifsCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-rose-500 text-white rounded-full text-[8px] font-black flex items-center justify-center shadow-xs animate-pulse">
+                  {unreadNotifsCount}
+                </span>
+              )}
             </button>
 
 
@@ -1317,24 +1555,20 @@ export default function SequenceSaaSLayout({
         onUpdateUser={handleUpdateUser}
       />
 
-      {/* Toast Notification (Bottom Right - Fixed 2 Lines Container) */}
+      {/* Toast Notification (All-Device Friendly & Clickable) */}
       {toast && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] max-w-xs sm:max-w-md px-4 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-900 dark:text-emerald-200 border border-emerald-500/40 shadow-2xl animate-scale-in flex items-start gap-2.5">
-          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-sm shrink-0 mt-0.5" />
-          <span
-            className="leading-snug flex-1"
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              wordBreak: 'break-word',
-            }}
-          >
-            {toast}
-          </span>
-        </div>
+        <ToastNotification
+          msg={toast.msg}
+          type={toast.type || 'success'}
+          targetTab={toast.targetTab}
+          onClick={() => {
+            if (toast.targetTab) {
+              handleTabClick(toast.targetTab);
+            }
+            setToast(null);
+          }}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

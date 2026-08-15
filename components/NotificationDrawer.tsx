@@ -53,7 +53,18 @@ function timeAgo(dateStr: string) {
 
 export default function NotificationDrawer({ open, onClose, role = 'owner' }: NotificationDrawerProps) {
   const currentRole = role.toLowerCase();
-  const [notifs, setNotifs] = useState<NotifItem[]>(ROLE_NOTIFS[currentRole] || ROLE_NOTIFS.owner);
+  const [notifs, setNotifs] = useState<NotifItem[]>([]);
+  const [readIds, setReadIds] = useState<string[]>([]);
+
+  // Load dismissed/read notif IDs from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`kosanku_read_notifs_${currentRole}`);
+      if (saved) {
+        setReadIds(JSON.parse(saved));
+      }
+    } catch {}
+  }, [currentRole]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,33 +72,170 @@ export default function NotificationDrawer({ open, onClose, role = 'owner' }: No
       try {
         const fallbackList = ROLE_NOTIFS[currentRole] || ROLE_NOTIFS.owner;
 
-        // Fetch live server order notifications
-        const resOrderNotifs = await fetch('/api/orders?type=notifications');
+        // 1. Live Staff Expense Approvals Stream (for Owner & Staff)
+        let liveExpenseNotifs: NotifItem[] = [];
+        try {
+          const savedApprovals = JSON.parse(localStorage.getItem('kosanku_staff_approvals') || '[]');
+          if (currentRole === 'owner' || currentRole === 'admin') {
+            liveExpenseNotifs = savedApprovals
+              .filter((a: any) => a.status === 'PENDING')
+              .map((a: any) => ({
+                id: `staff_exp_${a.id}`,
+                title: '✍️ Pengajuan Dana Baru dari Staf',
+                message: `${a.requestedBy}: "${a.title}" sebesar Rp ${Number(a.amount).toLocaleString('id-ID')}`,
+                createdAt: new Date().toISOString(),
+                targetTab: 'approval',
+                badgeColor: 'bg-amber-100 text-amber-800',
+              }));
+          } else if (currentRole === 'employee') {
+            // For staff: notify when Owner approved or rejected their expense
+            liveExpenseNotifs = savedApprovals
+              .filter((a: any) => a.status === 'APPROVED' || a.status === 'REJECTED')
+              .map((a: any) => ({
+                id: `staff_exp_dec_${a.id}_${a.status}`,
+                title: a.status === 'APPROVED' ? '🎉 Dana Disetujui Owner' : '❌ Pengajuan Ditolak Owner',
+                message: `Pengajuan "${a.title}" (Rp ${Number(a.amount).toLocaleString('id-ID')}) ${a.status === 'APPROVED' ? 'telah DISETUJUI Owner. Dana siap cair!' : 'DITOLAK oleh Owner.'}`,
+                createdAt: new Date().toISOString(),
+                targetTab: 'expense_history',
+                badgeColor: a.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800',
+              }));
+          }
+        } catch {}
+
+        // 2. Live Order Notifications from Server API
         let liveOrderNotifs: NotifItem[] = [];
-        if (resOrderNotifs.ok) {
-          const json = await resOrderNotifs.json();
-          if (json?.data?.length) {
-            liveOrderNotifs = json.data.map((item: any) => ({
-              ...item,
-              targetTab: currentRole === 'tenant' ? 'tenant_requests' : currentRole === 'vendor' ? 'tenant_requests' : 'tenant_requests',
-              badgeColor: 'bg-emerald-100 text-emerald-800',
+        try {
+          const resOrderNotifs = await fetch('/api/orders?type=notifications');
+          if (resOrderNotifs.ok) {
+            const json = await resOrderNotifs.json();
+            if (json?.data?.length) {
+              liveOrderNotifs = json.data.map((item: any) => ({
+                ...item,
+                targetTab: currentRole === 'tenant' ? 'tenant_requests' : currentRole === 'vendor' ? 'tenant_requests' : 'tenant_requests',
+                badgeColor: 'bg-emerald-100 text-emerald-800',
+              }));
+            }
+          }
+        } catch {}
+
+        // 3. Live Tenant Supply Requests Stream (from localStorage shared requests)
+        let liveTenantSupplyNotifs: NotifItem[] = [];
+        try {
+          const sharedOrders = JSON.parse(localStorage.getItem('kosanku_shared_supply_requests') || '[]');
+          if (currentRole === 'owner') {
+            liveTenantSupplyNotifs = sharedOrders
+              .filter((o: any) => o.status === 'PENDING_DISPATCH' || o.status === 'PENDING')
+              .map((o: any) => ({
+                id: `supply_req_${o.id}`,
+                title: '🛒 Order Suplai Baru Masuk',
+                message: `${o.tenantName || 'Tenant'} (Kamar ${o.roomNumber || 'A-101'}) memesan ${o.item || o.requestItem || 'Suplai'}.`,
+                createdAt: new Date().toISOString(),
+                targetTab: 'tenant_requests',
+                badgeColor: 'bg-purple-100 text-purple-800',
+              }));
+          } else if (currentRole === 'vendor') {
+            liveTenantSupplyNotifs = sharedOrders
+              .filter((o: any) => o.status === 'PROCESSING')
+              .map((o: any) => ({
+                id: `vendor_assigned_${o.id}`,
+                title: '📦 Tugas Pengantaran dari Owner',
+                message: `Owner menugaskan pesanan ${o.item} ke Kamar ${o.roomNumber} (${o.tenantName}).`,
+                createdAt: new Date().toISOString(),
+                targetTab: 'tenant_requests',
+                badgeColor: 'bg-emerald-100 text-emerald-800',
+              }));
+          } else if (currentRole === 'tenant') {
+            liveTenantSupplyNotifs = sharedOrders
+              .filter((o: any) => o.status === 'DELIVERED')
+              .map((o: any) => ({
+                id: `tenant_delivered_${o.id}`,
+                title: '📦 Pesanan Tiba di Kamar Anda!',
+                message: `Pesanan ${o.item} telah diantar kurir. Silakan klik konfirmasi pesanan diterima.`,
+                createdAt: new Date().toISOString(),
+                targetTab: 'tenant_requests',
+                badgeColor: 'bg-blue-100 text-blue-800',
+              }));
+          }
+        } catch {}
+
+        // 4. Live Server API Notifications (/api/activity?type=notifs)
+        let serverNotifs: NotifItem[] = [];
+        try {
+          const res = await fetch(`/api/activity?type=notifs&role=${currentRole}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.data && Array.isArray(json.data)) {
+              serverNotifs = json.data;
+            }
+          }
+        } catch {}
+
+        // 5. Live Room Inspection (Check-In & Check-Out) Stream for Owner
+        let liveInspectionNotifs: NotifItem[] = [];
+        if (currentRole === 'owner' || currentRole === 'admin') {
+          try {
+            const savedInspections = JSON.parse(localStorage.getItem('kosanku_room_inspections') || '[]');
+            liveInspectionNotifs = savedInspections.map((r: any) => ({
+              id: `room_insp_${r.id}`,
+              title: r.type === 'CHECK_IN' ? '🚪 Laporan Cek-In Kamar Baru' : '📦 Laporan Cek-Out Kamar',
+              message: `Kamar ${r.roomNumber} (${r.tenantName}) selesai diinspeksi oleh ${r.inspectedBy}. Status fasilitas dicatat.`,
+              createdAt: r.date ? new Date().toISOString() : new Date().toISOString(),
+              targetTab: 'checkin_reports',
+              badgeColor: r.type === 'CHECK_IN' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800',
             }));
+          } catch {}
+        }
+
+        // Live dynamic items always take top priority and are not filtered by old static readIds
+        const liveItems = [...serverNotifs, ...liveInspectionNotifs, ...liveExpenseNotifs, ...liveTenantSupplyNotifs, ...liveOrderNotifs];
+        
+        // Deduplicate by ID
+        const uniqueLive: NotifItem[] = [];
+        const seenIds = new Set<string>();
+        for (const item of liveItems) {
+          if (!seenIds.has(item.id)) {
+            seenIds.add(item.id);
+            uniqueLive.push(item);
           }
         }
 
-        const merged = [...liveOrderNotifs, ...fallbackList];
+        const activeLiveItems = uniqueLive.filter((n) => !readIds.includes(n.id));
+        const activeFallback = fallbackList.filter((n) => !readIds.includes(n.id));
+
+        const merged = [...activeLiveItems, ...activeFallback];
         setNotifs(merged);
       } catch (err) {}
     };
 
     fetchRoleNotifs();
-  }, [open, currentRole]);
+    const interval = setInterval(fetchRoleNotifs, 2000);
+    return () => clearInterval(interval);
+  }, [open, currentRole, readIds]);
 
   const handleNotifClick = (n: NotifItem) => {
+    // Mark this notification as read/dismissed immediately
+    const updatedRead = [...readIds, n.id];
+    setReadIds(updatedRead);
+    localStorage.setItem(`kosanku_read_notifs_${currentRole}`, JSON.stringify(updatedRead));
+    setNotifs((prev) => prev.filter((item) => item.id !== n.id));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('notifs_updated'));
+    }
+
     onClose();
     if (typeof window !== 'undefined' && n.targetTab) {
-      // Dispatch custom event to switch to the exact tab where notification originates!
       window.dispatchEvent(new CustomEvent('switch_dashboard_tab', { detail: { tab: n.targetTab, role: currentRole } }));
+    }
+  };
+
+  const handleClearAllNotifs = () => {
+    const allIds = notifs.map((n) => n.id);
+    const updated = Array.from(new Set([...readIds, ...allIds]));
+    setReadIds(updated);
+    localStorage.setItem(`kosanku_read_notifs_${currentRole}`, JSON.stringify(updated));
+    setNotifs([]);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('notifs_updated'));
     }
   };
 
@@ -107,13 +255,31 @@ export default function NotificationDrawer({ open, onClose, role = 'owner' }: No
               <span>Notifikasi ({notifs.length})</span>
             </h3>
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mt-0.5">
-              Role Logged In: <strong className="text-[#047857] dark:text-emerald-400">{currentRole.toUpperCase()}</strong>
+              Role: <strong className="text-[#047857] dark:text-emerald-400">{currentRole.toUpperCase()}</strong>
             </span>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"><i className="fa-solid fa-xmark text-xs" /></button>
+          <div className="flex items-center gap-1.5">
+            {notifs.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearAllNotifs}
+                className="px-2.5 py-1 neu-btn text-[10px] font-bold text-rose-500 hover:text-rose-600 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                title="Tandai semua sudah dibaca & bersihkan"
+              >
+                <i className="fa-solid fa-check-double text-[9px]" />
+                <span>Bersihkan</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <i className="fa-solid fa-xmark text-xs" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-4 space-y-3">
+        <div className="flex-1 overflow-y-auto py-4 space-y-3 scrollbar-none">
           {notifs.map((n) => (
             <div
               key={n.id}
@@ -143,12 +309,18 @@ export default function NotificationDrawer({ open, onClose, role = 'owner' }: No
             </div>
           ))}
           {notifs.length === 0 && (
-            <p className="text-center text-xs text-slate-500 py-8">Belum ada notifikasi untuk role ini.</p>
+            <div className="text-center py-12 space-y-2">
+              <div className="w-12 h-12 rounded-2xl neu-inset mx-auto flex items-center justify-center text-emerald-500 text-lg">
+                <i className="fa-solid fa-bell-slash" />
+              </div>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Semua notifikasi sudah dibaca</p>
+              <p className="text-[10px] text-slate-400">Tidak ada notifikasi baru untuk saat ini.</p>
+            </div>
           )}
         </div>
 
         <button onClick={onClose} className="w-full py-2.5 neu-btn rounded-xl text-xs font-bold text-slate-700 dark:text-white transition-all cursor-pointer">
-          Tutup Panel Notifikasi
+          Tutup Panel
         </button>
       </div>
     </div>

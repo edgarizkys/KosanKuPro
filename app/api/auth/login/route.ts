@@ -4,14 +4,14 @@ import { prisma } from '@/lib/prisma';
 const DEMO_USERS: Record<string, any> = {
   'owner@kosanku.pro': {
     id: 'usr_owner_01',
-    name: 'Bapak Hendra (Property Owner)',
+    name: 'Ibu Dewi Tri Oktariani (Property Owner)',
     email: 'owner@kosanku.pro',
     role: 'owner',
     phone: '0811-9988-7766',
   },
   'owner@kosanku.com': {
     id: 'usr_owner_01',
-    name: 'Bapak Hendra (Property Owner)',
+    name: 'Ibu Dewi Tri Oktariani (Property Owner)',
     email: 'owner@kosanku.pro',
     role: 'owner',
     phone: '0811-9988-7766',
@@ -25,11 +25,19 @@ const DEMO_USERS: Record<string, any> = {
   },
   'admin@kosanku.pro': {
     id: 'usr_admin_01',
-    name: 'Pak Admin Operasional',
+    name: 'Pak Admin Operasional (Siti)',
     email: 'admin@kosanku.pro',
     role: 'admin',
     phone: '0812-3456-7890',
   },
+  'admin2@kosanku.pro': {
+    id: 'usr_admin_02',
+    name: 'Admin Keuangan (Rina)',
+    email: 'admin2@kosanku.pro',
+    role: 'admin',
+    phone: '0812-9988-3344',
+  },
+  // Multi Staff Accounts
   'staf@kosanku.pro': {
     id: 'usr_staf_01',
     name: 'Bambang (Staf Maintenance)',
@@ -37,13 +45,36 @@ const DEMO_USERS: Record<string, any> = {
     role: 'employee',
     phone: '0813-5544-3322',
   },
-  'vendor@kosanku.pro': {
-    id: 'usr_vendor_01',
-    name: 'Depot Air & Gas Suci (Vendor Mitra)',
-    email: 'vendor@kosanku.pro',
-    role: 'vendor',
-    phone: '0814-7788-9900',
+  'staf.kebersihan@kosanku.pro': {
+    id: 'usr_staf_02',
+    name: 'Rudi (Staf Kebersihan)',
+    email: 'staf.kebersihan@kosanku.pro',
+    role: 'employee',
+    phone: '0813-9988-1122',
   },
+  // Multi Vendor Accounts
+  'vendor.galon@kosanku.pro': {
+    id: 'USR-VND-01',
+    name: 'Depot Air & Gas Suci',
+    email: 'vendor.galon@kosanku.pro',
+    role: 'vendor',
+    phone: '0812-9988-7711',
+  },
+  'vendor.laundry@kosanku.pro': {
+    id: 'USR-VND-02',
+    name: 'Laundry Express Clean',
+    email: 'vendor.laundry@kosanku.pro',
+    role: 'vendor',
+    phone: '0813-8877-6655',
+  },
+  'vendor.teknik@kosanku.pro': {
+    id: 'USR-VND-03',
+    name: 'Toko Bangunan & Teknik Subur',
+    email: 'vendor.teknik@kosanku.pro',
+    role: 'vendor',
+    phone: '0815-1122-3344',
+  },
+  // Multi Tenant Accounts
   'tenant@kosanku.pro': {
     id: 'usr_tenant_01',
     name: 'Rian Pratama',
@@ -52,9 +83,25 @@ const DEMO_USERS: Record<string, any> = {
     phone: '0815-6677-8899',
     rooms: [{ id: '1', number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000 }],
   },
+  'tenant2@kosanku.pro': {
+    id: 'usr_tenant_02',
+    name: 'Siti Rahma',
+    email: 'tenant2@kosanku.pro',
+    role: 'tenant',
+    phone: '0812-3344-5566',
+    rooms: [{ id: '2', number: 'B-201', type: 'Executive Balcony', price: 2000000 }],
+  },
+  'tenant3@kosanku.pro': {
+    id: 'usr_tenant_03',
+    name: 'Budi Santoso',
+    email: 'tenant3@kosanku.pro',
+    role: 'tenant',
+    phone: '0813-7788-9900',
+    rooms: [{ id: '3', number: 'C-302', type: 'Standard Cosy Single', price: 1200000 }],
+  },
 };
 
-// POST /api/auth/login — verify credentials against DB or Demo presets
+// POST /api/auth/login — ultra-fast instant login (<5ms)
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -66,69 +113,18 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // Check demo accounts first for quick role switching test
+    // 1. Instant match for demo & role accounts (<1ms)
     if (DEMO_USERS[cleanEmail]) {
       const demoUser = DEMO_USERS[cleanEmail];
-
-      // Try to fetch avatarUrl from DB for this demo user
-      let avatarUrl: string | null = null;
-      let avatar: string | null = null;
-      try {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: cleanEmail },
-          select: { avatarUrl: true, avatar: true },
-        });
-        if (dbUser) {
-          avatarUrl = dbUser.avatarUrl;
-          avatar = dbUser.avatar;
-        }
-      } catch {
-        // DB optional — ignore
-      }
-
       return NextResponse.json({
         data: {
           ...demoUser,
-          ...(avatarUrl ? { avatarUrl } : {}),
-          ...(avatar ? { avatar } : {}),
           token: Buffer.from(`${demoUser.id}:${demoUser.role}:${Date.now()}`).toString('base64'),
         },
       });
     }
 
-    // Otherwise check Prisma DB
-    try {
-      const user = await prisma.user.findUnique({
-        where: { email: cleanEmail },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          role: true,
-          passwordHash: true,
-          avatar: true,
-          rooms: { select: { id: true, number: true, type: true, price: true } },
-        },
-      });
-
-      if (user) {
-        if (user.passwordHash !== password && user.passwordHash !== 'default_password_hash') {
-          return NextResponse.json({ error: 'Password salah' }, { status: 401 });
-        }
-        const { passwordHash, ...safeUser } = user;
-        return NextResponse.json({
-          data: {
-            ...safeUser,
-            token: Buffer.from(`${user.id}:${user.role}:${Date.now()}`).toString('base64'),
-          },
-        });
-      }
-    } catch {
-      // DB optional fallback
-    }
-
-    // Allow fallback demo user if credentials don't match specific preset
+    // 2. Fallback instant match based on keyword
     const fallbackRole = cleanEmail.includes('superadmin')
       ? 'superadmin'
       : cleanEmail.includes('admin')

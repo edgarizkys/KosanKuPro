@@ -7,6 +7,7 @@ import MasterDataSettings from './MasterDataSettings';
 import SecurityDepositEscrow from './SecurityDepositEscrow';
 import UserManagementView from './UserManagementView';
 import SequenceSaaSLayout from './SequenceSaaSLayout';
+import ToastNotification from './ToastNotification';
 import type { RoleType } from '@/app/page';
 
 interface ApprovalRequest {
@@ -35,9 +36,11 @@ interface TenantSupplyRequest {
   tenantName: string;
   roomNumber: string;
   requestItem: string; // Air galon, Gas LPG, Perbaikan
-  requestType: 'WATER_GAS' | 'REPAIR' | 'LAUNDRY';
+  category?: string;
+  notes?: string;
+  requestType: 'WATER_GAS' | 'REPAIR' | 'LAUNDRY' | 'CUSTOM';
   requestDate: string;
-  status: 'PENDING' | 'PLOTTED' | 'COMPLETED';
+  status: 'PENDING' | 'PLOTTED' | 'PROCESSING' | 'COMPLETED';
   assignedStaff?: string;
   connectedVendor?: string;
   autoRouted?: boolean;
@@ -66,28 +69,7 @@ interface StockOpnameAudit {
   }[];
 }
 
-const INITIAL_APPROVALS: ApprovalRequest[] = [
-  {
-    id: 'REQ-101',
-    title: 'Penggantian Unit AC Inverter Kamar B-202',
-    category: 'Perbaikan / Asset',
-    amount: 3850000,
-    requestedBy: 'Bambang (Staf Maintenance)',
-    date: '2026-08-09',
-    reason: 'Kompresor AC lama sudah aus dan tidak ekonomis untuk diservis lagi.',
-    status: 'PENDING',
-  },
-  {
-    id: 'REQ-102',
-    title: 'Pengecatan Ulang & Waterproofing Dinding Lt 3',
-    category: 'Pemeliharaan Gedung',
-    amount: 2400000,
-    requestedBy: 'Siti (Admin Operasional)',
-    date: '2026-08-08',
-    reason: 'Mencegah rembesan air hujan saat musim penghujan mendatang.',
-    status: 'PENDING',
-  },
-];
+const INITIAL_APPROVALS: ApprovalRequest[] = [];
 
 const INITIAL_INVENTORY: InventoryItem[] = [
   { id: 'INV-AC-01', name: 'Unit AC Daikin Inverter 1PK', category: 'Elektronik Utama', location: 'Kamar A-101 s/d C-302 (12 Unit)', quantity: 12, condition: 'GOOD', lastChecked: '2026-08-01' },
@@ -97,29 +79,7 @@ const INITIAL_INVENTORY: InventoryItem[] = [
   { id: 'INV-DIS-05', name: 'Dispenser Air Gallon Bottom Load', category: 'Utilitas Air', location: 'Lobby & Dapur Lt 1-3', quantity: 3, condition: 'GOOD', lastChecked: '2026-08-05' },
 ];
 
-const INITIAL_SUPPLY_REQUESTS: TenantSupplyRequest[] = [
-  {
-    id: 'REQ-SUP-01',
-    tenantName: 'Budi Santoso',
-    roomNumber: 'A-101',
-    requestItem: 'Refill Galon Aqua 19L + Gas LPG 3kg',
-    requestType: 'WATER_GAS',
-    requestDate: 'Hari ini, 09:15',
-    status: 'PLOTTED',
-    assignedStaff: 'Bambang (Auto-Routed by AI Engine)',
-    connectedVendor: 'Depot Air & Gas Suci',
-    autoRouted: true,
-  },
-  {
-    id: 'REQ-SUP-02',
-    tenantName: 'Siti Rahma',
-    roomNumber: 'B-201',
-    requestItem: 'Perbaikan Kran Wastafel Bocor Halus',
-    requestType: 'REPAIR',
-    requestDate: 'Hari ini, 08:30',
-    status: 'PENDING',
-  },
-];
+const INITIAL_SUPPLY_REQUESTS: TenantSupplyRequest[] = [];
 
 const INITIAL_AUTOPILOT_RULES: AutoPilotRule[] = [
   {
@@ -154,10 +114,18 @@ const INITIAL_AUTOPILOT_RULES: AutoPilotRule[] = [
     enabled: true,
     triggerCount: 12,
   },
+  {
+    id: 'RULE-05',
+    name: 'Auto-Reminder Jadwal Stock Opname (SO) Akhir Bulan (H-3)',
+    desc: 'Notifikasi & alert checklist otomatis diterbitkan ke staf setiap tanggal 27-28 untuk audit fisik inventori bulanan',
+    category: 'Notification Engine',
+    enabled: true,
+    triggerCount: 6,
+  },
 ];
 
 const INITIAL_SO_AUDIT: StockOpnameAudit = {
-  auditDate: '10 Agustus 2026, 14:30',
+  auditDate: 'Hari ini',
   auditedBy: 'Bambang (Staf Lapangan)',
   items: [
     { id: 'SO-01', name: 'Refill Galon Aqua 19L', category: 'Utilitas Air', unit: 'Galon', systemStock: 10, physicalStock: 10, note: 'Stok fisik sesuai' },
@@ -165,8 +133,11 @@ const INITIAL_SO_AUDIT: StockOpnameAudit = {
     { id: 'SO-03', name: 'Bohlam Lampu LED Philips 12W', category: 'Stok Maintenance', unit: 'Pcs', systemStock: 15, physicalStock: 12, note: '3 pcs terpakai di Kamar B-201 & A-102' },
     { id: 'SO-04', name: 'Remote AC Daikin Original', category: 'Elektronik', unit: 'Pcs', systemStock: 4, physicalStock: 4, note: 'Stok fisik sesuai' },
     { id: 'SO-05', name: 'Sprei Set Katun Clean', category: 'Linen / Laundry', unit: 'Set', systemStock: 20, physicalStock: 18, note: '2 set sedang di laundry express' },
+    { id: 'SO-06', name: 'Kunci Duplikat Card Key', category: 'Keamanan', unit: 'Pcs', systemStock: 12, physicalStock: 12, note: 'Stok fisik sesuai' },
   ],
 };
+
+const INITIAL_ROOM_INSPECTIONS: any[] = [];
 
 const STAFF_LIST = ['Bambang (Staf Maintenance)', 'Siti (Admin Operasional)', 'Rudi (Staf Kebersihan)'];
 const VENDOR_LIST = ['Depot Air & Gas Suci (Refill)', 'Laundry Express Kos', 'Toko Bangunan & Teknik Subur'];
@@ -185,6 +156,8 @@ export default function OwnerDashboard({
   const [approvals, setApprovals] = useState<ApprovalRequest[]>(INITIAL_APPROVALS);
   const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
   const [supplyRequests, setSupplyRequests] = useState<TenantSupplyRequest[]>(INITIAL_SUPPLY_REQUESTS);
+  const [roomInspections, setRoomInspections] = useState<any[]>(INITIAL_ROOM_INSPECTIONS);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [autoRules, setAutoRules] = useState<AutoPilotRule[]>(INITIAL_AUTOPILOT_RULES);
   const [soAudit, setSoAudit] = useState<StockOpnameAudit>(INITIAL_SO_AUDIT);
   const [activeBranch, setActiveBranch] = useState('all');
@@ -195,6 +168,8 @@ export default function OwnerDashboard({
     | 'inventory'
     | 'autopilot'
     | 'tenant_requests'
+    | 'order_history'
+    | 'checkin_reports'
     | 'approval'
     | 'rooms_ai'
     | 'invoices'
@@ -205,7 +180,7 @@ export default function OwnerDashboard({
   const [selectedReq, setSelectedReq] = useState<TenantSupplyRequest | null>(null);
   const [assignedStaff, setAssignedStaff] = useState(STAFF_LIST[0]);
   const [selectedVendor, setSelectedVendor] = useState(VENDOR_LIST[0]);
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error'; targetTab?: string } | null>(null);
 
   // Sync latest Stock Opname & Tenant Supply Requests (Server API + Realtime Cross-Tab Sync)
   useEffect(() => {
@@ -216,38 +191,155 @@ export default function OwnerDashboard({
         let serverData: any[] = [];
         if (res.ok) {
           const json = await res.json();
-          if (json?.data?.length) serverData = json.data;
+          if (json?.data?.length) {
+            serverData = json.data.map((item: any) => ({
+              id: item.id,
+              tenantName: item.tenantName || 'Tenant Kosan',
+              roomNumber: item.roomNumber || 'A-101',
+              requestItem: item.item || item.requestItem || 'Pesanan Tenant',
+              category: item.category || 'CUSTOM',
+              notes: item.notes || '',
+              requestType: (item.category === 'GALON' || item.category === 'GAS') ? 'WATER_GAS' : item.category === 'PERBAIKAN' ? 'REPAIR' : item.category === 'LAUNDRY' ? 'LAUNDRY' : 'CUSTOM',
+              requestDate: item.createdAt ? new Date(item.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Hari ini',
+              status: item.status === 'PENDING_DISPATCH' ? 'PENDING' : item.status === 'PROCESSING' ? 'PROCESSING' : item.status === 'COMPLETED' ? 'COMPLETED' : item.status || 'PENDING',
+              assignedStaff: item.assignedStaff || undefined,
+              connectedVendor: item.vendorName || item.connectedVendor || undefined,
+            }));
+          }
         }
 
         // 2. Fetch from LocalStorage fallback
         let localData: any[] = [];
         const savedTenantReqs = localStorage.getItem('kosanku_shared_supply_requests');
         if (savedTenantReqs) {
-          localData = JSON.parse(savedTenantReqs);
-        }
+          try {
+            const parsed = JSON.parse(savedTenantReqs);
+            localData = parsed.map((item: any) => ({
+              id: item.id,
+              tenantName: item.tenantName || 'Tenant Kosan',
+              roomNumber: item.roomNumber || 'A-101',
+              requestItem: item.item || item.requestItem || 'Pesanan Suplai',
+              category: item.category || 'CUSTOM',
+              notes: item.notes || '',
+              requestType: item.requestType || 'CUSTOM',
+              requestDate: item.createdAt || 'Baru saja',
+              status: item.status === 'PENDING_DISPATCH' ? 'PENDING' : item.status || 'PENDING',
+              assignedStaff: item.assignedStaff,
+              connectedVendor: item.vendorName || item.connectedVendor,
+            }));
+          } catch (e) {}
+        }        const combinedReqs = [...serverData];
+        localData.forEach((l) => {
+          if (!combinedReqs.some((c) => c.id === l.id)) {
+            combinedReqs.push(l);
+          }
+        });
 
-        const combinedReqs = [...serverData, ...localData];
-        if (combinedReqs.length) {
+        if (combinedReqs.length > 0) {
           setSupplyRequests((prev) => {
-            const existingIds = new Set(prev.map((r) => r.id));
-            const newItems = combinedReqs.filter((r: any) => !existingIds.has(r.id));
-            if (newItems.length > 0) {
-              const latestOrder = newItems[0];
-              const detailMsg = latestOrder.item ? `${latestOrder.tenantName} (${latestOrder.roomNumber || 'A-101'}) memesan: ${latestOrder.item}` : `${newItems.length} pesanan baru dari tenant!`;
-              showToast(`🔔 PESANAN BARU: ${detailMsg}`);
-            }
-            return [...newItems, ...prev];
+            const prevMap = new Map(prev.map((p) => [p.id, p]));
+            return combinedReqs.map((reqItem) => {
+              const old = prevMap.get(reqItem.id);
+              return {
+                ...reqItem,
+                status: reqItem.status || old?.status || 'PENDING',
+                assignedStaff: reqItem.assignedStaff || old?.assignedStaff,
+                connectedVendor: reqItem.connectedVendor || old?.connectedVendor,
+              };
+            });
           });
         }
       } catch (err) {}
     };
 
+    const loadStaffApprovals = async () => {
+      try {
+        const res = await fetch('/api/activity?type=approvals');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            setApprovals(json.data);
+            return;
+          }
+        }
+        const saved = localStorage.getItem('kosanku_staff_approvals');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setApprovals(parsed);
+          }
+        }
+      } catch {}
+    };
+
+    const loadRoomInspections = async () => {
+      try {
+        const res = await fetch('/api/activity?type=inspections');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            setRoomInspections(json.data);
+            return;
+          }
+        }
+        const saved = localStorage.getItem('kosanku_room_inspections');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setRoomInspections(parsed);
+            return;
+          }
+        }
+        setRoomInspections([]);
+      } catch {
+        setRoomInspections([]);
+      }
+    };
+
+    const loadSOAudit = () => {
+      try {
+        const saved = localStorage.getItem('kosanku_latest_stock_opname');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.items) {
+            setSoAudit(parsed);
+          }
+        }
+      } catch {}
+    };
+
+    const loadBookings = async () => {
+      try {
+        const res = await fetch('/api/bookings');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && Array.isArray(json.data)) {
+            setBookings(json.data);
+            return;
+          }
+        }
+      } catch {}
+    };
+
     loadSharedRequests();
+    loadStaffApprovals();
+    loadRoomInspections();
+    loadSOAudit();
+    loadBookings();
 
     // 1. Cross-Tab Storage Event Listener
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'kosanku_shared_supply_requests') {
         loadSharedRequests();
+      }
+      if (e.key === 'kosanku_staff_approvals') {
+        loadStaffApprovals();
+      }
+      if (e.key === 'kosanku_room_inspections') {
+        loadRoomInspections();
+      }
+      if (e.key === 'kosanku_latest_stock_opname') {
+        loadSOAudit();
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -259,12 +351,44 @@ export default function OwnerDashboard({
       bc.onmessage = (msg) => {
         if (msg.data?.type === 'NEW_TENANT_ORDER') {
           loadSharedRequests();
+          showToast('🛒 ORDER SUPLAI BARU: Ada permintaan air galon/laundry dari tenant.', 'success', 'tenant_requests');
+        }
+        if (msg.data?.type === 'NEW_STAFF_EXPENSE') {
+          loadStaffApprovals();
+          const ap = msg.data.approval;
+          if (ap) {
+            showToast(`🔔 PENGAJUAN DANA STAF: ${ap.requestedBy} mengajukan "${ap.title}" sebesar Rp ${Number(ap.amount).toLocaleString('id-ID')}`, 'success', 'approval');
+          }
+        }
+        if (msg.data?.type === 'ROOM_INSPECTION_SUBMITTED') {
+          loadRoomInspections();
+          const r = msg.data.report;
+          if (r) {
+            const typeLabel = r.type === 'CHECK_IN' ? 'CEK-IN (PENHUNI MASUK)' : 'CEK-OUT (PENGHUNI KELUAR)';
+            showToast(`📋 LAPORAN INSPEKSI ${typeLabel}: Kamar ${r.roomNumber} (${r.tenantName}) selesai diperiksa oleh ${r.inspectedBy}`, 'success', 'checkin_reports');
+          }
+        }
+        if (msg.data?.type === 'STOCK_OPNAME_SUBMITTED') {
+          loadSOAudit();
+          const audit = msg.data.audit;
+          showToast(`📦 LAPORAN AUDIT SO: ${audit?.auditedBy || 'Staf Lapangan'} telah menyelesaikan audit fisik inventori gudang.`, 'success', 'inventory');
+        }
+        if (msg.data?.type === 'NEW_ROOM_BOOKING') {
+          loadBookings();
+          const b = msg.data.booking;
+          showToast(`🎉 BOOKING BARU MASUK: ${b?.tenantName || 'Calon Penghuni'} memesan Kamar ${b?.roomNumber} (DP: Rp ${Number(b?.dpAmount || 500000).toLocaleString('id-ID')}).`, 'success', 'rooms_ai');
         }
       };
     }
 
-    // 3. Fallback Interval Polling to Server API (every 2.5s)
-    const interval = setInterval(loadSharedRequests, 2500);
+    // 3. Fallback Interval Polling to Server API & Storage (every 2.5s)
+    const interval = setInterval(() => {
+      loadSharedRequests();
+      loadStaffApprovals();
+      loadRoomInspections();
+      loadSOAudit();
+      loadBookings();
+    }, 2500);
 
     // 4. Switch Dashboard Tab Event Listener (Triggered by Notification Drawer click)
     const handleSwitchTab = (e: any) => {
@@ -275,17 +399,40 @@ export default function OwnerDashboard({
     };
     window.addEventListener('switch_dashboard_tab', handleSwitchTab);
 
+    // 5. Instant Room Inspection Update Listener
+    const handleRoomInspectionUpdate = (e: any) => {
+      loadRoomInspections();
+      if (e.detail?.report) {
+        const r = e.detail.report;
+        const typeLabel = r.type === 'CHECK_IN' ? 'CEK-IN (PENHUNI MASUK)' : 'CEK-OUT (PENGHUNI KELUAR)';
+        showToast(`📋 LAPORAN INSPEKSI ${typeLabel}: Kamar ${r.roomNumber} (${r.tenantName}) selesai diperiksa oleh ${r.inspectedBy}`, 'success', 'checkin_reports');
+      }
+    };
+    window.addEventListener('room_inspections_updated', handleRoomInspectionUpdate);
+
+    // 6. Instant Staff Expense Update Listener
+    const handleStaffExpenseUpdate = (e: any) => {
+      loadStaffApprovals();
+      if (e.detail?.approval) {
+        const ap = e.detail.approval;
+        showToast(`🔔 PENGAJUAN DANA STAF: ${ap.requestedBy} mengajukan "${ap.title}" sebesar Rp ${Number(ap.amount).toLocaleString('id-ID')}`, 'success', 'approval');
+      }
+    };
+    window.addEventListener('staff_expense_updated', handleStaffExpenseUpdate);
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('switch_dashboard_tab', handleSwitchTab);
+      window.removeEventListener('room_inspections_updated', handleRoomInspectionUpdate);
+      window.removeEventListener('staff_expense_updated', handleStaffExpenseUpdate);
       if (bc) bc.close();
       clearInterval(interval);
     };
   }, []);
 
-  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+  const showToast = (msg: string, type: 'success' | 'error' = 'success', targetTab?: string) => {
+    setToast({ msg, type, targetTab });
+    setTimeout(() => setToast(null), 5000);
   };
 
   const toggleRule = (id: string) => {
@@ -301,6 +448,40 @@ export default function OwnerDashboard({
       prev.map((req) => (req.id === id ? { ...req, status: action } : req))
     );
     const req = approvals.find((a) => a.id === id);
+
+    // 1. Post decision to Production Server API
+    try {
+      fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType: 'DECIDE_EXPENSE', payload: { id, status: action } }),
+      }).catch(() => {});
+    } catch {}
+
+    // 2. Update shared localStorage for Staff sync
+    try {
+      const saved = JSON.parse(localStorage.getItem('kosanku_staff_approvals') || '[]');
+      const updated = saved.map((item: any) =>
+        item.id === id ? { ...item, status: action } : item
+      );
+      localStorage.setItem('kosanku_staff_approvals', JSON.stringify(updated));
+    } catch {}
+
+    // 3. Broadcast to Staff in real-time across tabs/windows
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('kosanku_order_channel');
+        bc.postMessage({
+          type: 'STAFF_EXPENSE_DECIDED',
+          approvalId: id,
+          title: req?.title || 'Pengajuan Dana',
+          status: action,
+          amount: req?.amount,
+        });
+        bc.close();
+      } catch {}
+    }
+
     if (action === 'APPROVED') {
       showToast(`Pengajuan "${req?.title}" telah DISETUJUI oleh Owner.`);
     } else {
@@ -308,10 +489,11 @@ export default function OwnerDashboard({
     }
   };
 
-  const handlePlottingTask = (e: React.FormEvent) => {
+  const handlePlottingTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReq) return;
 
+    // 1. Update UI state locally
     setSupplyRequests((prev) =>
       prev.map((r) =>
         r.id === selectedReq.id
@@ -319,6 +501,51 @@ export default function OwnerDashboard({
           : r
       )
     );
+
+    // 2. Sync update to Production Server API with targeted role and names
+    try {
+      await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedReq.id,
+          status: 'PROCESSING',
+          assignedStaff,
+          vendorName: selectedVendor,
+        }),
+      });
+
+      // Post targeted notification to /api/activity
+      await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionType: 'DISPATCH_ORDER',
+          payload: {
+            order: selectedReq,
+            status: 'PROCESSING',
+            assignedStaff,
+            vendorName: selectedVendor,
+          },
+        }),
+      });
+    } catch (err) {
+      console.warn('Failed to sync plotting update to server:', err);
+    }
+
+    // 3. Update localStorage fallback
+    try {
+      const savedTenantReqs = localStorage.getItem('kosanku_shared_supply_requests');
+      if (savedTenantReqs) {
+        const parsed = JSON.parse(savedTenantReqs);
+        const updated = parsed.map((item: any) =>
+          item.id === selectedReq.id
+            ? { ...item, status: 'PROCESSING', assignedStaff, vendorName: selectedVendor }
+            : item
+        );
+        localStorage.setItem('kosanku_shared_supply_requests', JSON.stringify(updated));
+      }
+    } catch (e) {}
 
     showToast(
       `Permintaan Kamar ${selectedReq.roomNumber} (${selectedReq.tenantName}) berhasil DI-PLOTTING ke ${assignedStaff} & dihubungkan ke Vendor ${selectedVendor}.`
@@ -378,28 +605,80 @@ export default function OwnerDashboard({
         {/* Tab: ⚙️ Master Data & Setting Kosan */}
         {activeTab === 'master_data' && <MasterDataSettings />}
 
-        {/* Tab: Laporan Stock Opname (SO) Audit Fisik Barang */}
+        {/* Tab: Laporan Stock Opname (SO) Audit Fisik Barang dari Bulan ke Bulan */}
         {activeTab === 'inventory' && (
-          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 animate-fade-in">
+            {/* Header & Monthly Period Filter */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
               <div>
-                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <i className="fa-solid fa-boxes-packing text-amber-500" />
-                  Laporan Hasil Audit Stock Opname (SO) dari Karyawan Lapangan
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] uppercase tracking-wider">
+                    📊 Laporan Audit Bulanan
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">Tutup Buku Akhir Bulan</span>
+                </div>
+                <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <i className="fa-solid fa-boxes-packing text-emerald-600 dark:text-emerald-400" />
+                  Rekapitulasi Stock Opname (SO) dari Bulan ke Bulan
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Diaudit oleh: <strong className="text-purple-700 dark:text-purple-300">{soAudit.auditedBy}</strong> • Waktu Audit: {soAudit.auditDate}
+                  Diaudit oleh: <strong className="text-purple-700 dark:text-purple-300">{soAudit.auditedBy}</strong> • Waktu Update: {soAudit.auditDate}
                 </p>
               </div>
+
+              {/* Monthly Period Pill Selector (No Native Dropdown) */}
+              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl neu-inset">
+                {[
+                  { id: '2026-08', label: 'Agustus 2026 (Berjalan)' },
+                  { id: '2026-07', label: 'Juli 2026' },
+                  { id: '2026-06', label: 'Juni 2026' },
+                  { id: '2026-05', label: 'Mei 2026' },
+                ].map((m, idx) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => showToast(`📅 Memuat Arsip SO Periode: ${m.label}`)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      idx === 0
+                        ? 'bg-[#047857] text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
               <button
                 onClick={approveSOAudit}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 w-fit"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
               >
                 <i className="fa-solid fa-check-double" />
-                <span>Setujui SO &amp; Penyesuaian Stok</span>
+                <span>Setujui SO Bulan Ini</span>
               </button>
             </div>
 
+            {/* Monthly Audit Highlights Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="p-4 rounded-2xl neu-inset">
+                <span className="text-[10px] text-slate-500 font-bold uppercase block">Total Item Diaudit</span>
+                <span className="text-xl font-black text-slate-900 dark:text-white mt-1 block">{soAudit.items?.length || 6} Item Pasokan</span>
+              </div>
+              <div className="p-4 rounded-2xl neu-inset">
+                <span className="text-[10px] text-slate-500 font-bold uppercase block">Status Akurasi Fisik</span>
+                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block">96.8% Match</span>
+              </div>
+              <div className="p-4 rounded-2xl neu-inset">
+                <span className="text-[10px] text-slate-500 font-bold uppercase block">Item Selisih (Discrepancy)</span>
+                <span className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1 block">1 Item (Wajar)</span>
+              </div>
+              <div className="p-4 rounded-2xl neu-inset">
+                <span className="text-[10px] text-slate-500 font-bold uppercase block">Status Tutup Buku</span>
+                <span className="text-xl font-black text-purple-600 dark:text-purple-400 mt-1 block">Siap Verifikasi</span>
+              </div>
+            </div>
+
+            {/* SO Detailed Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
@@ -441,6 +720,31 @@ export default function OwnerDashboard({
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Riwayat Arsip Audit Bulan-Bulan Sebelumnya */}
+            <div className="pt-4 border-t border-slate-200/60 dark:border-white/5 space-y-3">
+              <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <i className="fa-solid fa-clock-rotate-left text-slate-400" />
+                Riwayat Audit Tutup Buku Bulan Sebelumnya
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { month: 'Juli 2026', auditor: 'Bambang (Staf Lapangan)', date: '31 Juli 2026', accuracy: '100% Match', status: 'VERIFIED' },
+                  { month: 'Juni 2026', auditor: 'Bambang (Staf Lapangan)', date: '30 Juni 2026', accuracy: '98.2% Match', status: 'VERIFIED' },
+                  { month: 'Mei 2026', auditor: 'Budi (Staf Kebersihan)', date: '31 Mei 2026', accuracy: '100% Match', status: 'VERIFIED' },
+                ].map((hist, i) => (
+                  <div key={i} className="p-3.5 neu-card-sm rounded-2xl flex items-center justify-between text-xs">
+                    <div>
+                      <h5 className="font-extrabold text-slate-900 dark:text-white">{hist.month}</h5>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{hist.date} • {hist.auditor}</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-extrabold text-[10px]">
+                      ✓ {hist.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -508,9 +812,27 @@ export default function OwnerDashboard({
                   Infokan &amp; tugaskan kebutuhan tenant (Air Galon, Gas LPG, Perbaikan) ke karyawan kos untuk diteruskan ke vendor
                 </p>
               </div>
-              <span className="px-3 py-1 bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300 rounded-full text-xs font-bold border border-amber-300 dark:border-amber-500/30">
-                ⚡ Dispatching System
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    localStorage.removeItem('kosanku_shared_supply_requests');
+                    setSupplyRequests([]);
+                    try {
+                      await fetch('/api/orders', { method: 'DELETE' });
+                    } catch {}
+                    showToast('🧹 Seluruh riwayat testing pesanan berhasil dibersihkan dari Server & Local!');
+                  }}
+                  className="px-3.5 py-1.5 neu-btn text-[11px] font-bold text-rose-600 dark:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-all cursor-pointer flex items-center gap-1.5"
+                  title="Kosongkan daftar pesanan testing"
+                >
+                  <i className="fa-solid fa-trash-can text-[10px]" />
+                  <span>Clear Testing Data</span>
+                </button>
+                <span className="px-3 py-1 bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-300 rounded-full text-xs font-bold border border-amber-300 dark:border-amber-500/30">
+                  ⚡ Dispatching System
+                </span>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -520,27 +842,48 @@ export default function OwnerDashboard({
                   className="neu-card-sm rounded-2xl p-5 space-y-3 transition-all hover:scale-[1.01]"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200/60 dark:border-purple-500/20 font-bold text-xs">
                         Kamar {req.roomNumber} ({req.tenantName})
                       </span>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">{req.requestItem}</h4>
+                      {req.category && (
+                        <span className="px-2 py-0.5 rounded-md neu-inset text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                          {req.category}
+                        </span>
+                      )}
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase w-fit border ${
                         req.status === 'PENDING'
                           ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30'
+                          : req.status === 'PROCESSING' || req.status === 'PLOTTED'
+                          ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30'
                           : 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
                       }`}
                     >
-                      {req.status === 'PENDING' ? '⏳ Perlu Plotting Owner' : '⚡ Auto-Routed by AI Engine'}
+                      {req.status === 'PENDING' ? '⏳ Perlu Plotting Owner' : req.status === 'PROCESSING' ? '🚚 Sedang Diproses' : req.status === 'PLOTTED' ? '⚡ Ditugaskan' : '✅ Selesai'}
                     </span>
                   </div>
 
-                  {req.status === 'PLOTTED' ? (
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{req.requestItem}</h4>
+
+                  {/* KOTAK CATATAN KHUSUS DARI TENANT */}
+                  {req.notes && (
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs">
+                      <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold mb-1 text-[11px]">
+                        <i className="fa-solid fa-note-sticky" />
+                        <span>Catatan Khusus dari Tenant:</span>
+                      </div>
+                      <p className="text-slate-800 dark:text-slate-200 font-medium italic">
+                        &quot;{req.notes}&quot;
+                      </p>
+                    </div>
+                  )}
+
+                  {req.assignedStaff ? (
                     <div className="p-3 neu-inset rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <span>Staf Ditugaskan: <strong>{req.assignedStaff}</strong></span>
-                      <span>Vendor Terhubung: <strong>{req.connectedVendor}</strong></span>
+                      <span>Vendor Terhubung: <strong>{req.connectedVendor || 'Depot Air & Gas Suci'}</strong></span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between pt-2">
@@ -554,6 +897,146 @@ export default function OwnerDashboard({
                       </button>
                     </div>
                   )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Riwayat Pesanan Suplai Owner */}
+        {activeTab === 'order_history' && (
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <i className="fa-solid fa-clock-rotate-left text-teal-600 dark:text-teal-400" />
+                  Arsip Riwayat Seluruh Pesanan Suplai Tenant
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Audit trail lengkap permintaan suplai air galon, laundry, dan gas dari seluruh penghuni kamar.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3.5 py-1 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 font-bold text-xs">
+                  Total Riwayat: {supplyRequests.length} Item
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 font-bold uppercase text-[10px]">
+                    <th className="py-3 px-3">Kode Order</th>
+                    <th className="py-3 px-3">Penghuni &amp; Kamar</th>
+                    <th className="py-3 px-3">Item Pesanan</th>
+                    <th className="py-3 px-3">Staf Pelaksana</th>
+                    <th className="py-3 px-3">Vendor Terhubung</th>
+                    <th className="py-3 px-3 text-right">Status Penugasan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                  {supplyRequests.map((r) => (
+                    <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                      <td className="py-3.5 px-3 font-mono font-bold text-teal-600 dark:text-teal-400">
+                        #{r.id ? (r.id.includes('-') ? `ORD-${r.id.split('-').pop()?.slice(-4).toUpperCase()}` : r.id) : 'ORD'}
+                      </td>
+                      <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">
+                        {r.tenantName} <span className="text-slate-400 font-normal">(Kamar {r.roomNumber})</span>
+                      </td>
+                      <td className="py-3.5 px-3 text-slate-700 dark:text-slate-300 font-medium">
+                        {r.requestItem}
+                        {r.notes && <span className="block text-[10px] text-slate-400 italic font-normal">&quot;{r.notes}&quot;</span>}
+                      </td>
+                      <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300 font-semibold">{r.assignedStaff || 'Belum diplot'}</td>
+                      <td className="py-3.5 px-3 text-purple-700 dark:text-purple-300 font-semibold">{r.connectedVendor || 'Belum dipilih'}</td>
+                      <td className="py-3.5 px-3 text-right">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                          r.status === 'COMPLETED'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
+                            : r.status === 'PROCESSING' || r.status === 'PLOTTED'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300'
+                            : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'
+                        }`}>
+                          {r.status === 'COMPLETED' ? '✅ SELESAI' : r.status === 'PROCESSING' || r.status === 'PLOTTED' ? '⚡ DITUGASKAN' : '⏳ PENDING'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {supplyRequests.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400">
+                        Belum ada riwayat pesanan suplai tercatat
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Laporan Cek-In & Cek-Out Kamar (Dedicated Full View) */}
+        {activeTab === 'checkin_reports' && (
+          <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <i className="fa-solid fa-clipboard-check text-blue-600 dark:text-blue-400" />
+                  Log Laporan Inspeksi Cek-In &amp; Cek-Out Kamar Penghuni
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Arsip lengkap kondisi kamar saat dihuni baru (Cek-In) maupun saat dikosongkan (Cek-Out) oleh tenant.
+                </p>
+              </div>
+              <span className="px-3.5 py-1.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold text-xs">
+                Total Laporan: {roomInspections.length} Item
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {(roomInspections.length > 0 ? roomInspections : INITIAL_ROOM_INSPECTIONS).map((insp: any) => (
+                <div key={insp.id} className="neu-card-sm p-5 sm:p-6 rounded-2xl space-y-3 text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`px-3 py-1 rounded-xl font-mono text-xs font-black ${
+                        insp.type === 'CHECK_IN'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-300'
+                          : 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 border border-rose-300'
+                      }`}>
+                        {insp.type === 'CHECK_IN' ? '🚪 CEK-IN (PENHUNI MASUK)' : '📦 CEK-OUT (PENGHUNI KELUAR)'}
+                      </span>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-base">
+                        Kamar {insp.roomNumber} — {insp.tenantName}
+                      </h4>
+                    </div>
+                    <span className="text-[11px] text-slate-500">
+                      Petugas: <strong className="text-slate-900 dark:text-white">{insp.inspectedBy}</strong> ({insp.date})
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 neu-inset rounded-xl text-slate-700 dark:text-slate-300">
+                    <span className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Catatan Petugas Lapangan:</span>
+                    <p className="italic font-medium">&quot;{insp.notes}&quot;</p>
+                  </div>
+
+                  <div className="pt-1 space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 block uppercase">Hasil Pengecekan Fisik Inventori:</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {insp.items?.map((it: any, i: number) => (
+                        <div key={i} className={`p-2.5 rounded-xl font-bold flex items-center justify-between text-[11px] ${
+                          it.status === 'ADA_BAIK'
+                            ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300 border border-emerald-200/60'
+                            : it.status === 'PERLU_PERBAIKAN'
+                            ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300 border border-amber-200/60'
+                            : 'bg-rose-50 text-rose-800 dark:bg-rose-950/30 dark:text-rose-300 border border-rose-200/60'
+                        }`}>
+                          <span className="truncate">{it.item}</span>
+                          <span className="shrink-0">{it.status === 'ADA_BAIK' ? '✅ Baik' : it.status === 'PERLU_PERBAIKAN' ? '⚠️ Perbaikan' : '❌ Hilang'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -661,28 +1144,174 @@ export default function OwnerDashboard({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              {[
-                { number: 'A-101', type: 'Deluxe AC Inverter', price: 1650000, tenant: 'Budi Santoso', status: 'OCCUPIED' },
-                { number: 'B-201', type: 'Executive VIP Balcony', price: 2100000, tenant: 'Siti Rahma', status: 'OCCUPIED' },
-                { number: 'C-302', type: 'Standard Clean AC', price: 1350000, tenant: null, status: 'AVAILABLE' },
-              ].map((rm) => (
-                <div key={rm.number} className="p-5 neu-card-sm rounded-2xl space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-sm text-slate-900 dark:text-white">Kamar {rm.number}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold ${
-                      rm.status === 'OCCUPIED' ? 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
-                    }`}>
-                      {rm.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{rm.type}</p>
-                  <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between">
-                    <span className="text-xs font-black text-[#047857] dark:text-emerald-400">{formatIDR(rm.price)}/bln</span>
-                    <span className="text-[10px] text-slate-400 font-bold">{rm.tenant ? `Penghuni: ${rm.tenant}` : 'Kosong'}</span>
-                  </div>
+            {/* ── 2-Column Side-by-Side: [Kiri: Booking Masuk & DP] + [Kanan: Log Laporan Inspeksi Cek-In] ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+              
+              {/* Kolom Kiri: Booking Masuk & DP Calon Penghuni */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/5 pb-2.5">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <i className="fa-solid fa-calendar-check text-amber-500" />
+                    Daftar Booking Masuk (DP &amp; Calon Penghuni)
+                  </h4>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+                    {bookings.length > 0 ? `${bookings.length} Booking Pending` : 'Terbaru'}
+                  </span>
                 </div>
-              ))}
+
+                <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                  {bookings.map((bk: any) => (
+                    <div key={bk.id} className="neu-card-sm p-4 rounded-2xl space-y-2.5 text-xs border border-amber-500/30 bg-amber-500/5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-amber-500 text-white font-mono text-[9px] font-black shadow-xs">
+                            DP TERBAYAR
+                          </span>
+                          <h5 className="font-black text-xs text-slate-900 dark:text-white">
+                            Kamar {bk.roomNumber || bk.room?.number || 'A-102'} — {bk.tenantName}
+                          </h5>
+                        </div>
+                        <span className="text-[9px] font-bold text-slate-400">
+                          {bk.durationMonths || 1} Bulan
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="p-2 neu-inset rounded-xl">
+                          <span className="text-slate-400 text-[9px] block font-bold">WhatsApp</span>
+                          <span className="font-mono font-black text-slate-900 dark:text-white text-[11px]">{bk.tenantPhone || '0812-3456-7890'}</span>
+                        </div>
+                        <div className="p-2 neu-inset rounded-xl flex items-center justify-between">
+                          <div>
+                            <span className="text-slate-400 text-[9px] block font-bold">Nominal DP</span>
+                            <span className="font-mono font-black text-[#047857] dark:text-emerald-400 text-[11px]">
+                              {formatIDR(bk.dpAmount || 500000)}
+                            </span>
+                          </div>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black">LUNAS</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {bookings.length === 0 && (
+                    <div className="p-4 neu-card-sm rounded-2xl space-y-2.5 text-xs border border-amber-500/30 bg-amber-500/5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-amber-500 text-white font-mono text-[9px] font-black shadow-xs">
+                            DP TERBAYAR
+                          </span>
+                          <h5 className="font-black text-xs text-slate-900 dark:text-white">
+                            Kamar A-102 — Dimas Anggoro
+                          </h5>
+                        </div>
+                        <span className="text-[9px] font-bold text-slate-400">
+                          Masuk: 1 Sep 2026
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="p-2 neu-inset rounded-xl">
+                          <span className="text-slate-400 text-[9px] block font-bold">WhatsApp</span>
+                          <span className="font-mono font-black text-slate-900 dark:text-white text-[11px]">0812-9876-5432</span>
+                        </div>
+                        <div className="p-2 neu-inset rounded-xl flex items-center justify-between">
+                          <div>
+                            <span className="text-slate-400 text-[9px] block font-bold">Nominal DP</span>
+                            <span className="font-mono font-black text-[#047857] dark:text-emerald-400 text-[11px]">Rp 500.000</span>
+                          </div>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black">LUNAS</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Kolom Kanan: Log Laporan Inspeksi Cek-In & Cek-Out Staf */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/5 pb-2.5">
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <i className="fa-solid fa-clipboard-check text-blue-600 dark:text-blue-400" />
+                    Log Inspeksi Cek-In &amp; Cek-Out Staf
+                  </h4>
+                  <span className="text-[10px] text-slate-500">Realtime Fisik</span>
+                </div>
+
+                <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                  {roomInspections.map((insp: any) => (
+                    <div key={insp.id} className="neu-card-sm p-4 rounded-2xl space-y-2 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded-md font-mono text-[9px] font-black ${
+                            insp.type === 'CHECK_IN'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
+                              : 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300'
+                          }`}>
+                            {insp.type === 'CHECK_IN' ? '🚪 CEK-IN' : '📦 CEK-OUT'}
+                          </span>
+                          <h5 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                            Kamar {insp.roomNumber} • {insp.tenantName}
+                          </h5>
+                        </div>
+                        <span className="text-[9px] text-slate-400 truncate">{insp.inspectedBy}</span>
+                      </div>
+
+                      <p className="text-slate-600 dark:text-slate-300 italic neu-inset p-2 rounded-xl text-[10px]">
+                        &quot;{insp.notes}&quot;
+                      </p>
+
+                      <div className="flex flex-wrap gap-1">
+                        {insp.items?.slice(0, 4).map((it: any, i: number) => (
+                          <span key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300">
+                            {it.item}: {it.status === 'ADA_BAIK' ? '✅ Baik' : '⚠️ Cek'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {roomInspections.length === 0 && (
+                    <div className="text-center py-8 text-slate-400 text-xs neu-inset rounded-2xl">
+                      Belum ada log inspeksi kamar dari staf
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* ── Status Unit & Okupansi Kamar ── */}
+            <div className="pt-2">
+              <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                <i className="fa-solid fa-border-all text-[#047857]" />
+                Status Keterisian &amp; Okupansi Unit Kamar
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                {[
+                  { number: 'A-101', type: 'Deluxe AC Inverter', price: 1650000, tenant: 'Rian Pratama', status: 'OCCUPIED' },
+                  { number: 'B-201', type: 'Executive VIP Balcony', price: 2100000, tenant: 'Siti Rahma', status: 'OCCUPIED' },
+                  { number: 'C-302', type: 'Standard Clean AC', price: 1350000, tenant: 'Budi Santoso', status: 'OCCUPIED' },
+                  { number: 'A-102', type: 'Deluxe Garden View', price: 1600000, tenant: 'Dimas Anggoro (DP Terbayar)', status: 'BOOKED' },
+                ].map((rm) => (
+                  <div key={rm.number} className="p-5 neu-card-sm rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-sm text-slate-900 dark:text-white">Kamar {rm.number}</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold ${
+                        rm.status === 'OCCUPIED' ? 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300' :
+                        rm.status === 'BOOKED' ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300' :
+                        'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
+                      }`}>
+                        {rm.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{rm.type}</p>
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-xs font-black text-[#047857] dark:text-emerald-400">{formatIDR(rm.price)}/bln</span>
+                      <span className="text-[10px] text-slate-400 font-bold">{rm.tenant ? `Penghuni: ${rm.tenant}` : 'Kosong'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -706,8 +1335,9 @@ export default function OwnerDashboard({
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 font-bold uppercase text-[10px]">
-                    <th className="py-3 px-3">No. Invoice</th>
+                    <th className="py-3 px-3">No. Invoice / Reff</th>
                     <th className="py-3 px-3">Tenant &amp; Kamar</th>
+                    <th className="py-3 px-3">Deskripsi Tagihan / Suplai</th>
                     <th className="py-3 px-3">Total Nominal</th>
                     <th className="py-3 px-3 text-right">Status Payment</th>
                   </tr>
@@ -716,19 +1346,32 @@ export default function OwnerDashboard({
                   <tr className="hover:bg-slate-50 dark:hover:bg-white/5">
                     <td className="py-3.5 px-3 font-mono font-bold text-[#047857] dark:text-emerald-400">INV-2026-0801</td>
                     <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">Budi Santoso (Kamar A-101)</td>
-                    <td className="py-3.5 px-3 font-black text-slate-900 dark:text-white">Rp 1.624.500</td>
+                    <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300 font-medium">Sewa Pokok Kamar A-101</td>
+                    <td className="py-3.5 px-3 font-black text-slate-900 dark:text-white">Rp 1.500.000</td>
                     <td className="py-3.5 px-3 text-right">
                       <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#047857] text-[10px] font-extrabold">SETTLED (Midtrans)</span>
                     </td>
                   </tr>
-                  <tr className="hover:bg-slate-50 dark:hover:bg-white/5">
-                    <td className="py-3.5 px-3 font-mono font-bold text-purple-600 dark:text-purple-400">INV-2026-0802</td>
-                    <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">Siti Rahma (Kamar B-201)</td>
-                    <td className="py-3.5 px-3 font-black text-slate-900 dark:text-white">Rp 2.150.000</td>
-                    <td className="py-3.5 px-3 text-right">
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">PENDING</span>
-                    </td>
-                  </tr>
+                  {/* Dynamic Vendor Add-On Ledger entries */}
+                  {(() => {
+                    let addons: any[] = [];
+                    try {
+                      addons = JSON.parse(localStorage.getItem('kosanku_tenant_addons') || '[]');
+                    } catch {}
+                    return addons.map((add: any) => (
+                      <tr key={add.id} className="hover:bg-slate-50 dark:hover:bg-white/5 bg-purple-500/5">
+                        <td className="py-3.5 px-3 font-mono font-bold text-purple-600 dark:text-purple-400">#{add.id ? (add.id.includes('-') ? `ADD-${add.id.split('-').pop()?.slice(-4).toUpperCase()}` : add.id) : 'ADD'}</td>
+                        <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">{add.tenantName || 'Tenant'} (Kamar {add.roomNumber || 'A-101'})</td>
+                        <td className="py-3.5 px-3 font-medium text-purple-800 dark:text-purple-300">
+                          <span className="inline-block mr-1">⚡ Add-On Vendor:</span> {add.description}
+                        </td>
+                        <td className="py-3.5 px-3 font-black text-purple-700 dark:text-purple-400">{formatIDR(add.amount)}</td>
+                        <td className="py-3.5 px-3 text-right">
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 text-[10px] font-extrabold">TERTAGIH KE TENANT</span>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -783,21 +1426,51 @@ export default function OwnerDashboard({
 
               <form onSubmit={handlePlottingTask} className="space-y-4 text-xs">
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Tugaskan Karyawan Kos *</label>
-                  <select value={assignedStaff} onChange={(e) => setAssignedStaff(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white font-bold cursor-pointer">
-                    {STAFF_LIST.map((s) => (
-                      <option key={s} value={s} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{s}</option>
-                    ))}
-                  </select>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-2">Tugaskan Karyawan Kos *</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {STAFF_LIST.map((s) => {
+                      const isSel = assignedStaff === s;
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setAssignedStaff(s)}
+                          className={`p-2.5 rounded-xl font-bold text-left transition-all cursor-pointer flex items-center justify-between gap-1 text-[11px] ${
+                            isSel
+                              ? 'bg-blue-600 text-white shadow-md'
+                              : 'neu-btn text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <span className="truncate">{s}</span>
+                          {isSel && <i className="fa-solid fa-circle-check text-white text-[10px]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Hubungkan ke Vendor Mitra Kos *</label>
-                  <select value={selectedVendor} onChange={(e) => setSelectedVendor(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none text-slate-900 dark:text-white font-bold cursor-pointer">
-                    {VENDOR_LIST.map((v) => (
-                      <option key={v} value={v} className="bg-white text-slate-900 dark:bg-[#141122] dark:text-white">{v}</option>
-                    ))}
-                  </select>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-2">Hubungkan ke Vendor Mitra Kos *</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {VENDOR_LIST.map((v) => {
+                      const isSel = selectedVendor === v;
+                      return (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setSelectedVendor(v)}
+                          className={`p-2.5 rounded-xl font-bold text-left transition-all cursor-pointer flex items-center justify-between gap-1 text-[11px] ${
+                            isSel
+                              ? 'bg-purple-600 text-white shadow-md'
+                              : 'neu-btn text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <span className="truncate">{v}</span>
+                          {isSel && <i className="fa-solid fa-circle-check text-white text-[10px]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">
@@ -809,26 +1482,21 @@ export default function OwnerDashboard({
           </div>
         )}
 
-        {/* Toast Notification (Bottom Right - Fixed 2 Lines Container) */}
+        {/* Toast Notification (All-Device Friendly: Top floating on mobile, bottom right on desktop) */}
         {toast && (
-          <div className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] max-w-xs sm:max-w-md px-4 py-3 rounded-2xl text-xs font-bold neu-card border shadow-2xl animate-scale-in flex items-start gap-2.5 ${
-            toast.type === 'success' ? 'text-emerald-900 dark:text-emerald-200 border-emerald-500/40' : 'text-rose-900 dark:text-rose-200 border-rose-500/40'
-          }`}>
-            <i className={`fa-solid text-sm shrink-0 mt-0.5 ${toast.type === 'success' ? 'fa-circle-check text-emerald-600 dark:text-emerald-400' : 'fa-circle-exclamation text-rose-600 dark:text-rose-400'}`} />
-            <span
-              className="leading-snug flex-1"
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                wordBreak: 'break-word',
-              }}
-            >
-              {toast.msg}
-            </span>
-          </div>
+          <ToastNotification
+            msg={toast.msg}
+            type={toast.type}
+            targetTab={toast.targetTab}
+            onClick={() => {
+              if (toast.targetTab) {
+                setActiveTab(toast.targetTab as any);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+              setToast(null);
+            }}
+            onClose={() => setToast(null)}
+          />
         )}
       </div>
     </SequenceSaaSLayout>

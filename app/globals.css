@@ -222,13 +222,13 @@ html.dark body,
 
 /* ===== NEUMORPHISM (SOFT UI 2026 DESIGN SYSTEM) ===== */
 :root {
-  --neu-bg: #f0f3f8;
-  --neu-surface: #f4f7fb;
-  --neu-shadow-dark: rgba(160, 172, 190, 0.35);
-  --neu-shadow-light: rgba(255, 255, 255, 0.35);
-  --neu-inset-dark: rgba(160, 172, 190, 0.4);
-  --neu-inset-light: rgba(255, 255, 255, 0.3);
-  --neu-border: rgba(0, 0, 0, 0.05);
+  --neu-bg: #f5f7fa;
+  --neu-surface: #ffffff;
+  --neu-shadow-dark: rgba(15, 23, 42, 0.08);
+  --neu-shadow-light: rgba(255, 255, 255, 0.7);
+  --neu-inset-dark: rgba(15, 23, 42, 0.06);
+  --neu-inset-light: rgba(255, 255, 255, 0.8);
+  --neu-border: rgba(226, 232, 240, 0.8);
 }
 
 html[data-theme="dark"],
@@ -240,7 +240,7 @@ html.dark,
   --neu-shadow-light: rgba(255, 255, 255, 0.035);
   --neu-inset-dark: rgba(0, 0, 0, 0.65);
   --neu-inset-light: rgba(255, 255, 255, 0.04);
-  --neu-border: rgba(255, 255, 255, 0.05);
+  --neu-border: rgba(255, 255, 255, 0.08);
 }
 
 .neu-bg {
@@ -248,14 +248,14 @@ html.dark,
 }
 
 .neu-flat, .neu-card {
-  background-color: var(--neu-bg);
-  box-shadow: 6px 6px 16px var(--neu-shadow-dark), -6px -6px 16px var(--neu-shadow-light);
+  background-color: var(--neu-surface);
+  box-shadow: 0 10px 25px -5px var(--neu-shadow-dark), 0 8px 10px -6px var(--neu-shadow-dark);
   border: 1px solid var(--neu-border);
 }
 
 .neu-card-sm {
-  background-color: var(--neu-bg);
-  box-shadow: 3px 3px 8px var(--neu-shadow-dark), -3px -3px 8px var(--neu-shadow-light);
+  background-color: var(--neu-surface);
+  box-shadow: 0 4px 12px -2px var(--neu-shadow-dark);
   border: 1px solid var(--neu-border);
 }
 

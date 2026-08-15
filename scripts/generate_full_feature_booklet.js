@@ -1,0 +1,549 @@
+import fs from 'fs';
+import path from 'path';
+
+const fullFeatureBookletHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buku_Katalog_Lengkap_Seluruh_Fitur_KosanKu_Pro_SaaS_2026</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+    
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 14mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      line-height: 1.45;
+      font-size: 10pt;
+      margin: 0;
+      padding: 0;
+    }
+
+    .page-container {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    /* Print Control Bar */
+    .no-print-bar {
+      background: #0f172a;
+      color: white;
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    .no-print-bar button {
+      background: #047857;
+      color: white;
+      border: none;
+      font-weight: 800;
+      padding: 10px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 10pt;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      transition: background 0.2s;
+    }
+
+    .no-print-bar button:hover {
+      background: #059669;
+    }
+
+    /* Cover / Header Banner */
+    .header-banner {
+      background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #0f766e 100%);
+      color: white;
+      padding: 30px 25px;
+      border-radius: 18px;
+      margin-bottom: 20px;
+    }
+
+    .header-banner h1 {
+      font-size: 24pt;
+      font-weight: 900;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .header-banner .badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+      font-size: 8pt;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .header-banner p {
+      font-size: 10.5pt;
+      margin: 4px 0 0 0;
+      color: #e2e8f0;
+      max-width: 95%;
+    }
+
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      font-size: 8.5pt;
+      color: #475569;
+    }
+
+    .meta-bar strong {
+      color: #047857;
+    }
+
+    /* Module Titles */
+    .module-header {
+      font-size: 13pt;
+      font-weight: 900;
+      color: #064e3b;
+      border-bottom: 2px solid #047857;
+      padding-bottom: 5px;
+      margin: 24px 0 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .module-header .role-badge {
+      font-size: 8pt;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      text-transform: uppercase;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .feature-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 15px;
+      page-break-inside: avoid;
+    }
+
+    .feature-card.highlight {
+      border-left: 4px solid #047857;
+      background: #f0fdf4;
+    }
+
+    .feature-card h3 {
+      font-size: 10.5pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 5px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .feature-card p {
+      font-size: 8.5pt;
+      color: #475569;
+      margin: 0 0 6px 0;
+      line-height: 1.4;
+    }
+
+    .feature-card .tags-container {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 7pt;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .tag-owner { background: #fef3c7; color: #92400e; }
+    .tag-admin { background: #e0e7ff; color: #3730a3; }
+    .tag-staff { background: #dbeafe; color: #1e40af; }
+    .tag-vendor { background: #dcfce7; color: #166534; }
+    .tag-tenant { background: #f3e8ff; color: #6b21a8; }
+    .tag-ai { background: #fce7f3; color: #9d174d; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+    }
+
+    th {
+      background-color: #047857;
+      color: #ffffff;
+      font-weight: 800;
+      text-align: left;
+      padding: 7px 9px;
+      border: 1px solid #047857;
+      text-transform: uppercase;
+      font-size: 7.5pt;
+    }
+
+    td {
+      border: 1px solid #e2e8f0;
+      padding: 7px 9px;
+      color: #334155;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 8pt;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+      margin-top: 25px;
+    }
+
+    @media print {
+      .no-print-bar {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar for Direct Browser Action -->
+  <div class="no-print-bar">
+    <div>
+      <strong>📚 KATALOG FITUR LENGKAP KOSANKU PRO SAAS ENTERPRISE</strong>
+      <span style="font-size: 8.5pt; color: #94a3b8; margin-left: 10px;">Format Resmi Siap Cetak / Download PDF</span>
+    </div>
+    <button onclick="window.print()">🖨️ Cetak / Download PDF Resmi</button>
+  </div>
+
+  <div class="page-container" style="padding: 20px;">
+
+    <!-- Cover Header -->
+    <div class="header-banner">
+      <span class="badge">Master Blueprint & Feature Directory</span>
+      <h1>KosanKu Pro SaaS Platform</h1>
+      <p>Katalog Seluruh Fitur, Modul Publik (Portal Booking & Hero), Dashboard Multi-Role (Owner, Admin, Staf, Vendor, Tenant), AI Auto-Pilot, IoT Smart Lock, dan Sistem Keuangan Midtrans.</p>
+    </div>
+
+    <!-- Meta Info -->
+    <div class="meta-bar">
+      <div><strong>Platform:</strong> KosanKu Pro Enterprise v2.5</div>
+      <div><strong>Owner Properti:</strong> Ibu Dewi Tri Oktariani</div>
+      <div><strong>Arsitektur:</strong> Multi-Tenant SaaS & Multi-Role Isolated</div>
+      <div><strong>Status:</strong> Production Live</div>
+    </div>
+
+    <!-- MODUL 1: PORTAL PUBLIK & BOOKING CALON PENGHUNI -->
+    <div class="module-header">
+      <span>🌐 1. Modul Publik & Portal Booking Calon Penghuni</span>
+      <span class="role-badge">Guest & Calon Tenant</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card highlight">
+        <h3>✨ Hero Section & Live Filter Smart Search</h3>
+        <p>Tampilan landing page interaktif dengan pencarian kamar berdasarkan kampus/lokasi, tipe kamar (Deluxe, Executive, VIP), rentang harga, dan ketersediaan real-time.</p>
+        <div class="tags-container"><span class="tag tag-tenant">Publik</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>🚪 Katalog Kamar & AI Pricing Recommendation</h3>
+        <p>Menampilkan foto galeri kamar 360°, detail fasilitas (AC, KM dalam, springbed), kalkulator sewa otomatis, serta AI dynamic pricing berbasis okupansi.</p>
+        <div class="tags-container"><span class="tag tag-ai">AI Pricing</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>📱 Form Booking Online & E-KTP KYC Verification</h3>
+        <p>Calon penghuni dapat memesan kamar secara instan, upload foto identitas KTP (KYC aman), dan memilih durasi kontrak sewa (1, 3, 6, 12 bulan).</p>
+        <div class="tags-container"><span class="tag tag-tenant">Booking</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>💬 WhatsApp Concierge & Live FAQ Widget</h3>
+        <p>Widget WhatsApp mengambang (floating concierge) yang langsung menghubungkan calon tenant ke customer service kosan 24/7.</p>
+        <div class="tags-container"><span class="tag tag-admin">Support</span></div>
+      </div>
+    </div>
+
+    <!-- MODUL 2: DASHBOARD OWNER & INVESTOR -->
+    <div class="module-header">
+      <span>👑 2. Modul Dashboard Property Owner & Investor</span>
+      <span class="role-badge">Ibu Dewi Tri Oktariani</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card highlight">
+        <h3>🎯 Pusat Plotting & Dispatching Permintaan Suplai</h3>
+        <p>Menghubungkan pesanan galon, gas, laundry dari tenant langsung ke kurir staf (Bambang/Rudi) dan mitra vendor terkait dengan alur terarah dan notifikasi real-time.</p>
+        <div class="tags-container"><span class="tag tag-owner">Owner</span><span class="tag tag-staff">Staf</span><span class="tag tag-vendor">Vendor</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>📊 Finansial Laba Rugi (P&L) & Dividen Investor</h3>
+        <p>Analisis arus kas masuk (Gross Inflow), pengeluaran operasional (Outflow), Net Profit, profit margin, serta simulasi dividen bagi hasil pemilik dan co-investor.</p>
+        <div class="tags-container"><span class="tag tag-owner">Keuangan</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>📦 Rekapitulasi Stock Opname (SO) dari Bulan ke Bulan</h3>
+        <p>Pemeriksaan audit fisik stok 6 pasokan barang, perbandingan stok sistem vs fisik, deteksi selisih (discrepancy), arsip bulanan, dan verifikasi tutup buku.</p>
+        <div class="tags-container"><span class="tag tag-owner">Audit SO</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>✍️ Approval Pengeluaran Anggaran Staf</h3>
+        <p>Persetujuan / penolakan instan atas pengajuan dana perbaikan darurat dari staf lapangan (misal: perbaikan kran/pipa bocor) via pop-up interaktif.</p>
+        <div class="tags-container"><span class="tag tag-owner">Approval</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>🤖 Auto-Pilot AI Rules Configuration</h3>
+        <p>5 Aturan otomatisasi: Auto-Dispatch Suplai, Auto-Addon Billing ke Invoice, Auto-Reminder WA H-3 sewa, Auto-Status Clearance Kamar, dan Reminder SO Akhir Bulan.</p>
+        <div class="tags-container"><span class="tag tag-ai">Auto-Pilot</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>🔐 Deposit Escrow Guarantee & Denda Keterlambatan</h3>
+        <p>Penyimpanan dana jaminan kerusakan kamar (security deposit) dalam rekening escrow aman dengan kalkulasi otomatis pengembalian atau pemotongan denda.</p>
+        <div class="tags-container"><span class="tag tag-owner">Escrow</span></div>
+      </div>
+    </div>
+
+    <!-- Page Break -->
+    <div class="page-break"></div>
+
+    <!-- MODUL 3: DASHBOARD ADMIN OPERASIONAL -->
+    <div class="module-header">
+      <span>🛡️ 3. Modul Dashboard Admin Operasional & Kasir</span>
+      <span class="role-badge">Siti Aminah & Rina Finance</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card highlight">
+        <h3>🧾 Kasir Digital & Multi-Channel Invoice QRIS</h3>
+        <p>Penerbitan tagihan sewa bulanan dan add-on suplai terintegrasi Midtrans Snap QRIS, Virtual Account BCA, Mandiri, BNI, dan BRI dengan auto-settlement.</p>
+        <div class="tags-container"><span class="tag tag-admin">Kasir</span><span class="tag tag-tenant">Midtrans</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>🎧 Pusat Tiket Keluhan & SLA Maintenance</h3>
+        <p>Manajemen tiket kendala kamar dari tenant (AC bocor, lampu mati, WiFi lambat), penugasan ke teknisi lapangan, dan monitoring SLA penyelesaian kendala.</p>
+        <div class="tags-container"><span class="tag tag-admin">Helpdesk</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>📷 OCR Receipt Scanner (AI Ekstraksi Nota)</h3>
+        <p>Upload foto kuitansi/nota belanja operasional; AI otomatis membaca nama toko, tanggal, item pembelian, dan nominal total untuk dibukukan ke sistem kasir.</p>
+        <div class="tags-container"><span class="tag tag-ai">AI OCR</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>📹 Security Monitoring & CCTV Gate Audit</h3>
+        <p>Integrasi feed kamera keamanan lorong dan pintu gerbang kosan dengan log pencatatan jam masuk tamu & kendaraan penghuni secara aman.</p>
+        <div class="tags-container"><span class="tag tag-admin">Security</span></div>
+      </div>
+    </div>
+
+    <!-- MODUL 4: DASHBOARD STAF LAPANGAN & TEKNISI -->
+    <div class="module-header">
+      <span>👷 4. Modul Dashboard Staf Lapangan & Teknisi</span>
+      <span class="role-badge">Bambang (Teknisi) & Rudi (Kurir)</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card highlight">
+        <h3>📋 Formulir Inspeksi Cek-In & Cek-Out Kamar</h3>
+        <p>Checklist pemeriksaan 7 aset kamar (Smart Lock RFID, AC, Springbed, Lemari, Sanitasi Shower, Smart TV, Cat Dinding) sebelum tenant baru masuk atau keluar.</p>
+        <div class="tags-container"><span class="tag tag-staff">Inspeksi</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>📦 Lembar Audit Stock Opname (SO) & Bukti GPS</h3>
+        <p>Pencatatan hitungan fisik barang di gudang kosan dilengkapi tombol Anti-Fraud Photo Capture dengan Watermark GPS Lokasi & Waktu Real-Time.</p>
+        <div class="tags-container"><span class="tag tag-staff">Audit Fisik</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>📝 Daftar Tugas Lapangan & Dispatching</h3>
+        <p>Daftar penugasan pembersihan kamar, kurir antar galon, dan jadwal servis berkala yang diinstruksikan oleh Owner atau mesin Auto-Pilot.</p>
+        <div class="tags-container"><span class="tag tag-staff">Tugas</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>💸 Pengajuan Dana Operasional Darurat</h3>
+        <p>Formulir permohonan dana pembelian material/peralatan darurat ke Owner lengkap dengan estimasi biaya, alasan urgensi, dan tracking persetujuan.</p>
+        <div class="tags-container"><span class="tag tag-staff">Pengajuan Dana</span></div>
+      </div>
+    </div>
+
+    <!-- MODUL 5: DASHBOARD MITRA VENDOR SUPLAI -->
+    <div class="module-header">
+      <span>🏪 5. Modul Dashboard Mitra Vendor Suplai</span>
+      <span class="role-badge">Depot Suci, Laundry Clean, Subur Teknik</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card highlight">
+        <h3>🛒 Penerimaan Order Suplai Masuk Real-Time</h3>
+        <p>Vendor menerima notifikasi pesanan air galon, tabung gas LPG, atau laundry kiloan dari tenant kosan lengkap dengan nomor kamar dan catatan khusus.</p>
+        <div class="tags-container"><span class="tag tag-vendor">Order Masuk</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>🚚 Dispatch & Update Status Pengantaran Kurir</h3>
+        <p>Vendor memperbarui status pesanan dari "Sedang Diproses" menjadi "Sedang Diantar" hingga "Telah Tiba di Depan Kamar" yang memicu notifikasi ke tenant.</p>
+        <div class="tags-container"><span class="tag tag-vendor">Delivery</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>💰 Add-On Billing ke Tagihan Bulanan Tenant</h3>
+        <p>Vendor dapat mencatat biaya pesanan suplai agar otomatis dimasukkan ke dalam invoice sewa bulanan tenant tanpa perlu pembayaran tunai di tempat.</p>
+        <div class="tags-container"><span class="tag tag-vendor">Add-On</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>📈 Rekapitulasi Pembayaran & Riwayat Penjualan</h3>
+        <p>Tabel riwayat seluruh pesanan yang telah selesai beserta rekapitulasi pembayaran berkala dari manajemen pengelola kosan.</p>
+        <div class="tags-container"><span class="tag tag-vendor">Rekap</span></div>
+      </div>
+    </div>
+
+    <!-- Page Break -->
+    <div class="page-break"></div>
+
+    <!-- MODUL 6: DASHBOARD PENYEWA (TENANT PORTAL) -->
+    <div class="module-header">
+      <span>👤 6. Modul Portal Penyewa (Tenant Experience)</span>
+      <span class="role-badge">Rian (A-101), Siti (B-201), Budi (C-302)</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card highlight">
+        <h3>🔓 IoT Smart Digital Key (Buka Pintu 1-Klik)</h3>
+        <p>Membuka kunci digital pintu kamar secara nirkabel via IoT Smart Lock tanpa perlu repot membawa anak kunci fisik konvensional.</p>
+        <div class="tags-container"><span class="tag tag-tenant">IoT Key</span></div>
+      </div>
+      <div class="feature-card highlight">
+        <h3>🛒 Order Galon, Gas & Laundry Tambahan 1-Klik</h3>
+        <p>Formulir pemesanan isi ulang air galon Aqua, tabung gas LPG 3kg, dan jasa laundry pakaian dengan pilihan penjemputan di depan kamar.</p>
+        <div class="tags-container"><span class="tag tag-tenant">Suplai</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>💳 Bayar Sewa Cepat via Midtrans Snap (QRIS/VA)</h3>
+        <p>Pembayaran sewa kamar bulanan dan rincian add-on tagihan suplai dalam satu invoice terpadu dengan konfirmasi otomatis lunas.</p>
+        <div class="tags-container"><span class="tag tag-tenant">Pembayaran</span></div>
+      </div>
+      <div class="feature-card">
+        <h3>🔧 Pengajuan Tiket Kendala & Status Perbaikan</h3>
+        <p>Melaporkan kerusakan fasilitas kamar (AC, kran, listrik) disertai foto kendala dan memantau progres pengerjaan teknisi hingga tuntas.</p>
+        <div class="tags-container"><span class="tag tag-tenant">Komplain</span></div>
+      </div>
+    </div>
+
+    <!-- MODUL 7: MASTER DATA & PENGATURAN PROPERTI SAAS -->
+    <div class="module-header">
+      <span>⚙️ 7. Master Data & Konfigurasi Multi-Properti</span>
+      <span class="role-badge">Superadmin & Owner</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Sub-Menu Master</th>
+          <th>Deskripsi Fungsi & Pengaturan</th>
+          <th>Objek yang Dikelola</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>👤 Akun Pengguna</strong></td>
+          <td>Manajemen seluruh akun user, penetapan role (Owner, Admin, Staf, Vendor, Tenant), dan aktivasi login SSO.</td>
+          <td>User Profiles & Kredensial</td>
+        </tr>
+        <tr>
+          <td><strong>🏨 Identitas Kosan</strong></td>
+          <td>Pengaturan profil kosan, alamat properti, no WhatsApp resmi, dan nomor rekening penampung pencairan bank.</td>
+          <td>Property Info & Bank Payout</td>
+        </tr>
+        <tr>
+          <td><strong>🪪 Karyawan</strong></td>
+          <td>Master data staf lapangan, posisi jabatan (Teknisi, Kebersihan, Kasir), gaji pokok bulanan, dan status aktif.</td>
+          <td>Daftar Karyawan Tetap/Kontrak</td>
+        </tr>
+        <tr>
+          <td><strong>👑 Owner & Investor</strong></td>
+          <td>Pencatatan persentase kepemilikan modal (share percentage) bagi hasil dividen antar pemilik dan investor co-funding.</td>
+          <td>Bagi Hasil & Co-Investors</td>
+        </tr>
+        <tr>
+          <td><strong>📦 Inventori Master</strong></td>
+          <td>Daftar seluruh item barang pasokan fisik, kategori, satuan unit (Galon, Tabung, Pcs, Set), dan batas minimum stok (Reorder Point).</td>
+          <td>6 Item Stock Opname</td>
+        </tr>
+        <tr>
+          <td><strong>🏪 Mitra Vendor</strong></td>
+          <td>Daftar kontak toko rekanan suplai air minum, gas LPG, laundry kiloan, dan supplier material teknisi.</td>
+          <td>Kontak & Layanan Vendor</td>
+        </tr>
+        <tr>
+          <td><strong>🛎️ Fasilitas Kosan</strong></td>
+          <td>Katalog fasilitas gedung dan kamar, penentuan apakah termasuk sewa gratis atau sebagai add-on berbayar bulanan.</td>
+          <td>AC, WiFi, Smart Lock, KM Dalam</td>
+        </tr>
+        <tr>
+          <td><strong>📋 Checklist Cek-In</strong></td>
+          <td>Master daftar aset dan inventori yang wajib diperiksa staf lapangan saat tenant baru check-in atau check-out.</td>
+          <td>Item Checklist Inspeksi Fisik</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer-note">
+      KosanKu Pro Enterprise SaaS • Dokumen Resmi Katalog Seluruh Fitur Platform 2026 • Hak Cipta Dilindungi Undang-Undang
+    </div>
+
+  </div>
+
+</body>
+</html>
+`;
+
+const publicDir = path.join(process.cwd(), 'public');
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
+fs.writeFileSync(path.join(publicDir, 'Katalog_Fitur_Lengkap_KosanKuPro_2026.html'), fullFeatureBookletHtml, 'utf-8');
+console.log('Master Full Feature Booklet Generated at /Katalog_Fitur_Lengkap_KosanKuPro_2026.html');

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SequenceSaaSLayout from './SequenceSaaSLayout';
+import ToastNotification from './ToastNotification';
 import type { RoleType } from '@/app/page';
 
 interface TenantUser {
@@ -61,9 +62,7 @@ export default function TenantDashboard({
 }) {
   const [activeBranch, setActiveBranch] = useState('all');
   const [activeTab, setActiveTab] = useState('invoices');
-  const [tickets, setTickets] = useState<Ticket[]>([
-    { id: 1, title: 'AC kurang dingin', desc: 'AC kamar A-101 kurang dingin sejak kemarin.', status: 'OPEN' },
-  ]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [invoice, setInvoice] = useState(FALLBACK_INVOICE);
   const [addOns, setAddOns] = useState<AddOnBillItem[]>(INITIAL_ADDONS);
   const [title, setTitle] = useState('');
@@ -73,11 +72,7 @@ export default function TenantDashboard({
   const [payError, setPayError] = useState<string | null>(null);
 
   // Tenant-side order tracking state (DELIVERED → tenant confirms → SETTLED)
-  const [tenantOrders, setTenantOrders] = useState([
-    { id: 'V-101', item: 'Laundry Cuci Kiloan 7.5 Kg',          status: 'PROCESSING', courier: 'Bambang', eta: '30 menit', updatedAt: '15 menit lalu' },
-    { id: 'V-102', item: 'Refill Galon Aqua 19L + Gas LPG 3kg', status: 'NEW',        courier: 'Bambang', eta: '1 jam',    updatedAt: '45 menit lalu' },
-    { id: 'V-103', item: 'Nasi Goreng Spesial + Es Teh',         status: 'DELIVERED',  courier: 'Budi',    eta: '-',        updatedAt: '3 jam lalu'   },
-  ]);
+  const [tenantOrders, setTenantOrders] = useState<any[]>([]);
 
   // Order Form Modal state
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -87,10 +82,37 @@ export default function TenantDashboard({
   const [orderNotes, setOrderNotes] = useState('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const confirmReceived = (id: string) => {
+  const confirmReceived = async (id: string) => {
+    // 1. Optimistic UI update
     setTenantOrders((prev) =>
-      prev.map((o) => o.id === id ? { ...o, status: 'SETTLED', updatedAt: 'Baru saja' } : o)
+      prev.map((o) => (o.id === id ? { ...o, status: 'SETTLED', updatedAt: 'Baru saja' } : o))
     );
+
+    // 2. Persist to server API live (so next poll remains SETTLED)
+    try {
+      await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'SETTLED' }),
+      });
+    } catch (err) {
+      console.warn('Failed to sync SETTLED status to server:', err);
+    }
+
+    // 3. Update localStorage fallback
+    try {
+      const savedTenantReqs = localStorage.getItem('kosanku_shared_supply_requests');
+      if (savedTenantReqs) {
+        const parsed = JSON.parse(savedTenantReqs);
+        const updated = parsed.map((item: any) =>
+          item.id === id ? { ...item, status: 'SETTLED' } : item
+        );
+        localStorage.setItem('kosanku_shared_supply_requests', JSON.stringify(updated));
+      }
+    } catch {}
+
+    setToastMsg('🎉 Terima kasih! Konfirmasi pesanan telah diteruskan ke Vendor & Pengelola Kos.');
+    setTimeout(() => setToastMsg(null), 4000);
   };
 
   const handleOpenOrder = (cat: 'GALON' | 'LAUNDRY' | 'GAS' | 'CUSTOM', defaultName: string) => {
@@ -104,13 +126,14 @@ export default function TenantDashboard({
   const handleSendOrderToOwner = async (e: React.FormEvent) => {
     e.preventDefault();
     const newOrderId = `REQ-${Date.now().toString().slice(-4)}`;
+    const customNotes = orderNotes.trim();
     const newOrderObj = {
       id: newOrderId,
       tenantName: tenantName,
       roomNumber: roomInfo?.number || 'A-101',
       category: orderCategory,
       item: `${orderTitle} (${orderQty}x)`,
-      notes: orderNotes || 'Tidak ada catatan tambahan',
+      notes: customNotes || 'Tidak ada catatan tambahan',
       status: 'PENDING_DISPATCH',
       createdAt: 'Baru saja',
     };
@@ -121,6 +144,19 @@ export default function TenantDashboard({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newOrderObj),
+      });
+
+      // Push to central activity notifications for Owner, Admin & Vendor
+      await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionType: 'DISPATCH_ORDER',
+          payload: {
+            order: newOrderObj,
+            status: 'NEW',
+          },
+        }),
       });
     } catch (err) {
       console.error('Failed to sync order to server:', err);
@@ -136,6 +172,10 @@ export default function TenantDashboard({
         bc.postMessage({ type: 'NEW_TENANT_ORDER', order: newOrderObj });
         bc.close();
       } catch (err) {}
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('notifs_updated'));
     }
 
     // 3. Add to tenant's tracking timeline UI
@@ -170,31 +210,46 @@ export default function TenantDashboard({
           }
         }
 
-        // Fetch live server order status
+        // Fetch live server order status & load any plotted/new orders automatically
         const res = await fetch('/api/orders');
+        let serverOrders: any[] = [];
         if (res.ok) {
           const json = await res.json();
-          if (json?.data?.length) {
-            setTenantOrders((prev) => {
-              return prev.map((oldOrder) => {
-                const serverOrder = json.data.find((s: any) => s.id === oldOrder.id);
-                if (serverOrder && serverOrder.status !== oldOrder.status) {
-                  return {
-                    ...oldOrder,
-                    status: serverOrder.status === 'PENDING_DISPATCH' ? 'NEW' : serverOrder.status,
-                    updatedAt: 'Baru saja',
-                  };
-                }
-                return oldOrder;
-              });
-            });
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            serverOrders = json.data;
           }
         }
+
+        // Also check local shared requests for instant fallback
+        let localOrders: any[] = [];
+        const savedTenantReqs = localStorage.getItem('kosanku_shared_supply_requests');
+        if (savedTenantReqs) {
+          try {
+            localOrders = JSON.parse(savedTenantReqs);
+          } catch {}
+        }
+
+        const combined = [...serverOrders];
+        localOrders.forEach((l) => {
+          if (!combined.some((c) => c.id === l.id)) {
+            combined.push(l);
+          }
+        });
+
+        const mappedOrders = combined.map((s: any) => ({
+          id: s.id,
+          item: s.item || 'Pesanan Suplai',
+          status: (s.status === 'PENDING_DISPATCH' || s.status === 'PENDING') ? 'NEW' : s.status,
+          courier: s.assignedStaff || s.vendorName || 'Dipilih Owner',
+          eta: s.status === 'PROCESSING' ? 'Sedang Diantar' : s.status === 'DELIVERED' ? 'Tiba di Kamar' : s.status === 'SETTLED' ? 'Sudah Diterima ✅' : 'Menunggu Dispatch Owner',
+          updatedAt: 'Baru saja',
+        }));
+        setTenantOrders(mappedOrders);
       } catch {}
     };
 
     syncTenantData();
-    const interval = setInterval(syncTenantData, 2500);
+    const interval = setInterval(syncTenantData, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -390,10 +445,10 @@ export default function TenantDashboard({
                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center text-lg font-bold">
                     <i className="fa-solid fa-shirt" />
                   </div>
-                  <h4 className="font-black text-sm">Laundry Express 1-Day</h4>
-                  <p className="text-xs text-slate-500">Rp 8.000 / kg (Jemput &amp; Antar Lipat)</p>
+                  <h4 className="font-black text-sm">Laundry Cuci Kiloan</h4>
+                  <p className="text-xs text-slate-500">Rp 8.000 / Kg (Antar-Jemput Kamar)</p>
                   <button
-                    onClick={() => handleOpenOrder('LAUNDRY', 'Laundry Express 1-Day (Cuci Lipat)')}
+                    onClick={() => handleOpenOrder('LAUNDRY', 'Laundry Cuci Kiloan')}
                     className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <i className="fa-solid fa-cart-plus" /> Jemput Laundry
@@ -402,12 +457,12 @@ export default function TenantDashboard({
 
                 <div className="neu-card-sm p-5 rounded-2xl space-y-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-lg font-bold">
-                    <i className="fa-solid fa-fire-flame-simple" />
+                    <i className="fa-solid fa-fire" />
                   </div>
-                  <h4 className="font-black text-sm">Tabung Gas Bright 5.5kg</h4>
-                  <p className="text-xs text-slate-500">Rp 110.000 / Tabung</p>
+                  <h4 className="font-black text-sm">Refill Gas LPG 3 Kg</h4>
+                  <p className="text-xs text-slate-500">Rp 25.000 / Tabung</p>
                   <button
-                    onClick={() => handleOpenOrder('GAS', 'Tabung Gas Bright 5.5kg')}
+                    onClick={() => handleOpenOrder('GAS', 'Refill Gas LPG 3kg')}
                     className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <i className="fa-solid fa-cart-plus" /> Pesan Gas
@@ -416,14 +471,32 @@ export default function TenantDashboard({
               </div>
             </div>
 
-            {/* ── Tracking Status Pesanan (Gojek/Grab Style) ── */}
+            {/* ── Tracking Status Pesanan Aktif (Gojek/Grab Style) ── */}
             <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-5">
-              <div className="border-b border-slate-200 dark:border-white/10 pb-4">
-                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <i className="fa-solid fa-route text-teal-500" />
-                  Status Pesanan Saya
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pantau status pengiriman pesanan Anda secara realtime.</p>
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <i className="fa-solid fa-route text-teal-500" />
+                    Status Pesanan Saya
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pantau status pengiriman pesanan Anda secara realtime.</p>
+                </div>
+                {tenantOrders.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTenantOrders([]);
+                      localStorage.removeItem('kosanku_shared_supply_requests');
+                      setToastMsg('🧹 Riwayat pesanan Anda berhasil dibersihkan!');
+                      setTimeout(() => setToastMsg(null), 3000);
+                    }}
+                    className="px-3 py-1.5 neu-btn text-[11px] font-bold text-rose-500 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer flex items-center gap-1.5"
+                    title="Kosongkan riwayat pesanan"
+                  >
+                    <i className="fa-solid fa-trash-can text-[10px]" />
+                    <span>Bersihkan Riwayat</span>
+                  </button>
+                )}
               </div>
 
               {tenantOrders.map((order) => {
@@ -439,7 +512,7 @@ export default function TenantDashboard({
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-lg bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300 mr-2">
-                          #{order.id}
+                          #{order.id ? (order.id.includes('-') ? `ORD-${order.id.split('-').pop()?.slice(-4).toUpperCase()}` : order.id) : 'ORD'}
                         </span>
                         <p className="text-sm font-bold text-slate-900 dark:text-white mt-1">{order.item}</p>
                       </div>
@@ -480,7 +553,7 @@ export default function TenantDashboard({
                               </div>
                             </div>
                             {!isLast && (
-                              <div className="flex-1 mx-1 h-1 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 relative -translate-y-4">
+                              <div className="flex-1 min-w-[28px] sm:min-w-[48px] mx-1 h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 relative -translate-y-3.5">
                                 <div
                                   className="h-full rounded-full bg-teal-500 transition-all duration-700"
                                   style={{ width: idx < stepIndex ? '100%' : '0%' }}
@@ -513,6 +586,70 @@ export default function TenantDashboard({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ===== TAB: RIWAYAT PESANAN LENGKAP TENANT ===== */}
+        {activeTab === 'order_history' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
+              <div className="border-b border-slate-200 dark:border-white/10 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <i className="fa-solid fa-clock-rotate-left text-teal-600 dark:text-teal-400" />
+                    Riwayat Transaksi &amp; Pesanan Suplai
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Arsip seluruh pesanan galon, laundry, dan gas kamar Anda yang tercatat di sistem.</p>
+                </div>
+                <span className="px-3.5 py-1 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 font-bold text-xs">
+                  Total: {tenantOrders.length} Pesanan
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 font-bold uppercase text-[10px]">
+                      <th className="py-3 px-3">Kode Order</th>
+                      <th className="py-3 px-3">Item Pesanan</th>
+                      <th className="py-3 px-3">Petugas / Vendor</th>
+                      <th className="py-3 px-3">Waktu Order</th>
+                      <th className="py-3 px-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {tenantOrders.map((o) => (
+                      <tr key={o.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        <td className="py-3.5 px-3 font-mono font-bold text-teal-600 dark:text-teal-400">
+                          #{o.id ? (o.id.includes('-') ? `ORD-${o.id.split('-').pop()?.slice(-4).toUpperCase()}` : o.id) : 'ORD'}
+                        </td>
+                        <td className="py-3.5 px-3 font-bold text-slate-900 dark:text-white">{o.item}</td>
+                        <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300">{o.courier}</td>
+                        <td className="py-3.5 px-3 text-slate-400">{o.updatedAt}</td>
+                        <td className="py-3.5 px-3 text-right">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                            o.status === 'SETTLED'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
+                              : o.status === 'PROCESSING' || o.status === 'DELIVERED'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'
+                          }`}>
+                            {o.status === 'SETTLED' ? '✅ SELESAI' : o.status === 'PROCESSING' ? '🚚 DIANTAR' : o.status === 'DELIVERED' ? '📦 TIBA' : '⏳ DIPROSES'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {tenantOrders.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-400">
+                          Belum ada riwayat pesanan
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -685,20 +822,38 @@ export default function TenantDashboard({
                 <input required value={orderTitle} onChange={(e) => setOrderTitle(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Jumlah *</label>
-                  <input required type="number" min={1} max={10} value={orderQty} onChange={(e) => setOrderQty(Number(e.target.value))} className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white" />
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Pilih Kategori Pesanan</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: 'GALON', label: 'Air Galon', icon: 'fa-bottle-water' },
+                    { id: 'LAUNDRY', label: 'Laundry Kiloan', icon: 'fa-shirt' },
+                    { id: 'GAS', label: 'Tabung Gas', icon: 'fa-fire-burner' },
+                    { id: 'CUSTOM', label: 'Lainnya', icon: 'fa-box' },
+                  ].map((cat) => {
+                    const isSel = orderCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setOrderCategory(cat.id as any)}
+                        className={`p-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          isSel
+                            ? 'bg-teal-600 text-white shadow-md'
+                            : 'neu-btn text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <i className={`fa-solid ${cat.icon}`} />
+                        <span>{cat.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Kategori</label>
-                  <select value={orderCategory} onChange={(e: any) => setOrderCategory(e.target.value)} className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white">
-                    <option value="GALON">Air Galon</option>
-                    <option value="LAUNDRY">Laundry Kiloan</option>
-                    <option value="GAS">Tabung Gas</option>
-                    <option value="CUSTOM">Lainnya</option>
-                  </select>
-                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Jumlah Pesanan *</label>
+                <input required type="number" min={1} max={10} value={orderQty} onChange={(e) => setOrderQty(Number(e.target.value))} className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white" />
               </div>
 
               <div>
@@ -717,24 +872,13 @@ export default function TenantDashboard({
         </div>
       )}
 
-      {/* Toast Notification (Bottom Right - Fixed 2 Lines Container) */}
+      {/* Toast Notification (All-Device Friendly) */}
       {toastMsg && (
-        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] max-w-xs sm:max-w-md px-4 py-3 rounded-2xl text-xs font-bold neu-card text-emerald-900 dark:text-emerald-200 border border-emerald-500/40 shadow-2xl animate-scale-in flex items-start gap-2.5">
-          <i className="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400 text-sm shrink-0 mt-0.5" />
-          <span
-            className="leading-snug flex-1"
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              wordBreak: 'break-word',
-            }}
-          >
-            {toastMsg}
-          </span>
-        </div>
+        <ToastNotification
+          msg={toastMsg}
+          type="success"
+          onClose={() => setToastMsg(null)}
+        />
       )}
     </SequenceSaaSLayout>
   );

@@ -223,36 +223,100 @@ export default function RoomsSection({
   const [bookingSent, setBookingSent] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [bookingRoom, setBookingRoom] = useState<RoomItem | null>(null);
+  const [visibleCount, setVisibleCount] = useState<number>(6);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
+  const loadRooms = () => {
+    // Get custom local created rooms first
+    let localCustomRooms: RoomItem[] = [];
+    try {
+      localCustomRooms = JSON.parse(localStorage.getItem('kosanku_custom_rooms') || '[]');
+    } catch {}
+
     fetch('/api/rooms')
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
-        if (json?.data?.length) {
-          // Merge API data with rich fallback metadata if missing
-          const merged = json.data.map((r: any, idx: number) => {
+        const dbList = (json?.data && Array.isArray(json.data)) ? json.data : [];
+        const combined = [...dbList];
+
+        // Merge any custom local rooms not yet present in db
+        localCustomRooms.forEach((lr) => {
+          if (!combined.some((cr: any) => cr.number === lr.number || cr.id === lr.id)) {
+            combined.push(lr);
+          }
+        });
+
+        if (combined.length > 0) {
+          const merged: RoomItem[] = combined.map((r: any, idx: number) => {
             const fb = FALLBACK_ROOMS[idx % FALLBACK_ROOMS.length];
             return {
-              ...fb,
-              ...r,
-              gallery: r.gallery || fb.gallery,
+              id: r.id || `custom-${idx}`,
+              number: r.number,
+              type: r.type || fb.type,
+              price: typeof r.price === 'number' ? r.price : parseFloat(r.price) || fb.price,
+              status: r.status || 'AVAILABLE',
+              floor: r.floor || 1,
+              imageUrl: r.imageUrl || fb.imageUrl,
+              gallery: r.gallery && r.gallery.length ? r.gallery : [r.imageUrl || fb.imageUrl, ...(fb.gallery || [])],
               videoUrl: r.videoUrl || fb.videoUrl,
-              size: r.size || fb.size,
-              bedType: r.bedType || fb.bedType,
-              electricity: r.electricity || fb.electricity,
-              view: r.view || fb.view,
-              capacity: r.capacity || fb.capacity,
+              size: r.size || fb.size || '4 x 5 m (20 m²)',
+              bedType: r.bedType || fb.bedType || 'Queen Bed (160x200)',
+              electricity: r.electricity || fb.electricity || 'Token Mandiri 1300W',
+              view: r.view || fb.view || 'City / Garden View',
+              capacity: r.capacity ? `${r.capacity} Orang` : fb.capacity || '1 - 2 Orang',
+              facilities: r.facilities && r.facilities.length ? r.facilities : fb.facilities,
               categorizedFacilities: r.categorizedFacilities || fb.categorizedFacilities,
             };
           });
-          setRooms(merged);
+
+          setRooms((prev) => {
+            if (
+              prev.length === merged.length &&
+              prev.every(
+                (p, i) =>
+                  p.id === merged[i].id &&
+                  p.status === merged[i].status &&
+                  p.number === merged[i].number &&
+                  p.videoUrl === merged[i].videoUrl
+              )
+            ) {
+              return prev;
+            }
+            return merged;
+          });
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn('Failed to load rooms from server, using local/fallback:', err);
+        if (localCustomRooms.length > 0) {
+          setRooms([...FALLBACK_ROOMS, ...localCustomRooms]);
+        }
+      });
+  };
+
+  useEffect(() => {
+    loadRooms();
+    const interval = setInterval(loadRooms, 4000);
+
+    const handleRoomAdded = () => loadRooms();
+    window.addEventListener('kosanku_room_added', handleRoomAdded);
+
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      bc = new BroadcastChannel('kosanku_room_channel');
+      bc.onmessage = (ev) => {
+        if (ev.data?.type === 'ROOM_ADDED') loadRooms();
+      };
+    }
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('kosanku_room_added', handleRoomAdded);
+      if (bc) bc.close();
+    };
   }, []);
 
   const filtered = filter === 'all' ? rooms : rooms.filter((r) => r.status.toUpperCase() === filter.toUpperCase());
@@ -279,13 +343,13 @@ export default function RoomsSection({
         slidesPerView: 1,
         spaceBetween: 24,
         loop: filtered.length > 3,
-        autoplay: { delay: 4000, disableOnInteraction: false },
+        autoplay: { delay: 5000, disableOnInteraction: false },
         breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } },
       });
-    }, 100);
+    }, 150);
 
     return () => clearTimeout(timer);
-  }, [rooms, filter]);
+  }, [rooms.length, filter]);
 
   const openRoomDetail = (room: RoomItem) => {
     setDetailRoom(room);
@@ -331,17 +395,31 @@ export default function RoomsSection({
               className={`reveal delay-${idx + 1} neu-card-sm rounded-2xl sm:rounded-3xl overflow-hidden group transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between`}
             >
               <div>
-                <div className="relative h-48 sm:h-56 overflow-hidden bg-slate-100 dark:bg-slate-800">
-                  <img
-                    src={room.imageUrl || DEFAULT_IMG}
-                    alt={room.type}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = DEFAULT_IMG;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                <div className="relative h-48 sm:h-56 overflow-hidden bg-slate-900">
+                  {room.videoUrl ? (
+                    <video
+                      key={room.videoUrl}
+                      src={room.videoUrl}
+                      poster={room.imageUrl || DEFAULT_IMG}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                  ) : (
+                    <img
+                      src={room.imageUrl || DEFAULT_IMG}
+                      alt={room.type}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_IMG;
+                      }}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
 
                   {/* Top Badges */}
                   <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
@@ -350,8 +428,8 @@ export default function RoomsSection({
                     </span>
                     <div className="flex items-center gap-1.5">
                       {room.videoUrl && (
-                        <span className="px-2.5 py-1 bg-black/70 text-white text-[9px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
-                          <i className="fa-solid fa-video text-rose-400 animate-pulse" /> Video
+                        <span className="px-2.5 py-1 bg-rose-600 text-white text-[9px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1 shadow-md">
+                          <i className="fa-solid fa-play text-white animate-pulse" /> Video Tour
                         </span>
                       )}
                       <span className={`px-3 py-1 ${room.badgeClass} text-[10px] uppercase rounded-full shadow-lg`}>
@@ -360,8 +438,8 @@ export default function RoomsSection({
                     </div>
                   </div>
 
-                  {/* Bottom Room Headline in photo (Explicit White Text via style & !important to override light mode defaults) */}
-                  <div className="absolute bottom-3.5 left-4 right-4 text-white z-10" style={{ color: '#ffffff' }}>
+                  {/* Bottom Room Headline in photo */}
+                  <div className="absolute bottom-3.5 left-4 right-4 text-white z-10 pointer-events-none" style={{ color: '#ffffff' }}>
                     <h3 className="text-lg sm:text-xl font-black text-white !text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]" style={{ color: '#ffffff' }}>{room.type}</h3>
                     <div className="flex items-center gap-2.5 text-[11px] text-white/95 !text-white/95 font-bold mt-0.5 drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]" style={{ color: 'rgba(255,255,255,0.95)' }}>
                       <span>Kamar {room.number}</span>
@@ -430,116 +508,154 @@ export default function RoomsSection({
         </div>
       )}
 
-      {/* Swiper Carousel for All Filtered Rooms */}
-      <div className="reveal delay-2" ref={swiperRef}>
-        <div className="swiper swiperRooms">
-          <div className="swiper-wrapper py-2">
-            {filtered.map((room) => (
-              <div key={room.id} className="swiper-slide h-auto">
-                <div className="neu-card-sm rounded-2xl sm:rounded-3xl overflow-hidden group h-full transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between">
-                  <div>
-                    <div className="relative h-44 sm:h-52 overflow-hidden bg-slate-100 dark:bg-slate-800">
-                      <img
-                        src={room.imageUrl || DEFAULT_IMG}
-                        alt={room.number}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_IMG;
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                      
-                      <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
-                        <span className={`px-3 py-0.5 ${statusColor(room.status)} text-[9px] font-bold uppercase rounded-full shadow-md`}>
-                          {room.status}
-                        </span>
-                        {room.videoUrl && (
-                          <span className="px-2 py-0.5 bg-black/70 text-white text-[8px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1">
-                            <i className="fa-solid fa-video text-rose-400" /> Video Tour
-                          </span>
-                        )}
-                      </div>
+      {/* Modern Paginated Catalog Grid (Clean, Luxurious & Organised for unlimited rooms) */}
+      <div className="space-y-6 pt-4 border-t border-slate-200/60 dark:border-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <i className="fa-solid fa-list-check text-[#047857] dark:text-emerald-400" />
+              Katalog Seluruh Unit Kamar
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Menampilkan {Math.min(visibleCount, filtered.length)} dari {filtered.length} kamar terdaftar
+            </p>
+          </div>
 
-                      <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white z-10" style={{ color: '#ffffff' }}>
-                        <h3 className="text-base font-black text-white !text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]" style={{ color: '#ffffff' }}>{room.type}</h3>
-                        <p className="text-[11px] text-white/95 !text-white/95 font-bold drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]" style={{ color: 'rgba(255,255,255,0.95)' }}>Kamar {room.number} • Lantai {room.floor} • {room.size || '20 m²'}</p>
-                      </div>
-                    </div>
-
-                    <div className="p-4 sm:p-5 space-y-3">
-                      {room.facilities && room.facilities.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {room.facilities.slice(0, 3).map((f) => (
-                            <span key={f} className="px-2.5 py-1 neu-card-sm rounded-lg text-[9px] text-slate-700 dark:text-slate-300 font-medium">
-                              {f}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-4 sm:p-5 pt-0">
-                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/60 dark:border-white/10">
-                      <div>
-                        <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{formatPrice(room.price)}</span>
-                        <span className="text-[9px] text-slate-500 dark:text-slate-400 block">/bulan</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          openRoomDetail(room);
-                        }}
-                        className="relative z-20 cursor-pointer px-4 py-2 neu-btn rounded-xl text-[11px] font-bold text-slate-900 dark:text-white transition-all duration-200"
-                      >
-                        Detail &amp; Video
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {filtered.length > 6 && visibleCount < filtered.length && (
+              <button
+                type="button"
+                onClick={() => setVisibleCount((c) => c + 6)}
+                className="px-4 py-2 neu-btn text-xs font-bold text-[#047857] dark:text-emerald-300 rounded-xl cursor-pointer hover:scale-105 transition-all flex items-center gap-1.5"
+              >
+                <span>Muat Lebih Banyak (+6)</span>
+                <i className="fa-solid fa-plus text-[10px]" />
+              </button>
+            )}
+            {visibleCount > 6 && (
+              <button
+                type="button"
+                onClick={() => setVisibleCount(6)}
+                className="px-3 py-2 neu-btn text-xs font-bold text-slate-600 dark:text-slate-400 rounded-xl cursor-pointer hover:scale-105 transition-all"
+              >
+                Ciutkan
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Custom Luxury Navigation Controls (← [🏠] →) */}
-        <div className="flex items-center justify-center gap-3 mt-6 sm:mt-8">
-          {/* Left Arrow Button */}
-          <button
-            type="button"
-            onClick={() => swiperInstance.current?.slidePrev()}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full neu-btn text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer shrink-0"
-            title="Unit Sebelumnya"
-            aria-label="Previous Slide"
-          >
-            <i className="fa-solid fa-arrow-left" />
-          </button>
+        {/* Room Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {filtered.slice(0, visibleCount).map((room, idx) => (
+            <div
+              key={room.id || idx}
+              className="neu-card-sm rounded-2xl sm:rounded-3xl overflow-hidden group transition-all duration-300 hover:scale-[1.02] flex flex-col justify-between"
+            >
+              <div>
+                <div className="relative h-44 sm:h-52 overflow-hidden bg-slate-900">
+                  {room.videoUrl ? (
+                    <video
+                      key={room.videoUrl}
+                      src={room.videoUrl}
+                      poster={room.imageUrl || DEFAULT_IMG}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                  ) : (
+                    <img
+                      src={room.imageUrl || DEFAULT_IMG}
+                      alt={room.number}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_IMG;
+                      }}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
+                  
+                  <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+                    <span className={`px-3 py-0.5 ${statusColor(room.status)} text-[9px] font-bold uppercase rounded-full shadow-md`}>
+                      {room.status}
+                    </span>
+                    {room.videoUrl && (
+                      <span className="px-2 py-0.5 bg-rose-600 text-white text-[8px] font-bold rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1 shadow-md">
+                        <i className="fa-solid fa-play text-white animate-pulse" /> Video Tour
+                      </span>
+                    )}
+                  </div>
 
-          {/* Center House Navigation Icon */}
-          <button
-            type="button"
-            onClick={() => swiperInstance.current?.slideTo(0)}
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full neu-btn text-[#047857] dark:text-emerald-400 flex items-center justify-center text-sm sm:text-base transition-all duration-300 cursor-pointer group shrink-0"
-            title="Kembali ke Unit Pertama"
-            aria-label="Reset to First Slide"
-          >
-            <i className="fa-solid fa-house group-hover:scale-110 transition-transform duration-200" />
-          </button>
+                  <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white z-10 pointer-events-none" style={{ color: '#ffffff' }}>
+                    <h3 className="text-base font-black text-white !text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]" style={{ color: '#ffffff' }}>{room.type}</h3>
+                    <p className="text-[11px] text-white/95 !text-white/95 font-bold drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]" style={{ color: 'rgba(255,255,255,0.95)' }}>Kamar {room.number} • Lantai {room.floor} • {room.size || '20 m²'}</p>
+                  </div>
+                </div>
 
-          {/* Right Arrow Button */}
-          <button
-            type="button"
-            onClick={() => swiperInstance.current?.slideNext()}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full neu-btn text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs sm:text-sm transition-all duration-200 cursor-pointer shrink-0"
-            title="Unit Selanjutnya"
-            aria-label="Next Slide"
-          >
-            <i className="fa-solid fa-arrow-right" />
-          </button>
+                <div className="p-4 sm:p-5 space-y-3">
+                  <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600 dark:text-slate-300 font-medium">
+                    <div className="flex items-center gap-1.5 neu-inset p-2 rounded-xl">
+                      <i className="fa-solid fa-bed text-amber-500" />
+                      <span className="truncate">{room.bedType || 'Queen Bed'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 neu-inset p-2 rounded-xl">
+                      <i className="fa-solid fa-bolt text-amber-500" />
+                      <span className="truncate">{room.electricity || 'Token Mandiri'}</span>
+                    </div>
+                  </div>
+
+                  {room.facilities && room.facilities.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {room.facilities.slice(0, 4).map((f) => (
+                        <span key={f} className="px-2.5 py-1 neu-card-sm rounded-lg text-[9px] text-slate-700 dark:text-slate-300 font-medium">
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 sm:p-5 pt-0">
+                <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/60 dark:border-white/10">
+                  <div>
+                    <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{formatPrice(room.price)}</span>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 block">/bulan</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      openRoomDetail(room);
+                    }}
+                    className="relative z-20 cursor-pointer px-4 py-2 neu-btn rounded-xl text-[11px] font-bold text-[#047857] dark:text-emerald-300 transition-all duration-200 flex items-center gap-1.5"
+                  >
+                    <span>Detail &amp; Booking</span>
+                    <i className="fa-solid fa-arrow-right text-[10px]" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+
+        {/* Bottom Load More Button */}
+        {filtered.length > visibleCount && (
+          <div className="text-center pt-4">
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + 6)}
+              className="px-6 py-3 neu-btn text-xs font-black text-[#047857] dark:text-emerald-400 rounded-2xl shadow-md hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer"
+            >
+              <i className="fa-solid fa-layer-group" />
+              <span>Tampilkan {filtered.length - visibleCount} Unit Kamar Lainnya</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Comprehensive Luxury Room Detail Modal (Photo Gallery + Video Tour + Categorized Facilities) */}
@@ -549,7 +665,7 @@ export default function RoomsSection({
           onClick={() => setDetailRoom(null)}
         >
           <div
-            className="neu-card rounded-3xl w-full max-w-2xl overflow-hidden animate-scale-in max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-white my-auto"
+            className="neu-card rounded-3xl w-full max-w-2xl overflow-hidden animate-scale-in max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-white my-auto border border-slate-200/80 dark:border-white/10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header Media (Photo Gallery vs Video Tour Switcher) */}

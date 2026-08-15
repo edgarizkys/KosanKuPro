@@ -28,9 +28,14 @@ async function main() {
       create: { name: 'Staf Kebersihan & Maintenance', email: 'staf@kosanku.pro', phone: '081200000004', passwordHash: 'demo123', role: Role.EMPLOYEE },
     }),
     prisma.user.upsert({
-      where: { email: 'vendor@kosanku.pro' },
+      where: { email: 'vendor.galon@kosanku.pro' },
       update: { passwordHash: 'demo123', role: Role.VENDOR },
-      create: { name: 'Vendor Mitra Laundry & Catering', email: 'vendor@kosanku.pro', phone: '081200000005', passwordHash: 'demo123', role: Role.VENDOR },
+      create: { name: 'Depot Air & Gas Suci', email: 'vendor.galon@kosanku.pro', phone: '081299887711', passwordHash: 'demo123', role: Role.VENDOR },
+    }),
+    prisma.user.upsert({
+      where: { email: 'vendor.laundry@kosanku.pro' },
+      update: { passwordHash: 'demo123', role: Role.VENDOR },
+      create: { name: 'Laundry Express Clean', email: 'vendor.laundry@kosanku.pro', phone: '081388776655', passwordHash: 'demo123', role: Role.VENDOR },
     }),
     prisma.user.upsert({
       where: { email: 'tenant@kosanku.pro' },
@@ -40,7 +45,7 @@ async function main() {
   ]);
   console.log(`✅ Multi-Role Accounts: ${multiRoleUsers.map((u) => u.email).join(', ')} (password: demo123)`);
 
-  const tenants = [multiRoleUsers[5]];
+  const tenants = [multiRoleUsers[6]];
 
   // Create property
   const property = await prisma.property.upsert({

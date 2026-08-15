@@ -393,26 +393,37 @@ export default function UserManagementView({
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Role Akun &amp; Akses *</label>
-                  <select
-                    value={formRole}
-                    onChange={(e) => {
-                      const r = e.target.value as RoleType;
-                      setFormRole(r);
-                      if (r === 'owner') setFormAvatar('👑');
-                      else if (r === 'admin') setFormAvatar('🛡️');
-                      else if (r === 'employee') setFormAvatar('👷');
-                      else if (r === 'vendor') setFormAvatar('🏪');
-                      else setFormAvatar('👤');
-                    }}
-                    className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white cursor-pointer"
-                  >
-                    <option value="owner">👑 Owner (Pemilik / Investor)</option>
-                    <option value="admin">🛡️ Admin (Super Admin Properti)</option>
-                    <option value="employee">👷 Employee (Staf Lapangan / Teknisi)</option>
-                    <option value="vendor">🏪 Vendor (Mitra Galon/Gas/Laundry)</option>
-                    <option value="tenant">👤 Tenant (Penghuni Kamar Kos)</option>
-                  </select>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Role Akun &amp; Akses *</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { r: 'owner', label: 'Owner', icon: '👑' },
+                      { r: 'admin', label: 'Admin', icon: '🛡️' },
+                      { r: 'employee', label: 'Employee', icon: '👷' },
+                      { r: 'vendor', label: 'Vendor', icon: '🏪' },
+                      { r: 'tenant', label: 'Tenant', icon: '👤' },
+                    ].map((item) => {
+                      const isSel = formRole === item.r;
+                      return (
+                        <button
+                          key={item.r}
+                          type="button"
+                          onClick={() => {
+                            const r = item.r as RoleType;
+                            setFormRole(r);
+                            setFormAvatar(item.icon);
+                          }}
+                          className={`p-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
+                            isSel
+                              ? 'bg-purple-600 text-white shadow-md'
+                              : 'neu-btn text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <span className="truncate">{item.icon} {item.label}</span>
+                          {isSel && <i className="fa-solid fa-circle-check text-[10px]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div>
@@ -450,17 +461,32 @@ export default function UserManagementView({
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Penugasan Cabang *</label>
-                  <select
-                    value={formBranchId}
-                    onChange={(e) => setFormBranchId(e.target.value)}
-                    className="w-full p-3 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white cursor-pointer"
-                  >
-                    <option value="all">Konsolidasi Semua Cabang</option>
-                    <option value="jkt">KosanKu Pro - Jakarta Selatan</option>
-                    <option value="bdg">KosanKu Pro - Dago Bandung</option>
-                    <option value="sby">KosanKu Pro - Gubeng Surabaya</option>
-                  </select>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">Penugasan Cabang *</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      { id: 'all', label: '🏢 Semua Cabang' },
+                      { id: 'jkt', label: '📍 Jakarta Selatan' },
+                      { id: 'bdg', label: '📍 Dago Bandung' },
+                      { id: 'sby', label: '📍 Gubeng Surabaya' },
+                    ].map((br) => {
+                      const isSel = formBranchId === br.id;
+                      return (
+                        <button
+                          key={br.id}
+                          type="button"
+                          onClick={() => setFormBranchId(br.id)}
+                          className={`p-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-between ${
+                            isSel
+                              ? 'bg-blue-600 text-white shadow-md'
+                              : 'neu-btn text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <span className="truncate">{br.label}</span>
+                          {isSel && <i className="fa-solid fa-circle-check text-[10px]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {formRole === 'tenant' ? (
