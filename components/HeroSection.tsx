@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface HeroSectionProps {
   onLogin: () => void;
@@ -11,6 +12,7 @@ interface HeroSectionProps {
 export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }: HeroSectionProps) {
   const [dismissCard, setDismissCard] = useState(false);
   const [doorOpen, setDoorOpen] = useState(false);
+  const { property } = useProperty();
 
   // Sync theme with document element
   useEffect(() => {
@@ -67,7 +69,10 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
               <img src="/images/logo.png" alt="KosanKu Pro Logo" className="w-full h-full object-cover rounded-xl" />
             </div>
             <div className="flex items-center gap-1.5 font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
-              KosanKu <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black text-[9px] sm:text-[10px] tracking-wider uppercase">PRO</span>
+              {property.slug === 'rshs' ? 'KosanKu' : 'KosanKu'}{' '}
+              <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black text-[9px] sm:text-[10px] tracking-wider uppercase">
+                {property.slug === 'rshs' ? 'RSHS' : 'PRO'}
+              </span>
             </div>
           </div>
 
@@ -145,13 +150,13 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
           
           {/* DESKTOP LAYER 1: Selling Display Typography (Harmonious & Perfectly Aligned) */}
           <div className="hidden sm:block hero-parallax-text absolute top-4 lg:top-6 w-full max-w-7xl mx-auto px-8 z-10 pointer-events-none select-none will-change-transform text-center sm:text-left">
-            <h1 className="text-[6.5rem] lg:text-[9.5rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.9] whitespace-nowrap drop-shadow-sm">
-              Sewa Kos <span className="text-[#047857] dark:text-emerald-400">Modern</span>
+            <h1 className="text-[6.0rem] lg:text-[8.5rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.9] whitespace-nowrap drop-shadow-sm">
+              {property.heroHeadline}
             </h1>
             <div className="relative flex items-center justify-start gap-4 pl-4 lg:pl-12 -mt-4 lg:-mt-6">
               <span className="w-12 lg:w-20 h-1.5 bg-[#047857] dark:bg-emerald-400 rounded-full shadow-sm" />
-              <h2 className="text-[5.5rem] lg:text-[8.5rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-[0.9] whitespace-nowrap drop-shadow-sm">
-                Siap Huni.
+              <h2 className="text-[5.0rem] lg:text-[7.5rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-[0.9] whitespace-nowrap drop-shadow-sm">
+                {property.heroSubheadline}
               </h2>
             </div>
           </div>
@@ -159,13 +164,13 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
           {/* MOBILE LAYER 1: Luxury Stacked Editorial Typography */}
           <div className="block sm:hidden hero-parallax-text absolute top-10 left-5 right-5 z-10 pointer-events-none select-none will-change-transform">
             <div className="flex flex-col items-start space-y-0">
-              <h1 className="text-[2.5rem] xs:text-[2.8rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.95]">
-                Sewa Kos <span className="text-[#047857] dark:text-emerald-400">Modern</span>
+              <h1 className="text-[2.3rem] xs:text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.95]">
+                {property.heroHeadline}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <div className="w-6 h-1 bg-amber-500 rounded-full" />
-                <span className="text-[1.8rem] xs:text-[2.0rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
-                  Siap Huni.
+                <span className="text-[1.7rem] xs:text-[1.9rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
+                  {property.heroSubheadline}
                 </span>
               </div>
             </div>

@@ -106,7 +106,7 @@ const INITIAL_EMPLOYEES: EmployeeMaster[] = [
 ];
 
 const INITIAL_OWNERS: OwnerMaster[] = [
-  { id: 'OWN-01', name: 'Bapak Hendra (Owner Utama)', email: 'owner@kosanku.com', phone: '0811-9988-7766', sharePercent: 70, bankAccount: 'BCA 8830-1928-44' },
+  { id: 'OWN-01', name: 'Ibu Dewi Tri Oktariani (Owner Utama)', email: 'owner@kosanku.pro', phone: '0811-9988-7766', sharePercent: 70, bankAccount: 'BCA 8830-1928-44' },
   { id: 'OWN-02', name: 'Ibu Rina (Co-Owner / Investor)', email: 'rina@kosanku.com', phone: '0811-2233-4455', sharePercent: 30, bankAccount: 'Mandiri 127-00-998877' },
 ];
 

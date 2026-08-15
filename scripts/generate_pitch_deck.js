@@ -1,0 +1,510 @@
+import fs from 'fs';
+import path from 'path';
+
+const pitchDeckPdfHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive_Pitch_Deck_KosanKu_Pro_SaaS_2026</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+    
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 14mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      line-height: 1.45;
+      font-size: 9.5pt;
+      margin: 0;
+      padding: 0;
+    }
+
+    .page-container {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    /* Print Control Bar */
+    .no-print-bar {
+      background: #0f172a;
+      color: white;
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    .no-print-bar button {
+      background: linear-gradient(135deg, #047857, #059669);
+      color: white;
+      border: none;
+      font-weight: 800;
+      padding: 10px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 10pt;
+      box-shadow: 0 2px 8px rgba(4, 120, 87, 0.4);
+    }
+
+    .no-print-bar button:hover {
+      opacity: 0.95;
+    }
+
+    /* Header / Cover Hero */
+    .cover-hero {
+      background: linear-gradient(135deg, #022c22 0%, #064e3b 40%, #047857 80%, #0d9488 100%);
+      color: white;
+      padding: 32px 28px;
+      border-radius: 18px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .cover-hero .badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #a7f3d0;
+      font-size: 8pt;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .cover-hero h1 {
+      font-size: 25pt;
+      font-weight: 900;
+      margin: 0 0 6px 0;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+    }
+
+    .cover-hero p {
+      font-size: 10pt;
+      margin: 6px 0 0 0;
+      color: #e2e8f0;
+      max-width: 95%;
+      line-height: 1.4;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 8pt;
+      text-align: center;
+    }
+
+    .meta-grid strong {
+      display: block;
+      color: #047857;
+      font-size: 8.5pt;
+    }
+
+    /* Section Styling */
+    .section-title {
+      font-size: 12.5pt;
+      font-weight: 900;
+      color: #064e3b;
+      border-bottom: 2px solid #047857;
+      padding-bottom: 4px;
+      margin: 22px 0 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-badge {
+      font-size: 7.5pt;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      text-transform: uppercase;
+    }
+
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      page-break-inside: avoid;
+    }
+
+    .card.highlight {
+      border-left: 4px solid #047857;
+      background: #f0fdf4;
+    }
+
+    .card h3 {
+      font-size: 10pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card p {
+      font-size: 8pt;
+      color: #475569;
+      margin: 0 0 6px 0;
+      line-height: 1.4;
+    }
+
+    /* Mobile App Mockup Box */
+    .mobile-showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 16px 0;
+    }
+
+    .phone-mockup {
+      border: 3px solid #1e293b;
+      border-radius: 20px;
+      padding: 14px 12px;
+      background: #0f172a;
+      color: white;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      position: relative;
+    }
+
+    .phone-mockup .notch {
+      width: 70px;
+      height: 10px;
+      background: #1e293b;
+      border-radius: 0 0 8px 8px;
+      margin: -14px auto 10px auto;
+    }
+
+    .phone-mockup .app-screen {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 10px;
+      color: #0f172a;
+      font-size: 7.5pt;
+    }
+
+    .app-screen h4 {
+      margin: 0 0 4px 0;
+      font-size: 9pt;
+      font-weight: 900;
+      color: #047857;
+    }
+
+    .app-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 6px;
+      background: #f8fafc;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      border-left: 2px solid #047857;
+    }
+
+    /* Financial Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      font-size: 8pt;
+    }
+
+    th {
+      background-color: #047857;
+      color: #ffffff;
+      font-weight: 800;
+      text-align: left;
+      padding: 6px 8px;
+      border: 1px solid #047857;
+      text-transform: uppercase;
+      font-size: 7.5pt;
+    }
+
+    td {
+      border: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      color: #334155;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .badge-profit {
+      background: #dcfce7;
+      color: #15803d;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 7.5pt;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar for Direct Browser Action -->
+  <div class="no-print-bar">
+    <div>
+      <strong>📊 INVESTOR PITCH DECK & EXECUTIVE REPORT — KOSANKU PRO SAAS 2026</strong>
+      <span style="font-size: 8.5pt; color: #94a3b8; margin-left: 10px;">Siap Cetak / Download PDF</span>
+    </div>
+    <button onclick="window.print()">🖨️ Cetak / Download PDF Sekarang</button>
+  </div>
+
+  <div class="page-container" style="padding: 16px;">
+
+    <!-- COVER BANNER -->
+    <div class="cover-hero">
+      <span class="badge">PropTech SaaS & Property Management Disruption</span>
+      <h1>KosanKu Pro</h1>
+      <p>Laporan Eksekutif Investasi & Rangkuman Arsitektur PropTech SaaS: Mengubah Pengelolaan Kosan Konvensional Menjadi Bisnis Otomatis (*Autonomous Property Management*), Terintegrasi IoT Smart Lock, Midtrans QRIS, dan Ekosistem Mobile App (iOS & Android).</p>
+    </div>
+
+    <!-- METRICS BAR -->
+    <div class="meta-grid">
+      <div><span>Tipe Platform</span><strong>B2B2C PropTech SaaS</strong></div>
+      <div><span>Model Monetisasi</span><strong>SaaS Subscription & Take-Rate</strong></div>
+      <div><span>Target Pasar</span><strong>120.000+ Kosan Modern di RI</strong></div>
+      <div><span>Status Teknologi</span><strong>Production Live Ready v2.5</strong></div>
+    </div>
+
+    <!-- 1. PROBLEM & MARKET OPPORTUNITY -->
+    <div class="section-title">
+      <span>🚨 1. Problem & Peluang Pasar (Market Opportunity)</span>
+      <span class="section-badge">Market Analysis</span>
+    </div>
+
+    <div class="two-col-grid">
+      <div class="card">
+        <h3>❌ Problem Pengelolaan Kosan Konvensional</h3>
+        <p>• <strong>Owner Terbelenggu Operasional</strong>: Harus menagih sewa manual via chat WA, mencatat pengeluaran kertas rawan hilang, dan menghitung bagi hasil co-investor yang rumit.</p>
+        <p>• <strong>Fraud & Kebocoran Pasokan</strong>: Tidak ada audit fisik berkala (Stock Opname) sehingga stok galon, gas, bohlam, dan remote AC sering hilang tanpa jejak.</p>
+        <p>• <strong>Komunikasi Terputus</strong>: Pesanan galon & laundry dari tenant tidak tersambung langsung ke vendor dan kurir staf.</p>
+      </div>
+
+      <div class="card highlight">
+        <h3>💡 Solusi Terobosan KosanKu Pro</h3>
+        <p>• <strong>Auto-Pilot AI Management Engine</strong>: 5 mesin otomatisasi yang mem-plot pesanan suplai, membuat invoice tagihan add-on, dan mengirim pengingat WA jatuh tempo tanpa campur tangan manusia.</p>
+        <p>• <strong>Stock Opname Terverifikasi GPS</strong>: Audit fisik rutin akhir bulan dengan bukti foto ber-watermark GPS dan deteksi selisih stok (*discrepancy*).</p>
+        <p>• <strong>Pusat Plotting Terarah</strong>: Pesanan tenant langsung disalurkan ke vendor dan staf yang bertugas dengan notifikasi real-time.</p>
+      </div>
+    </div>
+
+    <!-- 2. ARSITEKTUR PLATFORM & ECOSYSTEM -->
+    <div class="section-title">
+      <span>🏛️ 2. Arsitektur Ekosistem 5-Role Terisolasi</span>
+      <span class="section-badge">Core System</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Role Pengguna</th>
+          <th>Akses Platform</th>
+          <th>Fungsi Utama & Value Proposition</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>👑 Property Owner & Investor</strong></td>
+          <td>Web SaaS & Mobile iOS/Android</td>
+          <td>Monitoring P&L, Dividen Investor, Approval Pengeluaran 1-Klik, Verifikasi Stock Opname, Kontrol Auto-Pilot AI.</td>
+        </tr>
+        <tr>
+          <td><strong>🛡️ Admin Operasional</strong></td>
+          <td>Web Dashboard</td>
+          <td>Kasir Digital QRIS Midtrans, Helpdesk Tiket Komplain Kamar, OCR Scanner Nota Belanja, Security CCTV Gate Audit.</td>
+        </tr>
+        <tr>
+          <td><strong>👷 Staf Lapangan & Teknisi</strong></td>
+          <td>Mobile Field App (Android/iOS)</td>
+          <td>Formulir Cek-In / Cek-Out Kamar (7 Aset Fisik), Lembar Audit Stock Opname (GPS Foto), Pengajuan Dana Darurat.</td>
+        </tr>
+        <tr>
+          <td><strong>🏪 Mitra Vendor Suplai</strong></td>
+          <td>Vendor Mobile/Web Portal</td>
+          <td>Penerimaan Orderan Masuk Galon/Gas/Laundry, Tracking Pengantaran Kurir, Add-On Tagihan Otomatis ke Invoice Tenant.</td>
+        </tr>
+        <tr>
+          <td><strong>👤 Penyewa (Tenant)</strong></td>
+          <td>Tenant Mobile App (iOS/Android)</td>
+          <td>Akses Smart Door Lock (IoT), Pesan Galon/Laundry 1-Klik, Bayar Sewa QRIS/VA Midtrans, Lapor Kerusakan Kamar.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Page Break for Next Page -->
+    <div class="page-break"></div>
+
+    <!-- 3. GAMBARAN MOBILE APP (IOS & ANDROID) -->
+    <div class="section-title">
+      <span>📱 3. Gambaran Mobile App Ekosistem (iOS & Android)</span>
+      <span class="section-badge">Native Mobile Experience</span>
+    </div>
+
+    <p style="font-size: 8.5pt; color: #475569; margin-bottom: 10px;">
+      KosanKu Pro hadir dengan aplikasi mobile *Cross-Platform* (React Native / Flutter) untuk iOS (App Store) dan Android (Google Play Store) yang dirancang khusus untuk kenyamanan pengguna sehari-hari:
+    </p>
+
+    <div class="mobile-showcase">
+      <!-- Phone Mockup 1: Tenant App -->
+      <div class="phone-mockup">
+        <div class="notch"></div>
+        <div style="text-align: center; margin-bottom: 8px; font-weight: 800; font-size: 8.5pt;">
+          📱 TENANT MOBILE APP (iOS & Android)
+        </div>
+        <div class="app-screen">
+          <h4>🏠 KosanKu Living — Kamar A-101</h4>
+          <div style="font-size: 7pt; color: #64748b; margin-bottom: 6px;">Halo, Rian Pratama • Sewa Aktif s/d 31 Des 2026</div>
+          
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">🔓</span>
+            <div><strong>IoT Smart Door Unlock:</strong> Buka kunci pintu digital kamar 1-sentuhan via Bluetooth/NFC/Cloud.</div>
+          </div>
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">🛒</span>
+            <div><strong>Instant Supply Store:</strong> Order isi ulang galon Aqua & laundry kiloan langsung diantar ke kamar.</div>
+          </div>
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">💳</span>
+            <div><strong>Midtrans 1-Tap Pay:</strong> Bayar sewa & tagihan add-on via GoPay, QRIS, BCA & Mandiri VA.</div>
+          </div>
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">🔧</span>
+            <div><strong>Helpdesk Tiket:</strong> Foto kerusakan kran/AC ➔ Teknisi langsung ditugaskan dengan SLA 2 jam.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone Mockup 2: Staff & Owner Mobile App -->
+      <div class="phone-mockup">
+        <div class="notch"></div>
+        <div style="text-align: center; margin-bottom: 8px; font-weight: 800; font-size: 8.5pt;">
+          📱 OWNER & FIELD STAFF APP
+        </div>
+        <div class="app-screen">
+          <h4>👑 KosanKu Owner & Field Pro</h4>
+          <div style="font-size: 7pt; color: #64748b; margin-bottom: 6px;">Properti: KosanKu Pro Residence Bandung</div>
+          
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">🔔</span>
+            <div><strong>Live Push Notifications:</strong> Notifikasi instan saat ada booking baru masuk, DP dibayar, & pengajuan dana.</div>
+          </div>
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">📋</span>
+            <div><strong>Mobile Room Inspection:</strong> Staf centang 7 checklist aset kamar & foto kondisi saat cek-in/out.</div>
+          </div>
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">📦</span>
+            <div><strong>GPS Watermark Stock Opname:</strong> Hitung stok gudang & foto bukti fisik dengan lokasi akurat anti-fraud.</div>
+          </div>
+          <div class="app-feature-item">
+            <span style="font-size: 10pt;">📊</span>
+            <div><strong>Owner Pocket P&L:</strong> Pantau laba bersih harian, tingkat okupansi kamar, dan dividen dari saku Anda.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. BUSINESS MODEL & TRACTION PROJECTIONS -->
+    <div class="section-title">
+      <span>💰 4. Model Bisnis, Unit Economics & Proyeksi Finansial</span>
+      <span class="section-badge">Monetization & ROI</span>
+    </div>
+
+    <div class="two-col-grid">
+      <div class="card">
+        <h3>💵 Sumber Pendapatan SaaS (Revenue Streams)</h3>
+        <p>1. <strong>SaaS Subscription per Pintu</strong>: Rp 15.000 - Rp 25.000 / kamar / bulan untuk pengelola kosan.</p>
+        <p>2. <strong>Payment Gateway Take-Rate</strong>: Komisi transaksi 0.7% - 1.2% dari setiap pembayaran sewa QRIS/VA.</p>
+        <p>3. <strong>Vendor Marketplace Fee</strong>: Komisi 3% - 5% dari setiap pemesanan galon, gas, & laundry.</p>
+      </div>
+
+      <div class="card highlight">
+        <h3>📈 Proyeksi Pertumbuhan 3 Tahun (Target)</h3>
+        <p>• <strong>Tahun 1</strong>: 50 Properti (1.200 Kamar) ➔ ARR Rp 360 Juta</p>
+        <p>• <strong>Tahun 2</strong>: 250 Properti (6.000 Kamar) ➔ ARR Rp 1.8 Miliar</p>
+        <p>• <strong>Tahun 3</strong>: 1.000 Properti (25.000 Kamar) ➔ ARR Rp 7.5 Miliar</p>
+        <p><span class="badge-profit">Gross Margin SaaS: 84% • Customer LTV/CAC: 4.8x</span></p>
+      </div>
+    </div>
+
+    <!-- 5. KESIMPULAN & INVESTMENT ASK -->
+    <div class="section-title">
+      <span>🤝 5. Ringkasan Investasi & Tahap Pendanaan</span>
+      <span class="section-badge">Investment Ask</span>
+    </div>
+
+    <div class="card" style="background: #f8fafc; border: 1px solid #cbd5e1;">
+      <p style="margin: 0; font-size: 8.5pt; color: #1e293b; line-height: 1.5;">
+        KosanKu Pro berada di posisi terdepan untuk merevolusi industri kos-kosan Indonesia senilai $3.2 Miliar dengan mengawinkan perangkat lunak otomasi (*AI Automation*), perangkat keras IoT (*Smart Lock*), dan ekosistem suplai lokal (*Local Merchant Network*). Platform telah 100% tervalidasi, siap beroperasi (*Production Live*), dan siap diekspansi ke seluruh kota mahasiswa & perkantoran di Indonesia.
+      </p>
+    </div>
+
+    <div class="footer-note">
+      KosanKu Pro SaaS Platform • Laporan Pitching Investor Resmi • Hak Cipta © 2026 PT KosanKu Pro Indonesia
+    </div>
+
+  </div>
+
+</body>
+</html>
+`;
+
+const publicDir = path.join(process.cwd(), 'public');
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
+fs.writeFileSync(path.join(publicDir, 'Executive_Pitch_Deck_KosanKuPro_2026.html'), pitchDeckPdfHtml, 'utf-8');
+console.log('Executive Pitch Deck PDF generated successfully at /Executive_Pitch_Deck_KosanKuPro_2026.html');

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { PropertyProvider } from '@/lib/PropertyContext';
 
 export const viewport = {
   width: 'device-width',
@@ -9,8 +10,8 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'KosanKu Pro — Luxury Living Management',
-  description: 'Platform manajemen kos premium dengan pembayaran otomatis, AI chatbot, dan smart living.',
+  title: 'KosanKu Pro — Multi-Property Co-Living Management',
+  description: 'Platform manajemen kos premium terotomasi: IoT Smart Lock, QRIS, dan multi-cabang.',
 };
 
 export default function RootLayout({
@@ -41,7 +42,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col antialiased selection:bg-orchid-violet/40 noise-overlay">
-        {children}
+        <PropertyProvider>
+          {children}
+        </PropertyProvider>
         <script
           src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"
           crossOrigin="anonymous"

@@ -9,38 +9,68 @@ async function main() {
   const multiRoleUsers = await Promise.all([
     prisma.user.upsert({
       where: { email: 'superadmin@kosanku.pro' },
-      update: { passwordHash: 'demo123', role: Role.SUPERADMIN },
+      update: { name: 'Super Admin KosanKu', passwordHash: 'demo123', role: Role.SUPERADMIN },
       create: { name: 'Super Admin KosanKu', email: 'superadmin@kosanku.pro', phone: '081200000001', passwordHash: 'demo123', role: Role.SUPERADMIN },
     }),
     prisma.user.upsert({
-      where: { email: 'admin@kosanku.pro' },
-      update: { passwordHash: 'demo123', role: Role.ADMIN },
-      create: { name: 'Admin Pengelola Kost', email: 'admin@kosanku.pro', phone: '081200000002', passwordHash: 'demo123', role: Role.ADMIN },
+      where: { email: 'owner@kosanku.pro' },
+      update: { name: 'Ibu Dewi Tri Oktariani', passwordHash: 'demo123', role: Role.OWNER },
+      create: { name: 'Ibu Dewi Tri Oktariani', email: 'owner@kosanku.pro', phone: '081199887766', passwordHash: 'demo123', role: Role.OWNER },
     }),
     prisma.user.upsert({
-      where: { email: 'owner@kosanku.pro' },
-      update: { passwordHash: 'demo123', role: Role.OWNER },
-      create: { name: 'Owner / Investor Kosan', email: 'owner@kosanku.pro', phone: '081200000003', passwordHash: 'demo123', role: Role.OWNER },
+      where: { email: 'owner@kosanku.com' },
+      update: { name: 'Ibu Dewi Tri Oktariani', passwordHash: 'demo123', role: Role.OWNER },
+      create: { name: 'Ibu Dewi Tri Oktariani', email: 'owner@kosanku.com', phone: '081199887766', passwordHash: 'demo123', role: Role.OWNER },
+    }),
+    prisma.user.upsert({
+      where: { email: 'admin@kosanku.pro' },
+      update: { name: 'Pak Admin Operasional (Siti)', passwordHash: 'demo123', role: Role.ADMIN },
+      create: { name: 'Pak Admin Operasional (Siti)', email: 'admin@kosanku.pro', phone: '081234567890', passwordHash: 'demo123', role: Role.ADMIN },
+    }),
+    prisma.user.upsert({
+      where: { email: 'admin2@kosanku.pro' },
+      update: { name: 'Rina (Admin Keuangan)', passwordHash: 'demo123', role: Role.ADMIN },
+      create: { name: 'Rina (Admin Keuangan)', email: 'admin2@kosanku.pro', phone: '081299883344', passwordHash: 'demo123', role: Role.ADMIN },
     }),
     prisma.user.upsert({
       where: { email: 'staf@kosanku.pro' },
-      update: { passwordHash: 'demo123', role: Role.EMPLOYEE },
-      create: { name: 'Staf Kebersihan & Maintenance', email: 'staf@kosanku.pro', phone: '081200000004', passwordHash: 'demo123', role: Role.EMPLOYEE },
+      update: { name: 'Bambang Prasetyo (Teknisi)', passwordHash: 'demo123', role: Role.EMPLOYEE },
+      create: { name: 'Bambang Prasetyo (Teknisi)', email: 'staf@kosanku.pro', phone: '081355443322', passwordHash: 'demo123', role: Role.EMPLOYEE },
+    }),
+    prisma.user.upsert({
+      where: { email: 'staf.kebersihan@kosanku.pro' },
+      update: { name: 'Rudi Hartono (Kebersihan)', passwordHash: 'demo123', role: Role.EMPLOYEE },
+      create: { name: 'Rudi Hartono (Kebersihan)', email: 'staf.kebersihan@kosanku.pro', phone: '081399881122', passwordHash: 'demo123', role: Role.EMPLOYEE },
     }),
     prisma.user.upsert({
       where: { email: 'vendor.galon@kosanku.pro' },
-      update: { passwordHash: 'demo123', role: Role.VENDOR },
+      update: { name: 'Depot Air & Gas Suci', passwordHash: 'demo123', role: Role.VENDOR },
       create: { name: 'Depot Air & Gas Suci', email: 'vendor.galon@kosanku.pro', phone: '081299887711', passwordHash: 'demo123', role: Role.VENDOR },
     }),
     prisma.user.upsert({
       where: { email: 'vendor.laundry@kosanku.pro' },
-      update: { passwordHash: 'demo123', role: Role.VENDOR },
+      update: { name: 'Laundry Express Clean', passwordHash: 'demo123', role: Role.VENDOR },
       create: { name: 'Laundry Express Clean', email: 'vendor.laundry@kosanku.pro', phone: '081388776655', passwordHash: 'demo123', role: Role.VENDOR },
     }),
     prisma.user.upsert({
+      where: { email: 'vendor.teknik@kosanku.pro' },
+      update: { name: 'Toko Bangunan & Teknik Subur', passwordHash: 'demo123', role: Role.VENDOR },
+      create: { name: 'Toko Bangunan & Teknik Subur', email: 'vendor.teknik@kosanku.pro', phone: '081511223344', passwordHash: 'demo123', role: Role.VENDOR },
+    }),
+    prisma.user.upsert({
       where: { email: 'tenant@kosanku.pro' },
-      update: { passwordHash: 'demo123', role: Role.TENANT },
-      create: { name: 'Rian Pratama (Penghuni A-101)', email: 'tenant@kosanku.pro', phone: '081200000006', passwordHash: 'demo123', role: Role.TENANT },
+      update: { name: 'Rian Pratama (Penghuni A-101)', passwordHash: 'demo123', role: Role.TENANT },
+      create: { name: 'Rian Pratama (Penghuni A-101)', email: 'tenant@kosanku.pro', phone: '081566778899', passwordHash: 'demo123', role: Role.TENANT },
+    }),
+    prisma.user.upsert({
+      where: { email: 'tenant2@kosanku.pro' },
+      update: { name: 'Siti Rahma (Penghuni B-201)', passwordHash: 'demo123', role: Role.TENANT },
+      create: { name: 'Siti Rahma (Penghuni B-201)', email: 'tenant2@kosanku.pro', phone: '081233445566', passwordHash: 'demo123', role: Role.TENANT },
+    }),
+    prisma.user.upsert({
+      where: { email: 'tenant3@kosanku.pro' },
+      update: { name: 'Budi Santoso (Penghuni C-302)', passwordHash: 'demo123', role: Role.TENANT },
+      create: { name: 'Budi Santoso (Penghuni C-302)', email: 'tenant3@kosanku.pro', phone: '081377889900', passwordHash: 'demo123', role: Role.TENANT },
     }),
   ]);
   console.log(`✅ Multi-Role Accounts: ${multiRoleUsers.map((u) => u.email).join(', ')} (password: demo123)`);

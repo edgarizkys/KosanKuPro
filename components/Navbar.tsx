@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ViewType, RoleType } from '@/app/page';
 import KosanKuLogo from './KosanKuLogo';
 
@@ -18,9 +18,24 @@ interface NavbarProps {
 
 export default function Navbar({ view, role, theme, onToggleTheme, onLogout, onSwitchRole, onToggleNotif, onNavigate }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeUser, setActiveUser] = useState<{ name: string; email?: string } | null>(null);
   const isPublic = view === 'landing';
 
   const closeMobile = () => setMobileOpen(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedSession = localStorage.getItem('kosanku_user_session');
+        if (savedSession) {
+          const parsed = JSON.parse(savedSession);
+          if (parsed?.name) {
+            setActiveUser(parsed);
+          }
+        }
+      } catch {}
+    }
+  }, [role]);
 
   if (isPublic) {
     return null;
@@ -46,15 +61,16 @@ export default function Navbar({ view, role, theme, onToggleTheme, onLogout, onS
   };
 
   const userProfileName =
-    role === 'owner'
-      ? 'Bapak Hendra'
+    activeUser?.name ||
+    (role === 'owner'
+      ? 'Ibu Dewi Tri Oktariani'
       : role === 'admin'
       ? 'Pak Admin Properti'
       : role === 'employee'
       ? 'Bambang (Staf Lapangan)'
       : role === 'vendor'
       ? 'Depot Suci (Mitra Vendor)'
-      : 'Budi Santoso (Tenant A-101)';
+      : 'Budi Santoso (Tenant A-101)');
 
   return (
     <header className="sticky top-0 z-40 bg-[#f2f5fa]/95 dark:bg-[#141122]/95 backdrop-blur-xl border-b border-[#d1d9e6]/70 dark:border-white/10 shadow-[0_6px_20px_rgba(163,177,198,0.35)] dark:shadow-[0_6px_20px_rgba(0,0,0,0.6)] px-4 sm:px-6 py-3.5 navbar-visible transition-colors">
