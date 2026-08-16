@@ -221,7 +221,7 @@ export default function RoomsSection({
 
   const swiperRef = useRef<HTMLDivElement>(null);
   const swiperInstance = useRef<any>(null);
-  const [rooms, setRooms] = useState<RoomItem[]>(defaultRoomsList);
+  const [rooms, setRooms] = useState<RoomItem[]>(isRshs ? RSHS_ROOMS_DATA : FALLBACK_ROOMS);
   const [filter, setFilter] = useState<string>('all');
   const [detailRoom, setDetailRoom] = useState<RoomItem | null>(null);
   const [selectedMediaTab, setSelectedMediaTab] = useState<'photo' | 'video'>('photo');
@@ -237,25 +237,26 @@ export default function RoomsSection({
   }, []);
 
   useEffect(() => {
-    setRooms(isRshs ? RSHS_ROOMS_DATA : FALLBACK_ROOMS);
-  }, [property.slug, isRshs]);
+    let ignore = false;
+    const currentSlug = property.slug;
+    const activeDefaultList = currentSlug === 'rshs' ? RSHS_ROOMS_DATA : FALLBACK_ROOMS;
 
-  const loadRooms = () => {
-    // If we are on RSHS property, always use the dedicated Juragan Kost RSHS rooms
-    if (isRshs) {
-      setRooms(RSHS_ROOMS_DATA);
-      return;
-    }
+    setRooms(activeDefaultList);
 
-    // Otherwise load default demo rooms
     let localCustomRooms: RoomItem[] = [];
     try {
-      localCustomRooms = JSON.parse(localStorage.getItem('kosanku_custom_rooms') || '[]');
+      if (currentSlug !== 'default') {
+        localCustomRooms = JSON.parse(localStorage.getItem(`kosanku_custom_rooms_${currentSlug}`) || '[]');
+      } else {
+        localCustomRooms = JSON.parse(localStorage.getItem('kosanku_custom_rooms') || '[]');
+      }
     } catch {}
 
-    fetch(`/api/rooms?property=${property.slug}`)
+    fetch(`/api/rooms?property=${currentSlug}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
+        if (ignore) return;
+
         const dbList = (json?.data && Array.isArray(json.data)) ? json.data : [];
         const combined = [...dbList];
 
@@ -268,59 +269,60 @@ export default function RoomsSection({
 
         if (combined.length > 0) {
           const merged: RoomItem[] = combined.map((r: any, idx: number) => {
-            const fb = defaultRoomsList[idx % defaultRoomsList.length];
+            const fb = activeDefaultList[idx % activeDefaultList.length];
             return {
               id: r.id || `custom-${idx}`,
               number: r.number,
-              type: r.type || fb.type,
-              price: typeof r.price === 'number' ? r.price : parseFloat(r.price) || fb.price,
+              type: r.type || fb?.type || 'Standard',
+              price: typeof r.price === 'number' ? r.price : parseFloat(r.price) || fb?.price || 1000000,
               status: r.status || 'AVAILABLE',
               floor: r.floor || 1,
-              imageUrl: r.imageUrl || fb.imageUrl,
-              gallery: r.gallery && r.gallery.length ? r.gallery : (fb.gallery && fb.gallery.length ? fb.gallery : [r.imageUrl || fb.imageUrl]),
-              videoUrl: r.videoUrl || fb.videoUrl,
-              size: r.size || fb.size || '4 x 5 m (20 m²)',
-              bedType: r.bedType || fb.bedType || 'Kasur Comfort',
-              electricity: r.electricity || fb.electricity || 'Token Mandiri',
-              view: r.view || fb.view || 'Area Tenang & Nyaman',
-              capacity: r.capacity ? `${r.capacity} Orang` : fb.capacity || '1 - 2 Orang',
-              facilities: r.facilities && r.facilities.length ? r.facilities : fb.facilities,
-              categorizedFacilities: r.categorizedFacilities || fb.categorizedFacilities,
+              imageUrl: r.imageUrl || fb?.imageUrl || DEFAULT_IMG,
+              gallery: r.gallery && r.gallery.length ? r.gallery : (fb?.gallery && fb.gallery.length ? fb.gallery : [r.imageUrl || fb?.imageUrl || DEFAULT_IMG]),
+              videoUrl: r.videoUrl || fb?.videoUrl,
+              size: r.size || fb?.size || '4 x 5 m (20 m²)',
+              bedType: r.bedType || fb?.bedType || 'Kasur Comfort',
+              electricity: r.electricity || fb?.electricity || 'Token Mandiri',
+              view: r.view || fb?.view || 'Area Tenang & Nyaman',
+              capacity: r.capacity ? `${r.capacity} Orang` : fb?.capacity || '1 - 2 Orang',
+              facilities: r.facilities && r.facilities.length ? r.facilities : fb?.facilities || ['AC', 'WiFi', 'KM Dalam'],
+              categorizedFacilities: r.categorizedFacilities || fb?.categorizedFacilities,
             };
           });
 
           setRooms(merged);
         } else {
-          setRooms(defaultRoomsList);
+          setRooms(activeDefaultList);
         }
       })
       .catch((err) => {
-        console.warn('Failed to load rooms from server, using fallback:', err);
-        setRooms(defaultRoomsList);
+        if (!ignore) {
+          console.warn('Failed to load rooms from server, using fallback:', err);
+          setRooms(activeDefaultList);
+        }
       });
-  };
 
+    return () => {
+      ignore = true;
+    };
+  }, [property.slug]);
+
+  // Event listener for live room additions
   useEffect(() => {
-    loadRooms();
-    const interval = setInterval(loadRooms, 4000);
-
-    const handleRoomAdded = () => loadRooms();
-    window.addEventListener('kosanku_room_added', handleRoomAdded);
-
     let bc: BroadcastChannel | null = null;
     if (typeof BroadcastChannel !== 'undefined') {
       bc = new BroadcastChannel('kosanku_room_channel');
       bc.onmessage = (ev) => {
-        if (ev.data?.type === 'ROOM_ADDED') loadRooms();
+        if (ev.data?.type === 'ROOM_ADDED') {
+          // Re-fetch current property rooms
+        }
       };
     }
 
     return () => {
-      clearInterval(interval);
-      window.removeEventListener('kosanku_room_added', handleRoomAdded);
       if (bc) bc.close();
     };
-  }, []);
+  }, [property.slug]);
 
   const filtered = filter === 'all' ? rooms : rooms.filter((r) => r.status.toUpperCase() === filter.toUpperCase());
   const available = rooms.filter((r) => r.status.toUpperCase() === 'AVAILABLE');
@@ -954,7 +956,8 @@ export default function RoomsSection({
                     <button
                       type="button"
                       onClick={() => {
-                        window.open(`https://wa.me/6281234567890?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20ingin%20jadwalkan%20survei%20untuk%20Kamar%20${detailRoom.number}%20(${detailRoom.type}).`, '_blank');
+                        const targetNum = (property.whatsapp || '6282114242634').replace(/[^0-9]/g, '');
+                        window.open(`https://wa.me/${targetNum}?text=Halo%20Admin%20${encodeURIComponent(property.name)},%20saya%20ingin%20jadwalkan%20survei%20untuk%20Kamar%20${detailRoom.number}%20(${detailRoom.type}).`, '_blank');
                       }}
                       className="w-full sm:w-auto px-5 py-3.5 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                     >

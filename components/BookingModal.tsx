@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 export interface RoomForBooking {
   id: string;
@@ -42,6 +43,7 @@ export default function BookingModal({
   onBookingSuccess: (roomId: string) => void;
   isFullPage?: boolean;
 }) {
+  const { property } = useProperty();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState<BookingFormData>({
     email: '',
@@ -593,7 +595,10 @@ export default function BookingModal({
 
             <div className="w-full space-y-2 max-w-xs">
               <button type="button"
-                onClick={() => window.open(`https://wa.me/6281234567890?text=Halo%20Admin%20KosanKu!%20Saya%20${encodeURIComponent(form.namaLengkap)}%20sudah%20booking%20Kamar%20${room.number}.%20ID%20Booking:%20${bookingId}.%20Mohon%20konfirmasi.`, '_blank')}
+                onClick={() => {
+                  const targetNum = (property.whatsapp || '6282114242634').replace(/[^0-9]/g, '');
+                  window.open(`https://wa.me/${targetNum}?text=Halo%20Admin%20${encodeURIComponent(property.name)}!%20Saya%20${encodeURIComponent(form.namaLengkap)}%20sudah%20booking%20Kamar%20${room.number}.%20ID%20Booking:%20${bookingId}.%20Mohon%20konfirmasi.`, '_blank');
+                }}
                 className="w-full py-3 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2">
                 <i className="fa-brands fa-whatsapp text-sm" /> Konfirmasi via WhatsApp Admin
               </button>

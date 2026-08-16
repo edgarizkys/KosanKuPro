@@ -10,16 +10,55 @@ let cachedRooms: any[] = [
   { id: '4', number: 'B-202', type: 'Standard Room Single', price: 1200000, floor: 2, capacity: 1, facilities: ['AC', 'WiFi', 'KM Luar'], status: 'AVAILABLE', tenant: null, imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=600' },
 ];
 
-// GET /api/rooms — list with optional filters (status, floor, type, property/kosan) - Instant <5ms
+// GET /api/rooms — list with optional filters (status, floor, type, property/kosan)
 export async function GET(req: NextRequest) {
+  let propertyParam: string | null = null;
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
     const floor = searchParams.get('floor');
     const type = searchParams.get('type');
-    const propertyParam = searchParams.get('property') || searchParams.get('kosan');
+    propertyParam = searchParams.get('property') || searchParams.get('kosan');
+    const isRshs = propertyParam && propertyParam.toLowerCase() === 'rshs';
 
-    if (propertyParam && propertyParam.toLowerCase() === 'rshs') {
+    // 1. Direct DB Query filtered strictly by property
+    try {
+      const where: any = {};
+      if (status) where.status = status.toUpperCase();
+      if (floor) where.floor = parseInt(floor, 10);
+      if (type) where.type = { contains: type, mode: 'insensitive' };
+
+      if (propertyParam && propertyParam !== 'default') {
+        where.OR = [
+          { propertyId: propertyParam },
+          { property: { name: { contains: propertyParam, mode: 'insensitive' } } },
+        ];
+      } else {
+        where.OR = [
+          { propertyId: null },
+          { propertyId: 'default' }
+        ];
+      }
+
+      where.NOT = [
+        { number: { contains: 'EDGAR', mode: 'insensitive' } },
+        { type: { contains: 'SIREGAR', mode: 'insensitive' } },
+        { type: { contains: 'SUREGR', mode: 'insensitive' } },
+      ];
+
+      const dbRooms = await prisma.room.findMany({
+        where,
+        include: { tenant: { select: { id: true, name: true, phone: true } } },
+        orderBy: { number: 'asc' },
+      });
+
+      if (dbRooms && dbRooms.length > 0) {
+        return NextResponse.json({ data: dbRooms, count: dbRooms.length });
+      }
+    } catch {}
+
+    // Fallback for static RSHS if DB has no specific rooms for RSHS
+    if (isRshs) {
       const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
       let filteredRshs = [...RSHS_ROOMS_DATA];
       if (status) filteredRshs = filteredRshs.filter((r) => r.status === status.toUpperCase());
@@ -33,16 +72,12 @@ export async function GET(req: NextRequest) {
     if (floor) filtered = filtered.filter((r) => r.floor === parseInt(floor, 10));
     if (type) filtered = filtered.filter((r) => r.type.toLowerCase().includes(type.toLowerCase()));
 
-    // Background sync from DB non-blocking
-    prisma.room.findMany({
-      include: { tenant: { select: { id: true, name: true, phone: true } } },
-      orderBy: { number: 'asc' },
-    }).then((dbRooms) => {
-      if (dbRooms && dbRooms.length > 0) cachedRooms = dbRooms;
-    }).catch(() => {});
-
     return NextResponse.json({ data: filtered, count: filtered.length });
   } catch (error) {
+    if (propertyParam && propertyParam.toLowerCase() === 'rshs') {
+      const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
+      return NextResponse.json({ data: RSHS_ROOMS_DATA, count: RSHS_ROOMS_DATA.length });
+    }
     return NextResponse.json({ data: cachedRooms, count: cachedRooms.length });
   }
 }

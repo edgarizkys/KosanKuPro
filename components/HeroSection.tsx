@@ -65,7 +65,7 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
     <section className="relative w-full font-sans select-none overflow-hidden transition-colors">
       
       {/* Seamless Full-Width Canvas Container (Mobile: Compact Editorial | Desktop: Full Luxury) */}
-      <div className="relative w-full h-[420px] xs:h-[450px] sm:h-[84vh] sm:min-h-[640px] sm:max-h-[820px] bg-[#f8f7f4] dark:bg-[#121018] rounded-[2rem] sm:rounded-[3rem] border border-black/5 dark:border-white/10 overflow-hidden shadow-sm flex flex-col justify-between transition-colors">
+      <div className="relative w-full h-[450px] xs:h-[480px] sm:h-[84vh] sm:min-h-[640px] sm:max-h-[820px] bg-[#f8f7f4] dark:bg-[#121018] rounded-[2rem] sm:rounded-[3rem] border border-black/5 dark:border-white/10 overflow-hidden shadow-sm flex flex-col justify-between transition-colors">
         
         {/* Top Navbar Floating Inside Canvas */}
         <div className="relative z-40 flex items-center justify-between w-full px-4 py-3 sm:px-10 sm:py-5">
@@ -76,7 +76,7 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             </div>
             <div className="flex items-center gap-1.5 font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
               <span>{property.slug === 'rshs' ? 'KosanKu' : 'KosanKu'}</span>{' '}
-              <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black text-[9px] sm:text-[10px] tracking-wider uppercase">
+              <span suppressHydrationWarning className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black text-[9px] sm:text-[10px] tracking-wider uppercase">
                 {property.slug === 'rshs' ? 'RSHS' : 'PRO'}
               </span>
             </div>
@@ -239,9 +239,9 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
         </div>
 
         {/* LAYER 4: 100% NEUMORPHIC FLOATING WIDGET CARDS */}
-        {/* Prominent Floating CTA Card for Kosan Owners (Only shown on Demo SaaS website, hidden on plotted/custom branches like RSHS) */}
+        {/* Prominent Floating CTA Card for Kosan Owners (Only shown on Demo SaaS website on tablet/desktop to keep mobile house view 100% clean & unblocked) */}
         {isDemo && (
-          <div className="absolute top-[28%] sm:top-[32%] lg:top-[34%] left-4 sm:left-10 lg:left-14 z-40 w-[88%] xs:w-80 sm:w-84 max-w-sm animate-scale-in">
+          <div className="hidden sm:block absolute top-[32%] lg:top-[34%] left-10 lg:left-14 z-40 w-80 sm:w-84 max-w-sm animate-scale-in">
             <a
               href="https://wa.me/6282114242634?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20punya%20kosan%20dan%20belum%20punya%20sistem%20digital.%20Mau%20konsultasi%20gratis%20dan%20daftar%20sekarang."
               target="_blank"

@@ -33,7 +33,7 @@ export default function SaaSLeadModal({ onClose }: SaaSLeadModalProps) {
         `🚪 *Est. Jumlah Kamar*: ${totalRooms}%0A` +
         `💬 *Catatan*: ${notes || '-'}`;
 
-      const waUrl = `https://wa.me/6281234567890?text=${waMsg}`;
+      const waUrl = `https://wa.me/6282114242634?text=${waMsg}`;
       
       // Open WhatsApp window
       window.open(waUrl, '_blank');

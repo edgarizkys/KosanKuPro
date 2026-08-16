@@ -33,7 +33,7 @@ export const PROPERTIES_REGISTRY: Record<string, PropertyConfig> = {
     tagline: 'Luxury Living Management & Smart Co-Living',
     address: 'Jl. Merdeka No. 123, Kel. Sukajadi',
     city: 'Bandung',
-    whatsapp: '081234567890',
+    whatsapp: '+62 821-1424-2634',
     mapsUrl: 'https://maps.google.com/?q=-6.917464,107.619123',
     heroHeadline: 'Sewa Kos Modern',
     heroSubheadline: 'Siap Huni.',
@@ -141,6 +141,7 @@ const PropertyContext = createContext<PropertyContextType>({
 
 export function PropertyProvider({ children }: { children: React.ReactNode }) {
   const [activeSlug, setActiveSlug] = useState<string>('default');
+  const [dbProperty, setDbProperty] = useState<PropertyConfig | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -148,14 +149,12 @@ export function PropertyProvider({ children }: { children: React.ReactNode }) {
       const searchParams = new URLSearchParams(window.location.search);
       const urlSlugParam = searchParams.get('property') || searchParams.get('kosan');
 
-      // 1. Explicit Query Param (?kosan=rshs or ?kosan=default)
+      // 1. Explicit Query Param (?kosan=rshs, ?kosan=custom_slug, etc)
       if (urlSlugParam) {
         const slug = urlSlugParam.toLowerCase();
-        if (PROPERTIES_REGISTRY[slug]) {
-          setActiveSlug(slug);
-          localStorage.setItem('kosanku_active_property_slug', slug);
-          return;
-        }
+        setActiveSlug(slug);
+        localStorage.setItem('kosanku_active_property_slug', slug);
+        return;
       }
 
       // 2. Subdomain check (e.g. rshs.kosankupro.cloud)
@@ -170,16 +169,58 @@ export function PropertyProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Fetch dynamic DB property metadata if available in DB
+  useEffect(() => {
+    if (activeSlug && activeSlug !== 'default') {
+      fetch(`/api/properties?slug=${activeSlug}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && json.data && !Array.isArray(json.data) && json.data.name) {
+            const p = json.data;
+            const fallbackReg = PROPERTIES_REGISTRY[activeSlug] || PROPERTIES_REGISTRY['default'];
+            setDbProperty({
+              id: p.id,
+              slug: activeSlug,
+              name: p.name,
+              tagline: p.tagline || fallbackReg.tagline,
+              address: p.address || fallbackReg.address,
+              city: p.city || fallbackReg.city,
+              whatsapp: p.phone || fallbackReg.whatsapp,
+              mapsUrl: p.mapsUrl || fallbackReg.mapsUrl,
+              heroHeadline: p.name || fallbackReg.heroHeadline,
+              heroSubheadline: fallbackReg.heroSubheadline || (p.city ? `Di Area ${p.city}.` : 'Siap Huni.'),
+              accentColor: fallbackReg.accentColor || '#0284c7',
+              totalRooms: p.totalRooms || p.rooms?.length || fallbackReg.totalRooms,
+              featuredRooms: (p.rooms && p.rooms.length > 0) ? p.rooms.slice(0, 8).map((r: any) => ({
+                number: r.number,
+                type: r.type,
+                price: r.price,
+                size: '4 x 4 m',
+                imageUrl: r.imageUrl || '/images/rshs/Eksekutif/1.png',
+                facilities: r.facilities || ['AC', 'WiFi', 'KM Dalam'],
+              })) : fallbackReg.featuredRooms,
+            });
+          } else {
+            setDbProperty(null);
+          }
+        })
+        .catch(() => {
+          setDbProperty(null);
+        });
+    } else {
+      setDbProperty(null);
+    }
+  }, [activeSlug]);
+
   const handleSetPropertySlug = (slug: string) => {
-    if (PROPERTIES_REGISTRY[slug]) {
-      setActiveSlug(slug);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('kosanku_active_property_slug', slug);
-      }
+    setActiveSlug(slug);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kosanku_active_property_slug', slug);
     }
   };
 
-  const currentProperty = PROPERTIES_REGISTRY[activeSlug] || PROPERTIES_REGISTRY['default'];
+  const registryProp = PROPERTIES_REGISTRY[activeSlug] || PROPERTIES_REGISTRY['default'];
+  const currentProperty = dbProperty || registryProp;
 
   return (
     <PropertyContext.Provider

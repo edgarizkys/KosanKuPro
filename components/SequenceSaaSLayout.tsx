@@ -516,7 +516,7 @@ export default function SequenceSaaSLayout({
           const parsed = JSON.parse(savedUser);
           if (parsed.property && parsed.property.name) {
             setPropertyName(parsed.property.name);
-          } else if (parsed.name && parsed.role === 'OWNER') {
+          } else if (parsed?.name && parsed.role === 'OWNER') {
             setPropertyName(`Kosan ${parsed.name.split(' ')[0]}`);
           }
         } catch (e) {
@@ -1088,7 +1088,7 @@ export default function SequenceSaaSLayout({
                 title="Pilih Cabang Properti Kosan"
               >
                 <i className="fa-solid fa-building-user text-[#047857] dark:text-emerald-400" />
-                <span className="truncate max-w-[150px] sm:max-w-[200px]">{selectedBranch.name.split('(')[0].trim()}</span>
+                <span className="truncate max-w-[150px] sm:max-w-[200px]">{(selectedBranch?.name || property?.name || 'Cabang Kos').split('(')[0].trim()}</span>
                 <i className={`fa-solid fa-chevron-down text-[10px] transition-transform duration-200 ${branchDropdownOpen ? 'rotate-180 text-[#047857]' : 'text-slate-400'}`} />
               </button>
 

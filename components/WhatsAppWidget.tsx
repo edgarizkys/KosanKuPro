@@ -157,13 +157,13 @@ export default function WhatsAppWidget() {
                 <span>Info Harga &amp; Fasilitas</span>
               </button>
               <a
-                href={`https://wa.me/${(property.whatsapp || '6281223798307').replace(/[^0-9]/g, '')}?text=Halo%20Admin%20${encodeURIComponent(property.name)},%20saya%20ingin%20tanya%20langsung%20ke%20Owner%20mengenai%20sewa%20kamar`}
+                href={`https://wa.me/${(property.whatsapp || '6282114242634').replace(/[^0-9]/g, '')}?text=Halo%20Admin%20${encodeURIComponent(property.name)},%20saya%20ingin%20tanya%20langsung%20ke%20Owner%20mengenai%20sewa%20kamar`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full text-left px-4 py-2.5 neu-btn rounded-2xl text-[11px] text-emerald-700 dark:text-emerald-400 font-bold transition-all flex items-center gap-3 cursor-pointer hover:scale-[1.01]"
               >
                 <span className="w-7 h-7 rounded-xl neu-inset text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs shrink-0"><i className="fa-brands fa-whatsapp" /></span>
-                <span>Hubungi Langsung Owner (WA: {property.whatsapp || '+62 812-2379-8307'})</span>
+                <span>Hubungi Langsung Owner (WA: {property.whatsapp || '+62 821-1424-2634'})</span>
               </a>
             </div>
           )}
