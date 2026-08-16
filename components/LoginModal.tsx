@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface LoginModalProps {
   open: boolean;
@@ -39,10 +40,30 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
     }
   };
 
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+  const isRshs = property.slug === 'rshs';
+
   const selectPreset = (eMail: string) => {
     setEmail(eMail);
     setPassword('password123');
   };
+
+  const currentPresets = isRshs
+    ? {
+        owner: { email: 'owner.rshs@kosanku.pro', label: '👑 Owner RSHS', roleDesc: 'Plotting & Dividen dr. Dewi' },
+        admin: { email: 'admin.rshs@kosanku.pro', label: '🛡️ Admin RSHS', roleDesc: 'Control Center Pasteur' },
+        staff: { email: 'staf.rshs@kosanku.pro', label: '🪪 Staf Maintenance', roleDesc: 'Teknisi Medico Suite' },
+        vendor: { email: 'vendor.rshs@kosanku.pro', label: '🏪 Vendor Mitra', roleDesc: 'Depot Suci & Laundry Pasteur' },
+        tenant: { email: 'koas.rshs@kosanku.pro', label: '👤 Penghuni (dr. Rizky)', roleDesc: 'Tenant Kamar MED-101' },
+      }
+    : {
+        owner: { email: 'owner@kosanku.com', label: '👑 Owner', roleDesc: 'Plotting & Approval' },
+        admin: { email: 'admin@kosanku.com', label: '🛡️ Admin', roleDesc: 'Control Center' },
+        staff: { email: 'staf@kosanku.com', label: '🪪 Karyawan', roleDesc: 'Tugas & Plotting' },
+        vendor: { email: 'vendor@kosanku.com', label: '🏪 Vendor Mitra', roleDesc: 'Laundry & Galon/Gas' },
+        tenant: { email: 'budi@kosanku.com', label: '👤 Tenant (Penghuni Kos)', roleDesc: 'Tenant Kamar A-101' },
+      };
 
   return (
     <div className="fixed inset-0 z-[999] bg-black/5 dark:bg-black/20 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
@@ -55,8 +76,12 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
           <div className="w-12 h-12 rounded-2xl neu-inset text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl mx-auto shadow-xs">
             <i className="fa-solid fa-lock" />
           </div>
-          <h3 className="text-xl font-black text-slate-900 dark:text-white">Login Multi-Role KosanKu Pro</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Pilih akun demo 5-Role di bawah untuk masuk ke dashboard</p>
+          <h3 className="text-xl font-black text-slate-900 dark:text-white">
+            Login {property.name}
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {isRshs ? 'Portal Kosan RSHS Pasteur Bandung' : 'Pilih akun role di bawah atau masukkan kredensial Anda'}
+          </p>
         </div>
 
         {error && (
@@ -65,90 +90,94 @@ export default function LoginModal({ open, onClose, onLogin }: LoginModalProps) 
           </div>
         )}
 
-        {/* 5 Quick Preset Accounts */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Pilih Akun Demo Multi-Role:</span>
-          <div className="grid grid-cols-2 gap-2 text-left">
-            <button
-              type="button"
-              onClick={() => selectPreset('owner@kosanku.com')}
-              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                email === 'owner@kosanku.com'
-                  ? 'neu-inset border-amber-400/40 bg-amber-50/50 dark:bg-amber-950/20'
-                  : 'neu-card-sm hover:scale-[1.02]'
-              }`}
-            >
-              <span className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                👑 Owner
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">owner@kosanku.com</span>
-              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Plotting &amp; Approval</span>
-            </button>
+        {/* Quick Preset Accounts — ONLY visible in Default Demo */}
+        {!isCustomOrNewKos && (
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              Pilih Akun Demo Multi-Role:
+            </span>
+            <div className="grid grid-cols-2 gap-2 text-left">
+              <button
+                type="button"
+                onClick={() => selectPreset(currentPresets.owner.email)}
+                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
+                  email === currentPresets.owner.email
+                    ? 'neu-inset border-amber-400/40 bg-amber-50/50 dark:bg-amber-950/20'
+                    : 'neu-card-sm hover:scale-[1.02]'
+                }`}
+              >
+                <span className="text-xs font-black text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                  {currentPresets.owner.label}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono truncate">{currentPresets.owner.email}</span>
+                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">{currentPresets.owner.roleDesc}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => selectPreset('admin@kosanku.com')}
-              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                email === 'admin@kosanku.com'
-                  ? 'neu-inset border-purple-400/40 bg-purple-50/50 dark:bg-purple-950/20'
-                  : 'neu-card-sm hover:scale-[1.02]'
-              }`}
-            >
-              <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-                🛡️ Admin
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">admin@kosanku.com</span>
-              <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold block mt-0.5">Control Center</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => selectPreset(currentPresets.admin.email)}
+                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
+                  email === currentPresets.admin.email
+                    ? 'neu-inset border-purple-400/40 bg-purple-50/50 dark:bg-purple-950/20'
+                    : 'neu-card-sm hover:scale-[1.02]'
+                }`}
+              >
+                <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                  {currentPresets.admin.label}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono truncate">{currentPresets.admin.email}</span>
+                <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold block mt-0.5">{currentPresets.admin.roleDesc}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => selectPreset('staf@kosanku.com')}
-              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                email === 'staf@kosanku.com'
-                  ? 'neu-inset border-blue-400/40 bg-blue-50/50 dark:bg-blue-950/20'
-                  : 'neu-card-sm hover:scale-[1.02]'
-              }`}
-            >
-              <span className="text-xs font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
-                🪪 Karyawan
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">staf@kosanku.com</span>
-              <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold block mt-0.5">Tugas &amp; Plotting</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => selectPreset(currentPresets.staff.email)}
+                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
+                  email === currentPresets.staff.email
+                    ? 'neu-inset border-blue-400/40 bg-blue-50/50 dark:bg-blue-950/20'
+                    : 'neu-card-sm hover:scale-[1.02]'
+                }`}
+              >
+                <span className="text-xs font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                  {currentPresets.staff.label}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono truncate">{currentPresets.staff.email}</span>
+                <span className="text-[9px] text-blue-600 dark:text-blue-400 font-bold block mt-0.5">{currentPresets.staff.roleDesc}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => selectPreset('vendor@kosanku.com')}
-              className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
-                email === 'vendor@kosanku.com'
-                  ? 'neu-inset border-emerald-400/40 bg-emerald-50/50 dark:bg-emerald-950/20'
-                  : 'neu-card-sm hover:scale-[1.02]'
-              }`}
-            >
-              <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-                🏪 Vendor Mitra
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">vendor@kosanku.com</span>
-              <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">Laundry &amp; Galon/Gas</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => selectPreset(currentPresets.vendor.email)}
+                className={`p-3 rounded-2xl transition-all text-left cursor-pointer ${
+                  email === currentPresets.vendor.email
+                    ? 'neu-inset border-emerald-400/40 bg-emerald-50/50 dark:bg-emerald-950/20'
+                    : 'neu-card-sm hover:scale-[1.02]'
+                }`}
+              >
+                <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                  {currentPresets.vendor.label}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono truncate">{currentPresets.vendor.email}</span>
+                <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-0.5">{currentPresets.vendor.roleDesc}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => selectPreset('budi@kosanku.com')}
-              className={`p-3 rounded-2xl transition-all text-left cursor-pointer col-span-2 ${
-                email === 'budi@kosanku.com'
-                  ? 'neu-inset border-purple-400/40 bg-purple-50/50 dark:bg-purple-950/20'
-                  : 'neu-card-sm hover:scale-[1.02]'
-              }`}
-            >
-              <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-                👤 Tenant (Penghuni Kos)
-              </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">budi@kosanku.com</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => selectPreset(currentPresets.tenant.email)}
+                className={`p-3 rounded-2xl transition-all text-left cursor-pointer col-span-2 ${
+                  email === currentPresets.tenant.email
+                    ? 'neu-inset border-purple-400/40 bg-purple-50/50 dark:bg-purple-950/20'
+                    : 'neu-card-sm hover:scale-[1.02]'
+                }`}
+              >
+                <span className="text-xs font-black text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                  {currentPresets.tenant.label}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">{currentPresets.tenant.email}</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs pt-1">
           <div>

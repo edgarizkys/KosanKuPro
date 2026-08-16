@@ -43,15 +43,15 @@ export default function KosanKuLogo({
     >
       {/* Full-Frame Squircle Emblem Container */}
       <div
-        className={`${currentSize.icon} rounded-2xl bg-[#120e20] p-1 flex items-center justify-center neu-card-sm group-hover:scale-105 transition-all duration-300 relative overflow-hidden border border-white/20 dark:border-white/15`}
+        className={`${currentSize.icon} rounded-2xl bg-[#120e20] p-1 flex items-center justify-center neu-card-sm group-hover:scale-105 transition-all duration-300 relative overflow-hidden border border-amber-500/20 shadow-md`}
       >
         <img
-          src="/images/logo.png"
+          src="/images/kosanku_logo.svg"
           alt="KosanKu Pro Logo Emblem"
-          className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-300"
+          className="w-full h-full object-contain rounded-xl group-hover:scale-110 transition-transform duration-300"
         />
-        {/* Subtle Ambient Gradient Glow Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 via-transparent to-amber-500/20 pointer-events-none" />
+        {/* Subtle Ambient Gold Glow Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-amber-500/20 pointer-events-none" />
       </div>
 
       {/* Typography & Subtitle */}

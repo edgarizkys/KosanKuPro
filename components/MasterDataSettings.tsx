@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from '@/lib/userProfiles';
 import UserManagementView from './UserManagementView';
 
@@ -212,6 +213,7 @@ export default function MasterDataSettings() {
   const [newOwnPhone, setNewOwnPhone] = useState('');
   const [newOwnShare, setNewOwnShare] = useState('50');
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   // Sync to localStorage
@@ -227,6 +229,195 @@ export default function MasterDataSettings() {
     localStorage.setItem('kosanku_master_property', JSON.stringify(property));
     setToast('✅ PENGATURAN MASTER PROPERTI BERHASIL DISIMPAN!');
     setTimeout(() => setToast(null), 3500);
+  };
+
+  // 1. WIPE / RESET ALL MASTER DATA (Untuk Kosan Baru)
+  const handleWipeAllData = () => {
+    const confirmWipe = window.confirm(
+      '⚠️ PERINGATAN:\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA MASTER KOSAN?\n\nSemua master kamar, inventori, karyawan, vendor, checklist, dan profil pengguna akan dikosongkan agar Anda dapat menginput data kosan baru dari nol atau via Excel.'
+    );
+    if (!confirmWipe) return;
+
+    // Reset states to empty
+    const blankProperty: PropertySettings = {
+      propertyName: 'Kosan Baru (Belum Disetting)',
+      propertyAddress: 'Alamat Kosan Baru',
+      propertyPhone: '0812-0000-0000',
+      bankName: 'BCA',
+      bankAccount: '-',
+      bankHolder: '-',
+      allowanceLaundryKg: 0,
+    };
+    setProperty(blankProperty);
+    setInventoryMaster([]);
+    setExpenseCategories([]);
+    setVendors([]);
+    setEmployees([]);
+    setOwners([]);
+    setFacilities([]);
+    setInspectionItems([]);
+    setUserProfiles([]);
+
+    // Clear from localStorage
+    localStorage.removeItem('kosanku_master_property');
+    localStorage.removeItem('kosanku_master_inspection_items');
+    localStorage.setItem('kosanku_user_profiles_v2', JSON.stringify([]));
+
+    setToast('🗑️ SEMUA DATA MASTER KOSAN LAMA BERHASIL DIKOSONGKAN! Siap untuk data baru.');
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // 2. INJECT RSHS PASTEUR MASTER DATA PRESET
+  const handleInjectRSHSData = () => {
+    const confirmInject = window.confirm(
+      '🏥 INJEKSI DATA RSHS:\nApakah Anda ingin mengisi Master Data dengan data khusus "KosanKu Premium RSHS Pasteur Bandung" (16 Kamar Medico, Profil Tim RSHS, Vendor Pasteur, Checklist Dokter)?'
+    );
+    if (!confirmInject) return;
+
+    const rshsProperty: PropertySettings = {
+      propertyName: 'KosanKu Premium RSHS Pasteur Bandung',
+      propertyAddress: 'Jl. Pasteur No. 38 (3 Menit Jalan Kaki ke Gate 2 RSHS), Bandung',
+      propertyPhone: '0811-2233-4455',
+      bankName: 'BCA (Bank Central Asia)',
+      bankAccount: '8830-1928-44',
+      bankHolder: 'Ibu Dewi Tri Oktariani / Kos RSHS',
+      allowanceLaundryKg: 5,
+    };
+    setProperty(rshsProperty);
+    localStorage.setItem('kosanku_master_property', JSON.stringify(rshsProperty));
+
+    const rshsEmployees: EmployeeMaster[] = [
+      { id: 'EMP-01', name: 'Bambang Prasetyo', email: 'staf.rshs@kosanku.pro', phone: '0813-5544-3322', position: 'Teknisi Medico & AC', salary: 3600000, status: 'ACTIVE' },
+      { id: 'EMP-02', name: 'Siti Aminah', email: 'admin.rshs@kosanku.pro', phone: '0812-4433-2211', position: 'Supervisor Operasional RSHS', salary: 4000000, status: 'ACTIVE' },
+    ];
+    setEmployees(rshsEmployees);
+
+    const rshsOwners: OwnerMaster[] = [
+      { id: 'OWN-01', name: 'Ibu Dewi Tri Oktariani (Owner Utama)', email: 'owner.rshs@kosanku.pro', phone: '0811-2233-4455', sharePercent: 100, bankAccount: 'BCA 8830-1928-44' },
+    ];
+    setOwners(rshsOwners);
+
+    const rshsVendors: VendorMaster[] = [
+      { id: 'VND-01', name: 'Depot Air & Gas Pasteur Suci', type: 'Refill Aqua & BrightGas', phone: '0812-9988-7711', address: 'Jl. Pasteur No. 12' },
+      { id: 'VND-02', name: 'Laundry Express Dokter RSHS', type: 'Jasa Cuci Kiloan & Jas Lab', phone: '0813-4455-6677', address: 'Jl. Pasteur No. 45' },
+    ];
+    setVendors(rshsVendors);
+
+    const rshsFacilities: FacilityMaster[] = [
+      { id: 'FAC-01', name: 'AC 1 PK Daikin Inverter (Silent)', category: 'KAMAR', icon: '❄️', isIncludedInRent: true, additionalMonthlyFee: 0, description: 'AC senyap untuk istirahat optimal dokter & koas' },
+      { id: 'FAC-02', name: 'Wi-Fi Fiber High Speed 100Mbps Dedicated', category: 'BANGUNAN', icon: '📶', isIncludedInRent: true, additionalMonthlyFee: 0, description: 'Koneksi stabil untuk webinar, jurnal & riset medis' },
+      { id: 'FAC-03', name: 'Meja Belajar Ergonomis & Kursi Dokter', category: 'KAMAR', icon: '🪑', isIncludedInRent: true, additionalMonthlyFee: 0, description: 'Set meja belajar nyaman untuk koas dan dokter jaga' },
+      { id: 'FAC-04', name: 'Smart Key & Digital NFC Access 24 Jam', category: 'KAMAR', icon: '🔐', isIncludedInRent: true, additionalMonthlyFee: 0, description: 'Akses masuk bebas 24 jam fleksibel untuk jadwal jaga shift RS' },
+    ];
+    setFacilities(rshsFacilities);
+
+    setToast('✅ DATA MASTER KOSANKU RSHS BERHASIL DIINJEK & DIAPLIKASIKAN!');
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // 3. EXPORT / DOWNLOAD EXCEL TEMPLATE LANGSUNG DARI BROWSER
+  const handleDownloadExcel = () => {
+    try {
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Identitas
+      const ws1Data = [
+        ['PARAMETER / FIELD PENGATURAN', 'NILAI / ISIAN OWNER', 'PETUNJUK & KETERANGAN'],
+        ['Nama Properti / Kosan', property.propertyName || 'Kosan RSHS Pasteur Bandung', 'Wajib diisi - Ditampilkan di header web & invoice'],
+        ['Alamat Lengkap', property.propertyAddress || 'Jl. Pasteur No. 38, Sukajadi', 'Wajib diisi'],
+        ['Kota / Wilayah', 'Bandung', 'Wajib diisi'],
+        ['No. WhatsApp Resmi Kosan', property.propertyPhone || '0811-2233-4455', 'Wajib diisi - Digunakan untuk notifikasi & komplain'],
+        ['Nama Bank Rekening Pencairan', property.bankName || 'BCA (Bank Central Asia)', 'Wajib diisi - Rekening penerimaan uang sewa'],
+        ['Nomor Rekening Bank', property.bankAccount || '8830-1928-44', 'Wajib diisi'],
+        ['Nama Pemilik Rekening (Holder)', property.bankHolder || 'Ibu Dewi Tri Oktariani', 'Wajib diisi'],
+        ['Batas Tanggal Jatuh Tempo Tagihan', 'Tanggal 1 - 5 setiap bulan', 'Default tanggal penagihan invoice otomatis'],
+        ['Jatah Kuota Laundry Free (Kg/Bln)', property.allowanceLaundryKg || 5, 'Isi 0 jika tidak ada fasilitas laundry gratis']
+      ];
+      const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+      XLSX.utils.book_append_sheet(wb, ws1, '01_Identitas_Kosan');
+
+      // Sheet 2: Master Kamar
+      const ws2Data = [
+        ['No Kamar*', 'Lantai*', 'Tipe Kamar*', 'Harga Sewa / Bulan (Rp)*', 'Status (AVAILABLE/OCCUPIED/MAINTENANCE)*', 'Ukuran Kamar', 'Fasilitas Kamar', 'Kapasitas (Orang)'],
+        ['MED-101', 1, 'Deluxe Doctor Suite', 2200000, 'AVAILABLE', '4 x 5 m (20 m2)', 'AC Daikin, Meja Kerja, KM Dalam Water Heater', 1],
+        ['MED-102', 1, 'Deluxe Doctor Suite', 2200000, 'OCCUPIED', '4 x 5 m (20 m2)', 'AC Daikin, Meja Kerja, KM Dalam Water Heater', 1],
+        ['MED-201', 2, 'VIP Koas Balcony', 2500000, 'AVAILABLE', '5 x 5 m (25 m2)', 'AC Inverter, Smart TV, Balkon Private, Kulkas Mini', 2],
+        ['MED-301', 3, 'Standard Medico Room', 1800000, 'AVAILABLE', '3.5 x 4.5 m (16 m2)', 'AC Inverter, WiFi 100Mbps, Kasur Springbed', 1]
+      ];
+      const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+      XLSX.utils.book_append_sheet(wb, ws2, '02_Master_Kamar');
+
+      // Sheet 3: Penghuni
+      const ws3Data = [
+        ['No Kamar*', 'Nama Lengkap Penghuni*', 'No WhatsApp*', 'Email*', 'Tanggal Masuk (DD/MM/YYYY)*', 'Periode Sewa (Bulanan/3 Bulan/Tahunan)', 'Deposit (Rp)', 'No KTP / NIK'],
+        ['MED-102', 'dr. Rizky Pratama, Sp.A', '081388776655', 'rizky.pratama@gmail.com', '01/02/2026', 'Bulanan', 500000, '3171012345670001']
+      ];
+      const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
+      XLSX.utils.book_append_sheet(wb, ws3, '03_Penghuni_Aktif');
+
+      // Sheet 4: Karyawan & Vendor
+      const ws4Data = [
+        ['Tipe (KARYAWAN/VENDOR)*', 'Nama Lengkap / Nama Usaha*', 'Kontak WhatsApp*', 'Email / Bidang Layanan*', 'Gaji / Biaya (Rp)', 'Alamat / Catatan'],
+        ['KARYAWAN', 'Bambang Prasetyo', '081355443322', 'staf.maintenance@kosanku.pro', 3500000, 'Teknisi Listrik & AC'],
+        ['VENDOR', 'Depot Air & Gas Suci', '081299887711', 'Refill Aqua 19L & Gas LPG', 0, 'Jl. Pemuda No. 12']
+      ];
+      const ws4 = XLSX.utils.aoa_to_sheet(ws4Data);
+      XLSX.utils.book_append_sheet(wb, ws4, '04_Karyawan_Vendor');
+
+      XLSX.writeFile(wb, 'Template_Master_Data_KosanKu_Pro.xlsx');
+      setToast('📥 Template Excel berhasil di-download! Siap disodorkan ke Owner / diimpor ke Google Sheets.');
+      setTimeout(() => setToast(null), 4500);
+    } catch (err) {
+      console.error('Download error:', err);
+      // Fallback direct link
+      window.open('/Template_Master_Data_KosanKu_Pro.xlsx', '_blank');
+    }
+  };
+
+  // 4. IMPORT FILE EXCEL DARI OWNER
+  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+
+        // Parse Sheet 1: Identitas
+        if (wb.SheetNames.includes('01_Identitas_Kosan')) {
+          const ws = wb.Sheets['01_Identitas_Kosan'];
+          const data: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+          const propMap: Record<string, string> = {};
+          data.forEach(row => {
+            if (row && row[0] && row[1] !== undefined) {
+              propMap[String(row[0]).trim()] = String(row[1]).trim();
+            }
+          });
+
+          const newProp: PropertySettings = {
+            propertyName: propMap['Nama Properti / Kosan'] || property.propertyName,
+            propertyAddress: propMap['Alamat Lengkap'] || property.propertyAddress,
+            propertyPhone: propMap['No. WhatsApp Resmi Kosan'] || property.propertyPhone,
+            bankName: propMap['Nama Bank Rekening Pencairan'] || property.bankName,
+            bankAccount: propMap['Nomor Rekening Bank'] || property.bankAccount,
+            bankHolder: propMap['Nama Pemilik Rekening (Holder)'] || property.bankHolder,
+            allowanceLaundryKg: Number(propMap['Jatah Kuota Laundry Free (Kg/Bln)']) || property.allowanceLaundryKg,
+          };
+          setProperty(newProp);
+          localStorage.setItem('kosanku_master_property', JSON.stringify(newProp));
+        }
+
+        setToast('🎉 Berhasil mengimpor data Master Kosan dari Excel Owner!');
+        setTimeout(() => setToast(null), 4500);
+      } catch (err) {
+        alert('Gagal membaca file Excel. Pastikan format file sesuai template.');
+      }
+    };
+    reader.readAsBinaryString(file);
+    if (e.target) e.target.value = '';
   };
 
   const handleAddEmployee = (e: React.FormEvent) => {
@@ -316,11 +507,64 @@ export default function MasterDataSettings() {
   return (
     <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6 text-slate-900 dark:text-white">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-white/5 pb-5">
         <div>
           <h3 className="text-base sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             Master Data &amp; Pengaturan
           </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Kelola identitas properti, tarif kamar, fasilitas, dan sinkronisasi berkas Excel Owner
+          </p>
+        </div>
+
+        {/* Quick Tools: Excel & Reset Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Download Template Excel */}
+          <button
+            onClick={handleDownloadExcel}
+            className="px-3.5 py-2 neu-btn text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+            title="Download Template Excel Multi-Sheet untuk disodorkan ke Owner atau diimpor ke Google Sheets"
+          >
+            <i className="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400" />
+            <span>Template Excel</span>
+          </button>
+
+          {/* Import Excel */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImportExcel}
+            accept=".xlsx, .xls, .csv"
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3.5 py-2 neu-btn text-blue-700 dark:text-blue-400 hover:bg-blue-500/10 font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+            title="Impor Berkas Excel dari Owner langsung ke Master Data"
+          >
+            <i className="fa-solid fa-file-import text-blue-600 dark:text-blue-400" />
+            <span>Impor Excel</span>
+          </button>
+
+          {/* Inject Preset RSHS */}
+          <button
+            onClick={handleInjectRSHSData}
+            className="px-3.5 py-2 neu-btn text-sky-700 dark:text-sky-400 hover:bg-sky-500/10 font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+            title="Injek data default khusus Cabang Kosan RSHS Pasteur Bandung"
+          >
+            <i className="fa-solid fa-hospital text-sky-600 dark:text-sky-400" />
+            <span>Injek Data RSHS</span>
+          </button>
+
+          {/* Wipe / Reset All Data */}
+          <button
+            onClick={handleWipeAllData}
+            className="px-3.5 py-2 neu-btn text-rose-700 dark:text-rose-400 hover:bg-rose-500/10 font-black rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+            title="Hapus / Kosongkan semua data master lama untuk input kosan baru dari nol"
+          >
+            <i className="fa-solid fa-trash-can text-rose-600 dark:text-rose-400" />
+            <span>Kosongkan Data (Kosan Baru)</span>
+          </button>
         </div>
       </div>
 

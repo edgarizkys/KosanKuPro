@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface LoginViewProps {
   onClose: () => void;
@@ -8,12 +9,15 @@ interface LoginViewProps {
 }
 
 export default function LoginView({ onClose, onLogin }: LoginViewProps) {
-  const [email, setEmail] = useState('owner@kosanku.com');
-  const [password, setPassword] = useState('password123');
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
+  const [email, setEmail] = useState(isCustomOrNewKos ? '' : 'owner@kosanku.com');
+  const [password, setPassword] = useState(isCustomOrNewKos ? '' : 'password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSsoModal, setShowSsoModal] = useState(false);
-  const [ssoInputEmail, setSsoInputEmail] = useState('rahmat.hidayat99@gmail.com');
+  const [ssoInputEmail, setSsoInputEmail] = useState('');
   const [ssoError, setSsoError] = useState<string | null>(null);
 
   const handleGoogleSsoSubmit = () => {
@@ -51,7 +55,7 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
       if (res.ok && json.data) {
         onLogin(json.data);
       } else {
-        setError(json.error || 'Login gagal');
+        setError(json.error || 'Login gagal. Silakan periksa email dan password.');
       }
     } catch {
       setError('Gagal menghubungi server');
@@ -75,15 +79,15 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
       {/* SaaS Top Header Bar */}
       <header className="max-w-7xl w-full mx-auto flex items-center justify-between z-10 py-2">
         <div className="flex items-center gap-3 cursor-pointer" onClick={onClose}>
-          <div className="w-10 h-10 rounded-2xl bg-[#047857] flex items-center justify-center text-white font-black text-base neu-card-sm shadow-md">
-            <i className="fa-solid fa-cubes-stacked" />
+          <div className="w-10 h-10 rounded-2xl bg-[#120e20] p-1 flex items-center justify-center neu-card-sm shadow-md border border-amber-500/30 overflow-hidden">
+            <img src="/images/kosanku_logo.svg" alt="KosanKu Pro Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <span className="font-black text-xl text-[#047857] tracking-tight block leading-none">
-              KosanKu<span className="text-slate-900 dark:text-white">Pro</span>
+              {property.name}
             </span>
             <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-1 block">
-              Enterprise SaaS Portal v2.5
+              {isCustomOrNewKos ? `Portal Resmi • ${property.city}` : 'Enterprise SaaS Portal v2.5'}
             </span>
           </div>
         </div>
@@ -97,27 +101,125 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
         </button>
       </header>
 
-      {/* Main SaaS Portal Layout (Wide 2-Column Luxury Dashboard) */}
+      {/* Main SaaS Portal Layout */}
       <main className="max-w-6xl w-full mx-auto my-auto z-10 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          
-          {/* Left Column: Quick Role Test Matrix (Organized in Clean Category Cards) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#047857]/10 text-[#047857] dark:text-emerald-400 font-extrabold text-xs">
-                <i className="fa-solid fa-users-viewfinder" />
-                <span>Multi-Account Sandbox Demo</span>
+        {isCustomOrNewKos ? (
+          /* ========================================================
+             CLEAN LUXURY PORTAL FOR LIVE PROPERTY (NO DEMO SANDBOX MATRIX)
+             ======================================================== */
+          <div className="max-w-xl mx-auto w-full">
+            <div className="neu-card rounded-3xl p-6 sm:p-10 shadow-2xl border border-white/80 dark:border-white/10 space-y-6 animate-scale-in">
+              {/* Header Info */}
+              <div className="text-center space-y-2 pb-2 border-b border-slate-200/60 dark:border-white/10">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#047857] via-emerald-600 to-teal-600 text-white flex items-center justify-center text-2xl font-black shadow-lg mx-auto mb-3">
+                  <i className="fa-solid fa-shield-halved" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {property.name}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  {property.address}
+                </p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-[#047857] dark:text-emerald-400 text-[11px] font-black mt-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Portal Keamanan Resmi
+                </div>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                Pilih Akun Uji Coba untuk Simulasi <span className="text-[#047857]">Plotting &amp; Notifikasi</span>
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Klik salah satu profil di bawah untuk langsung login dan memverifikasi alur tugas antara Owner, Staf, dan Vendor secara real-time.
-              </p>
-            </div>
 
-            {/* Role Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {error && (
+                <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+                  <i className="fa-solid fa-circle-exclamation" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Clean Official Login Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block mb-1.5">
+                    Email Akun Terdaftar
+                  </label>
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nama@email.com"
+                    className="w-full p-3.5 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+                      Password
+                    </label>
+                    <span className="text-[10px] text-slate-400 hover:text-emerald-600 cursor-pointer">
+                      Lupa Password?
+                    </span>
+                  </div>
+                  <input
+                    required
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full p-3.5 neu-input rounded-2xl text-slate-900 dark:text-white outline-none focus:border-[#047857] transition-colors font-mono text-xs"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 bg-gradient-to-r from-[#047857] via-emerald-600 to-teal-600 hover:opacity-95 text-white font-black rounded-2xl shadow-lg hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer text-xs flex items-center justify-center gap-2"
+                >
+                  {loading ? <i className="fa-solid fa-spinner fa-spin" /> : <i className="fa-solid fa-right-to-bracket" />}
+                  <span>Masuk ke Akun Saya</span>
+                </button>
+
+                <div className="relative flex items-center justify-center py-1">
+                  <div className="border-t border-slate-200 dark:border-white/10 w-full" />
+                  <span className="bg-[#f2f5fa] dark:bg-[#0f0c1a] px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider absolute">atau</span>
+                </div>
+
+                {/* Google SSO Login Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSsoModal(true);
+                    setSsoError(null);
+                  }}
+                  className="w-full py-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-extrabold rounded-2xl border border-slate-300 dark:border-slate-700 shadow-xs cursor-pointer text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                >
+                  <i className="fa-brands fa-google text-rose-500 text-sm" />
+                  <span>Masuk Cepat via Google SSO</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : (
+          /* ========================================================
+             DEMO SANDBOX MATRIX VIEW (HANYA MUNCUL DI DEFAULT DEMO)
+             ======================================================== */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left Column: Quick Role Test Matrix */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#047857]/10 text-[#047857] dark:text-emerald-400 font-extrabold text-xs">
+                  <i className="fa-solid fa-users-viewfinder" />
+                  <span>Multi-Account Sandbox Demo</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                  Pilih Akun Uji Coba untuk Simulasi <span className="text-[#047857]">Plotting &amp; Notifikasi</span>
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Klik salah satu profil di bawah untuk langsung login dan memverifikasi alur tugas antara Owner, Staf, dan Vendor secara real-time.
+                </p>
+              </div>
+
+              {/* Role Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               
               {/* Category 1: Manajemen (Owner & Admin) */}
               <div className="neu-card p-4 rounded-2xl space-y-2.5">
@@ -358,8 +460,8 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
               </form>
             </div>
           </div>
-
         </div>
+      )}
       </main>
 
       {/* Modern Custom Google SSO Modal (No Browser Prompt/Alert) */}

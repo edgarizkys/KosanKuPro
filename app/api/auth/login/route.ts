@@ -99,6 +99,43 @@ const DEMO_USERS: Record<string, any> = {
     phone: '0813-7788-9900',
     rooms: [{ id: '3', number: 'C-302', type: 'Standard Cosy Single', price: 1200000 }],
   },
+  // RSHS Dedicated Branch Accounts
+  'owner.rshs@kosanku.pro': {
+    id: 'usr_owner_rshs',
+    name: 'Ibu Dewi Tri Oktariani (Owner Kos RSHS)',
+    email: 'owner.rshs@kosanku.pro',
+    role: 'owner',
+    phone: '0811-2233-4455',
+  },
+  'admin.rshs@kosanku.pro': {
+    id: 'usr_admin_rshs',
+    name: 'Admin Unit Pasteur RSHS',
+    email: 'admin.rshs@kosanku.pro',
+    role: 'admin',
+    phone: '0811-2233-4455',
+  },
+  'staf.rshs@kosanku.pro': {
+    id: 'usr_staf_rshs',
+    name: 'Bambang (Teknisi Medico RSHS)',
+    email: 'staf.rshs@kosanku.pro',
+    role: 'employee',
+    phone: '0813-5544-3322',
+  },
+  'vendor.rshs@kosanku.pro': {
+    id: 'usr_vendor_rshs',
+    name: 'Depot & Laundry Mitra Pasteur',
+    email: 'vendor.rshs@kosanku.pro',
+    role: 'vendor',
+    phone: '0812-9988-7711',
+  },
+  'koas.rshs@kosanku.pro': {
+    id: 'usr_tenant_rshs',
+    name: 'dr. Rizky Pratama, Sp.A',
+    email: 'koas.rshs@kosanku.pro',
+    role: 'tenant',
+    phone: '0813-8877-6655',
+    rooms: [{ id: 'med-101', number: 'MED-101', type: 'Deluxe Doctor Suite', price: 2200000 }],
+  },
 };
 
 // POST /api/auth/login — authenticates against Prisma Database first, with instant demo fallback

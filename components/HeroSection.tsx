@@ -65,8 +65,8 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
         <div className="relative z-40 flex items-center justify-between w-full px-4 py-3 sm:px-10 sm:py-5">
           {/* Left Logo */}
           <div className="flex items-center gap-2.5 cursor-pointer select-none group">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#120e20] p-0.5 flex items-center justify-center shadow-md shadow-purple-900/30 group-hover:scale-105 transition-all overflow-hidden border border-white/20 dark:border-white/15">
-              <img src="/images/logo.png" alt="KosanKu Pro Logo" className="w-full h-full object-cover rounded-xl" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#120e20] p-0.5 flex items-center justify-center shadow-md shadow-amber-900/20 group-hover:scale-105 transition-all overflow-hidden border border-amber-500/30">
+              <img src="/images/kosanku_logo.svg" alt="KosanKu Pro Logo" className="w-full h-full object-contain rounded-xl" />
             </div>
             <div className="flex items-center gap-1.5 font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
               {property.slug === 'rshs' ? 'KosanKu' : 'KosanKu'}{' '}

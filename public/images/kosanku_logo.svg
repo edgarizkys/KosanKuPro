@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Background Dark Glow -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e1833"/>
+      <stop offset="100%" stop-color="#0d0a17"/>
+    </radialGradient>
+
+    <!-- Luxury Gold Gradient for K Emblem -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="35%" stop-color="#f59e0b"/>
+      <stop offset="70%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+
+    <!-- Subtle Inner Top Highlight -->
+    <linearGradient id="highlightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Emerald Accent for Dot Connection -->
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#f59e0b" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Rounded Container Background -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect width="508" height="508" x="2" y="2" rx="126" stroke="rgba(255,255,255,0.12)" stroke-width="4"/>
+
+  <!-- Glowing Ambient Halo -->
+  <circle cx="270" cy="256" r="180" fill="#f59e0b" opacity="0.15" filter="blur(40px)"/>
+
+  <!-- The "K" Modern Geometric Connected Nodes (Organic Node Tech Logo) -->
+  <g filter="url(#softShadow)">
+    
+    <!-- Top-Left Independent Dot Node -->
+    <circle cx="180" cy="140" r="48" fill="url(#goldGrad)"/>
+    <circle cx="180" cy="140" r="48" fill="url(#highlightGrad)"/>
+
+    <!-- Bottom-Left Independent Dot Node -->
+    <circle cx="180" cy="372" r="48" fill="url(#goldGrad)"/>
+    <circle cx="180" cy="372" r="48" fill="url(#highlightGrad)"/>
+
+    <!-- Main Connected "K" Branch: Center Node flowing to Top-Right and Bottom-Right Nodes -->
+    <path d="
+      M 180 208
+      A 48 48 0 0 1 180 304
+      C 225 304, 255 315, 290 350
+      L 330 390
+      A 48 48 0 0 0 400 322
+      L 360 282
+      C 335 256, 335 256, 360 230
+      L 400 190
+      A 48 48 0 0 0 330 122
+      L 290 162
+      C 255 197, 225 208, 180 208
+      Z
+    " fill="url(#goldGrad)"/>
+
+    <!-- Center Node Bulb (Gives accurate round bulb shape) -->
+    <circle cx="180" cy="256" r="48" fill="url(#goldGrad)"/>
+    <circle cx="180" cy="256" r="48" fill="url(#highlightGrad)"/>
+
+    <!-- Top-Right Node Bulb -->
+    <circle cx="365" cy="156" r="48" fill="url(#goldGrad)"/>
+    <circle cx="365" cy="156" r="48" fill="url(#highlightGrad)"/>
+
+    <!-- Bottom-Right Node Bulb -->
+    <circle cx="365" cy="356" r="48" fill="url(#goldGrad)"/>
+    <circle cx="365" cy="356" r="48" fill="url(#highlightGrad)"/>
+
+  </g>
+</svg>

@@ -46,6 +46,7 @@ export async function POST(req: Request) {
         phone,
         passwordHash: password, // In production, hash with bcrypt
         role: Role.OWNER,
+        propertyId: property.id,
       },
     });
 

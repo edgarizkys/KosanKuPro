@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="id" data-theme="light" className="scroll-smooth">
       <head>
-        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="icon" href="/images/kosanku_logo.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

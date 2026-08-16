@@ -87,24 +87,25 @@ export function PropertyProvider({ children }: { children: React.ReactNode }) {
       const searchParams = new URLSearchParams(window.location.search);
       const urlSlugParam = searchParams.get('property') || searchParams.get('kosan');
 
-      // 1. Detect from Subdomain (e.g., rshs.kosankupro.cloud)
+      // 1. Explicit Query Param (?kosan=rshs or ?kosan=default)
+      if (urlSlugParam) {
+        const slug = urlSlugParam.toLowerCase();
+        if (PROPERTIES_REGISTRY[slug]) {
+          setActiveSlug(slug);
+          localStorage.setItem('kosanku_active_property_slug', slug);
+          return;
+        }
+      }
+
+      // 2. Subdomain check (e.g. rshs.kosankupro.cloud)
       if (hostname.includes('rshs.') || hostname.startsWith('rshs.')) {
         setActiveSlug('rshs');
         return;
       }
 
-      // 2. Detect from Query Param or saved state (?kosan=rshs)
-      if (urlSlugParam && PROPERTIES_REGISTRY[urlSlugParam.toLowerCase()]) {
-        setActiveSlug(urlSlugParam.toLowerCase());
-        localStorage.setItem('kosanku_active_property_slug', urlSlugParam.toLowerCase());
-        return;
-      }
-
-      // 3. Detect from localStorage
-      const savedSlug = localStorage.getItem('kosanku_active_property_slug');
-      if (savedSlug && PROPERTIES_REGISTRY[savedSlug]) {
-        setActiveSlug(savedSlug);
-      }
+      // 3. If accessed on root default URL without ?kosan= parameter, use default demo
+      setActiveSlug('default');
+      localStorage.setItem('kosanku_active_property_slug', 'default');
     }
   }, []);
 
