@@ -48,20 +48,81 @@ export const PROPERTIES_REGISTRY: Record<string, PropertyConfig> = {
   'rshs': {
     id: 'prop-rshs',
     slug: 'rshs',
-    name: 'KosanKu Premium RSHS Bandung',
-    tagline: 'Hunian Eksklusif Dokter, Koas & Mahasiswa Kedokteran Unpad / RSHS',
-    address: 'Jl. Pasteur No. 38 (3 Menit Jalan Kaki ke Gate 2 RS Hasan Sadikin)',
+    name: 'Juragan Kost RSHS',
+    tagline: 'Kosan Eksklusif dan Nyaman di Depan RS Hasan Sadikin Bandung',
+    address: 'Jl. Pasir Kaliki GG h tabri No.76/65, Sukabungah, Kec. Sukajadi, Kota Bandung, Jawa Barat 40162',
     city: 'Bandung',
-    whatsapp: '081122334455',
+    whatsapp: '+62 812-2379-8307',
     mapsUrl: 'https://maps.google.com/?q=-6.897368,107.598642',
-    heroHeadline: 'Kosan RSHS Pasteur',
-    heroSubheadline: 'Spesial Dokter & Koas.',
+    heroHeadline: 'Juragan Kost RSHS',
+    heroSubheadline: 'Depan RS Hasan Sadikin.',
     accentColor: '#0284c7', // Medical Azure Blue
-    totalRooms: 16,
+    totalRooms: 48,
     featuredRooms: [
-      { number: 'MED-101', type: 'Deluxe Doctor Suite', price: 2200000, size: '4 x 5 m (20 m²)', imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80', facilities: ['AC Daikin 1PK', 'Meja Belajar Ergonomis', 'KM Dalam Water Heater', 'Akses 24 Jam Smart Key'] },
-      { number: 'MED-201', type: 'VIP Koas Balcony', price: 2500000, size: '5 x 5 m (25 m²)', imageUrl: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80', facilities: ['AC Inverter', 'Smart TV 43"', 'Balkon Private', 'Kulkas Mini & KM Dalam'] },
-      { number: 'MED-301', type: 'Standard Medico Room', price: 1800000, size: '3.5 x 4.5 m (16 m²)', imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80', facilities: ['AC Inverter', 'WiFi Dedicated 100Mbps', 'Kasur KingKoil', 'Lemari 2 Pintu'] },
+      {
+        number: 'EKS-01',
+        type: 'Eksekutif',
+        price: 1500000,
+        size: '4 x 4.5 m (18 m²)',
+        imageUrl: '/images/rshs/Eksekutif/1.png',
+        facilities: ['Kasur Comfort', 'Lemari & Meja Kursi', 'Kipas Angin', 'Kamar Mandi Dalam', 'Free Laundry 5kg/bln', 'Mini Gym & CCTV', 'Dapur & Kulkas Bersama', 'Pembersihan Kamar 2x/bln'],
+      },
+      {
+        number: 'NYM-01',
+        type: 'Nyaman',
+        price: 1000000,
+        size: '3.5 x 4 m (14 m²)',
+        imageUrl: '/images/rshs/Nyaman/1.png',
+        facilities: ['Kipas Angin', 'Laundy Room', 'Free Laundry 5kg/bln', 'Parkir Motor', 'Dapur Bersama', 'CCTV 24 Jam'],
+      },
+      {
+        number: 'NYM-02',
+        type: 'Nyaman 2',
+        price: 1400000,
+        size: '4 x 4 m (16 m²)',
+        imageUrl: '/images/rshs/Nyaman%202/1.png',
+        facilities: ['Kasur & Lemari', 'Kamar Mandi Dalam', 'Closet Duduk & Shower', 'Free Laundry 5kg', 'WiFi & CCTV', 'Dapur & Kulkas', 'Pembersihan Kamar 2x/bln'],
+      },
+      {
+        number: 'NYM-03',
+        type: 'Nyaman 3',
+        price: 1300000,
+        size: '3.5 x 4 m (14 m²)',
+        imageUrl: '/images/rshs/Nyaman%203/1.png',
+        facilities: ['Kasur & Meja', 'Kamar Mandi Dalam', 'Closet Duduk', 'Water Heater', 'Token Listrik Awal', 'Air PDAM', 'Free Laundry 5kg'],
+      },
+      {
+        number: 'NYM-04',
+        type: 'Nyaman 4',
+        price: 1400000,
+        size: '4 x 4.5 m (18 m²)',
+        imageUrl: '/images/rshs/Nyaman%204/1.png',
+        facilities: ['Kamar Mandi Dalam', 'Free Laundry 5kg', 'Ruang Terbuka Bersama', 'Dapur Bersama', 'WiFi & CCTV', 'Free Trial Oxy Gym', 'Parkir Motor'],
+      },
+      {
+        number: 'PV-01',
+        type: 'Paviliun Eksekutif',
+        price: 2800000,
+        size: '6 x 7 m (42 m²)',
+        imageUrl: '/images/rshs/Paviliun%20Eksekutif/1.png',
+        facilities: ['Ruang Tamu & Kamar Tidur', 'Kamar Mandi Dalam', 'Dapur Privat', 'Free Laundry 10kg', 'WiFi Kencang', 'Parkir Motor', 'CCTV 24 Jam'],
+      },
+      {
+        number: 'PV-02',
+        type: 'Paviliun Tipe B',
+        price: 2600000,
+        size: '5.5 x 6.5 m (36 m²)',
+        imageUrl: '/images/rshs/Paviliun%20Tipe%20B/1.jpg',
+        facilities: ['1 Kasur 160x200 + 2 Kasur Single', 'Kompor Gas & Dapur', 'Lemari Baju Besar', 'Kamar Mandi Dalam', 'Free Laundry 10kg', 'Listrik & WiFi'],
+      },
+      {
+        number: 'SN-01',
+        type: 'Super Nyaman',
+        price: 1700000,
+        size: '4.5 x 5 m (22 m²)',
+        imageUrl: '/images/rshs/Super%20Nyaman/1.png',
+        facilities: ['Kasur Comfort Luas', 'Kamar Mandi Dalam', 'Water Heater', 'WiFi Kencang', 'Free Laundry 5kg', 'Dapur Bersama', 'Parkir Motor'],
+      },
     ],
   },
 };
@@ -103,7 +164,7 @@ export function PropertyProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // 3. If accessed on root default URL without ?kosan= parameter, use default demo
+      // 3. Root URL access without query param -> Default KosanKu Pro Landing Page
       setActiveSlug('default');
       localStorage.setItem('kosanku_active_property_slug', 'default');
     }

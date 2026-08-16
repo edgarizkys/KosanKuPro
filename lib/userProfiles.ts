@@ -198,26 +198,93 @@ export const INITIAL_USER_PROFILES: UserProfile[] = [
   },
 ];
 
-const STORAGE_KEY = 'kosanku_user_profiles_v2';
+const STORAGE_KEY = 'kosanku_user_profiles_v3';
 
-export function getStoredUserProfiles(): UserProfile[] {
+export function getStoredUserProfiles(propertySlug?: string): UserProfile[] {
   if (typeof window === 'undefined') return INITIAL_USER_PROFILES;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_USER_PROFILES));
+    const slug = propertySlug || localStorage.getItem('kosanku_active_property_slug') || 'default';
+    const scopedKey = `${STORAGE_KEY}_${slug}`;
+
+    const raw = localStorage.getItem(scopedKey);
+    if (raw) {
+      const parsed: UserProfile[] = JSON.parse(raw);
+      if (slug !== 'default') {
+        // Strict guard: remove demo users that might have been merged in earlier sessions
+        const cleaned = parsed.filter(
+          (u) =>
+            !u.email.endsWith('@kosanku.pro') &&
+            !u.email.includes('example.com') &&
+            (u.branchId === slug || u.email === 'rshs@kosankupro.cloud' || !u.email.includes('kosanku.pro'))
+        );
+        if (cleaned.length === 0 && slug === 'rshs') {
+          const rshsOwner: UserProfile[] = [
+            {
+              id: 'usr_owner_rshs',
+              name: 'Owner Juragan Kost RSHS',
+              email: 'rshs@kosankupro.cloud',
+              phone: '+62 812-2379-8307',
+              role: 'owner',
+              title: 'Pemilik Juragan Kost RSHS',
+              avatar: '👑',
+              avatarBg: 'bg-emerald-600',
+              branchId: 'rshs',
+              branchName: 'Juragan Kost RSHS',
+              department: 'Owner & Direksi',
+              status: 'ACTIVE',
+              joinDate: 'Hari Ini',
+              bio: 'Owner resmi Juragan Kost RSHS Bandung.',
+              verificationSource: 'MANUAL_ADMIN',
+            },
+          ];
+          localStorage.setItem(scopedKey, JSON.stringify(rshsOwner));
+          return rshsOwner;
+        }
+        return cleaned;
+      }
+      return parsed;
+    }
+
+    // If default demo property, return initial demo seed
+    if (slug === 'default') {
+      localStorage.setItem(scopedKey, JSON.stringify(INITIAL_USER_PROFILES));
       return INITIAL_USER_PROFILES;
     }
-    return JSON.parse(raw);
+
+    // For newly plotted kosan (like rshs), start with its specific registered owner or empty clean slate
+    const customKosInitialUsers: UserProfile[] = slug === 'rshs' ? [
+      {
+        id: 'usr_owner_rshs',
+        name: 'Owner Juragan Kost RSHS',
+        email: 'rshs@kosankupro.cloud',
+        phone: '+62 812-2379-8307',
+        role: 'owner',
+        title: 'Pemilik Juragan Kost RSHS',
+        avatar: '👑',
+        avatarBg: 'bg-emerald-600',
+        branchId: 'rshs',
+        branchName: 'Juragan Kost RSHS',
+        department: 'Owner & Direksi',
+        status: 'ACTIVE',
+        joinDate: 'Hari Ini',
+        bio: 'Owner resmi Juragan Kost RSHS Bandung.',
+        verificationSource: 'MANUAL_ADMIN',
+      },
+    ] : [];
+
+    localStorage.setItem(scopedKey, JSON.stringify(customKosInitialUsers));
+    return customKosInitialUsers;
   } catch (e) {
-    return INITIAL_USER_PROFILES;
+    return [];
   }
 }
 
-export function saveStoredUserProfiles(profiles: UserProfile[]) {
+export function saveStoredUserProfiles(profiles: UserProfile[], propertySlug?: string) {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+    const slug = propertySlug || localStorage.getItem('kosanku_active_property_slug') || 'default';
+    const scopedKey = `${STORAGE_KEY}_${slug}`;
+    localStorage.setItem(scopedKey, JSON.stringify(profiles));
   } catch (e) {
     console.error('Failed to save user profiles to localStorage:', e);
   }

@@ -100,19 +100,26 @@ const DEMO_USERS: Record<string, any> = {
     rooms: [{ id: '3', number: 'C-302', type: 'Standard Cosy Single', price: 1200000 }],
   },
   // RSHS Dedicated Branch Accounts
+  'rshs@kosankupro.cloud': {
+    id: 'usr_owner_rshs',
+    name: 'Owner Juragan Kost RSHS',
+    email: 'rshs@kosankupro.cloud',
+    role: 'owner',
+    phone: '+62 812-2379-8307',
+  },
   'owner.rshs@kosanku.pro': {
     id: 'usr_owner_rshs',
-    name: 'Ibu Dewi Tri Oktariani (Owner Kos RSHS)',
-    email: 'owner.rshs@kosanku.pro',
+    name: 'Owner Juragan Kost RSHS',
+    email: 'rshs@kosankupro.cloud',
     role: 'owner',
-    phone: '0811-2233-4455',
+    phone: '+62 812-2379-8307',
   },
   'admin.rshs@kosanku.pro': {
     id: 'usr_admin_rshs',
     name: 'Admin Unit Pasteur RSHS',
     email: 'admin.rshs@kosanku.pro',
     role: 'admin',
-    phone: '0811-2233-4455',
+    phone: '+62 812-2379-8307',
   },
   'staf.rshs@kosanku.pro': {
     id: 'usr_staf_rshs',
@@ -134,7 +141,7 @@ const DEMO_USERS: Record<string, any> = {
     email: 'koas.rshs@kosanku.pro',
     role: 'tenant',
     phone: '0813-8877-6655',
-    rooms: [{ id: 'med-101', number: 'MED-101', type: 'Deluxe Doctor Suite', price: 2200000 }],
+    rooms: [{ id: 'eks-01', number: 'EKS-01', type: 'Eksekutif', price: 1500000 }],
   },
 };
 

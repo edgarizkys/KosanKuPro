@@ -1,33 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 export default function LocationSection() {
+  const { property } = useProperty();
   const [propertyInfo, setPropertyInfo] = useState({
-    name: 'KosanKu Pro — Dago Bandung',
-    address: 'Jl. Ir. H. Juanda No. 128, Dago, Coblong, Bandung',
-    city: 'Bandung',
-    phone: '+62 812-3456-7890',
+    name: property.name || 'KosanKu Pro — Dago Bandung',
+    address: property.address || 'Jl. Ir. H. Juanda No. 128, Dago, Coblong, Bandung',
+    city: property.city || 'Bandung',
+    phone: property.whatsapp ? `+62 ${property.whatsapp.replace(/^0/, '')}` : '+62 812-3456-7890',
     email: 'hello@kosanku.pro',
-    description: 'Hanya 3 menit dari ITB, UNPAD Dipatiukur & pusat kuliner Dago.',
+    description: property.tagline || 'Hunian nyaman, strategis & siap huni.',
+    mapsUrl: property.mapsUrl || 'https://maps.google.com/?q=-6.8903333,107.6083818',
   });
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('kosanku_master_property');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setPropertyInfo((prev) => ({
-          ...prev,
-          name: parsed.name || prev.name,
-          address: parsed.address || prev.address,
-          city: parsed.city || prev.city,
-          phone: parsed.phone || prev.phone,
-          email: parsed.email || prev.email,
-        }));
-      }
-    } catch {}
-  }, []);
+    setPropertyInfo({
+      name: property.name,
+      address: property.address,
+      city: property.city,
+      phone: property.whatsapp ? (property.whatsapp.startsWith('+') ? property.whatsapp : `+62 ${property.whatsapp.replace(/^0/, '')}`) : '+62 812-3456-7890',
+      email: property.slug === 'rshs' ? 'juragankostrshs@gmail.com' : 'hello@kosanku.pro',
+      description: property.tagline,
+      mapsUrl: property.mapsUrl || 'https://maps.google.com/?q=-6.897368,107.598642',
+    });
+  }, [property]);
 
   return (
     <section id="location-section" className="reveal-scale">
@@ -40,10 +38,15 @@ export default function LocationSection() {
               {propertyInfo.address}. {propertyInfo.description}
             </p>
             <div className="space-y-3.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-              <div className="flex items-center gap-3.5 p-3 neu-card-sm rounded-xl transition-all">
-                <div className="w-9 h-9 rounded-xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-sm shadow-xs"><i className="fa-solid fa-phone" /></div>
-                {propertyInfo.phone}
-              </div>
+              <a
+                href={`https://wa.me/${(property.whatsapp || '6281223798307').replace(/[^0-9]/g, '')}?text=Halo%20Admin%20${encodeURIComponent(property.name)},%20saya%20tertarik%20tanya%20sewa%20kamar`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3.5 p-3 neu-card-sm rounded-xl transition-all hover:scale-[1.02] cursor-pointer text-[#047857] dark:text-emerald-400 font-bold"
+              >
+                <div className="w-9 h-9 rounded-xl neu-inset text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm shadow-xs"><i className="fa-brands fa-whatsapp" /></div>
+                <span>WhatsApp: {propertyInfo.phone}</span>
+              </a>
               <div className="flex items-center gap-3.5 p-3 neu-card-sm rounded-xl transition-all">
                 <div className="w-9 h-9 rounded-xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-sm shadow-xs"><i className="fa-solid fa-envelope" /></div>
                 {propertyInfo.email}
@@ -67,12 +70,28 @@ export default function LocationSection() {
             />
           </div>
         </div>
-        <div className="border-t border-slate-200/60 dark:border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 gap-3 sm:gap-4">
-          <p>&copy; 2026 KosanKu Pro. All rights reserved.</p>
-          <div className="flex items-center gap-6 font-medium">
-            <a href="#" className="hover:text-[#047857] dark:hover:text-emerald-400 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-[#047857] dark:hover:text-emerald-400 transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-[#047857] dark:hover:text-emerald-400 transition-colors">System Status</a>
+        <div className="border-t border-slate-200/60 dark:border-white/5 pt-6 flex flex-col md:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 gap-4">
+          <div className="flex items-center gap-3">
+            <p>&copy; 2026 {propertyInfo.name}. Powered by <span className="font-extrabold text-[#047857] dark:text-emerald-400">KosanKu Pro</span>.</p>
+          </div>
+
+          {/* Clean Subtle Footer Consultation Badge */}
+          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
+            <a
+              href="https://wa.me/6282114242634?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20tertarik%20menerapkan%20sistem%20digital%20KosanKu%20Pro%20untuk%20kosan%20saya"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full neu-inset text-emerald-700 dark:text-emerald-400 hover:scale-105 transition-all"
+              title="Tertarik pasang sistem KosanKu Pro di properti Anda?"
+            >
+              <i className="fa-brands fa-whatsapp text-emerald-600" />
+              <span>Pasang Sistem di Kosan Anda (WA: +6282114242634)</span>
+            </a>
+            <div className="flex items-center gap-4 text-[11px] text-slate-400">
+              <a href="#" className="hover:text-[#047857] dark:hover:text-emerald-400 transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-[#047857] dark:hover:text-emerald-400 transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-[#047857] dark:hover:text-emerald-400 transition-colors">System Status</a>
+            </div>
           </div>
         </div>
       </div>

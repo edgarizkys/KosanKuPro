@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import OCRUpload from './OCRUpload';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface ExpenseItem {
   id: string;
@@ -23,7 +24,7 @@ interface RevenueItem {
   status: 'SETTLED' | 'PENDING';
 }
 
-const MONTHLY_DATA = [
+const DEFAULT_MONTHLY_DATA = [
   { month: 'Jan 2026', revenue: 28500000, expenses: 8200000, occupancy: 85 },
   { month: 'Feb 2026', revenue: 30000000, expenses: 7800000, occupancy: 90 },
   { month: 'Mar 2026', revenue: 31200000, expenses: 9100000, occupancy: 92 },
@@ -32,7 +33,7 @@ const MONTHLY_DATA = [
   { month: 'Jun 2026', revenue: 34500000, expenses: 8900000, occupancy: 100 },
 ];
 
-const DETAILED_REVENUE_LOGS: RevenueItem[] = [
+const DEFAULT_REVENUE_LOGS: RevenueItem[] = [
   { id: 'REV-2026-001', source: 'Sewa Bulanan Kamar Deluxe', tenantName: 'Budi Santoso', roomNumber: 'A-101', category: 'SEWA', amount: 2500000, method: 'QRIS Midtrans', date: '2026-08-01 10:15', status: 'SETTLED' },
   { id: 'REV-2026-002', source: 'Deposit Garansi Kerusakan', tenantName: 'Rian Pratama', roomNumber: 'C-302', category: 'DEPOSIT', amount: 1000000, method: 'BCA VA', date: '2026-08-02 14:30', status: 'SETTLED' },
   { id: 'REV-2026-003', source: 'Sewa Bulanan VIP Balcony', tenantName: 'Siti Rahma', roomNumber: 'B-201', category: 'SEWA', amount: 3000000, method: 'Mandiri VA', date: '2026-08-03 09:00', status: 'SETTLED' },
@@ -41,7 +42,7 @@ const DETAILED_REVENUE_LOGS: RevenueItem[] = [
   { id: 'REV-2026-006', source: 'Sewa Parkir Mobil Bulanan', tenantName: 'Deni Setiawan', roomNumber: 'B-203', category: 'PARKIR', amount: 250000, method: 'Manual Transfer', date: '2026-08-08 13:10', status: 'SETTLED' },
 ];
 
-const FALLBACK_EXPENSES: ExpenseItem[] = [
+const DEFAULT_EXPENSES: ExpenseItem[] = [
   { id: '185d98ac-6f08', category: 'listrik', description: 'Token PLN Juli 2026', amount: 4200000, date: '2026-07-01' },
   { id: '899fefb0-d221', category: 'air', description: 'Tagihan Air PDAM Juli 2026', amount: 850000, date: '2026-07-02' },
   { id: 'db5fdc64-c289', category: 'internet', description: 'Langganan Wi-Fi IndiHome 100Mbps', amount: 1200000, date: '2026-07-03' },
@@ -68,26 +69,41 @@ function formatShort(n: number) {
 }
 
 export default function FinancialDashboard() {
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [revenueFilter, setRevenueFilter] = useState<string>('all');
   const [ledgerTab, setLedgerTab] = useState<'all' | 'revenue' | 'expense'>('all');
-  const [expenses, setExpenses] = useState<ExpenseItem[]>(FALLBACK_EXPENSES);
-  const [revenues, setRevenues] = useState<RevenueItem[]>(DETAILED_REVENUE_LOGS);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>(isCustomOrNewKos ? [] : DEFAULT_EXPENSES);
+  const [revenues, setRevenues] = useState<RevenueItem[]>(isCustomOrNewKos ? [] : DEFAULT_REVENUE_LOGS);
   const [activeChartTab, setActiveChartTab] = useState<'revenue' | 'profit' | 'occupancy'>('revenue');
 
   useEffect(() => {
-    fetch('/api/expenses', {
-      headers: { 'x-user-role': 'owner' },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (json?.data?.length) setExpenses(json.data);
+    if (!isCustomOrNewKos) {
+      fetch('/api/expenses', {
+        headers: { 'x-user-role': 'owner' },
       })
-      .catch(() => {});
-  }, []);
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => {
+          if (json?.data?.length) setExpenses(json.data);
+        })
+        .catch(() => {});
+    } else {
+      // Clean start for newly plotted Kosan property
+      setExpenses([]);
+      setRevenues([]);
+    }
+  }, [isCustomOrNewKos]);
 
-  const currentMonth = MONTHLY_DATA[MONTHLY_DATA.length - 1];
-  const totalRevenue = currentMonth.revenue;
+  const monthlyData = isCustomOrNewKos
+    ? [{ month: 'Agt 2026', revenue: 0, expenses: 0, occupancy: 0 }]
+    : DEFAULT_MONTHLY_DATA;
+
+  const currentMonth = monthlyData[monthlyData.length - 1];
+  const totalRevenue = isCustomOrNewKos
+    ? revenues.reduce((s: number, r: RevenueItem) => s + r.amount, 0)
+    : currentMonth.revenue;
   const totalExpenses = expenses.reduce((s: number, e: ExpenseItem) => s + e.amount, 0);
   const netProfit = totalRevenue - totalExpenses;
   const margin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
@@ -238,7 +254,7 @@ export default function FinancialDashboard() {
             </svg>
 
             <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 font-mono pt-1">
-              {MONTHLY_DATA.map((d, idx) => (
+              {monthlyData.map((d: any, idx: number) => (
                 <span key={idx} className="hover:text-emerald-500 cursor-pointer transition-colors">{d.month}</span>
               ))}
             </div>

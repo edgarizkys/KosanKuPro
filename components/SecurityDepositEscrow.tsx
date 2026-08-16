@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface DepositRecord {
   id: string;
@@ -24,7 +25,10 @@ function formatIDR(n: number) {
 }
 
 export default function SecurityDepositEscrow() {
-  const [deposits, setDeposits] = useState<DepositRecord[]>(INITIAL_DEPOSITS);
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
+  const [deposits, setDeposits] = useState<DepositRecord[]>(isCustomOrNewKos ? [] : INITIAL_DEPOSITS);
   const [toast, setToast] = useState<string | null>(null);
 
   const handleRefund = (id: string) => {

@@ -56,18 +56,19 @@ export default function KosanKuLogo({
 
       {/* Typography & Subtitle */}
       <div>
-        <div className="flex items-center gap-1.5">
-          <span className={`${currentSize.title} font-black tracking-tight text-slate-900 dark:text-white leading-none`}>
+        <div className="flex items-center gap-1.5" suppressHydrationWarning>
+          <span className={`${currentSize.title} font-black tracking-tight text-slate-900 dark:text-white leading-none`} suppressHydrationWarning>
             KosanKu
           </span>
           <span
+            suppressHydrationWarning
             className={`${currentSize.badge} rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black shadow-2xs tracking-wider uppercase leading-none`}
           >
             PRO
           </span>
         </div>
         {subtitle && (
-          <p className={`${currentSize.sub} text-slate-500 dark:text-slate-400 font-bold tracking-wider uppercase mt-1`}>
+          <p className={`${currentSize.sub} text-slate-500 dark:text-slate-400 font-bold tracking-wider uppercase mt-1`} suppressHydrationWarning>
             {subtitle}
           </p>
         )}

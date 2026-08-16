@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface ReportsHubProps {
   totalRevenue: number;
@@ -19,6 +20,9 @@ export default function ReportsHub({
   expenses,
   revenues,
 }: ReportsHubProps) {
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
   const [activeReportTab, setActiveReportTab] = useState<'all' | 'financial' | 'incomes' | 'expenses' | 'occupancy' | 'bookings' | 'inventory' | 'tickets' | 'vendor' | 'employee'>('all');
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
 
@@ -26,8 +30,8 @@ export default function ReportsHub({
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
   }
 
-  // Mock comprehensive report datasets for property audit
-  const occupancyData = [
+  // Comprehensive report datasets (Clean 0 for custom kosan, demo for SaaS sandbox)
+  const occupancyData = isCustomOrNewKos ? [] : [
     { roomNumber: 'A-101', type: 'Deluxe Executive', tenant: 'Budi Santoso', status: 'OCCUPIED', rentPrice: 2500000, contractEnd: '2026-12-31' },
     { roomNumber: 'A-102', type: 'Standard Suite', tenant: 'Deni Setiawan', status: 'OCCUPIED', rentPrice: 2000000, contractEnd: '2026-10-15' },
     { roomNumber: 'B-201', type: 'VIP Balcony', tenant: 'Siti Rahma', status: 'OCCUPIED', rentPrice: 3000000, contractEnd: '2027-01-20' },
@@ -35,27 +39,27 @@ export default function ReportsHub({
     { roomNumber: 'C-301', type: 'Standard Suite', tenant: 'Rian Pratama', status: 'OCCUPIED', rentPrice: 2000000, contractEnd: '2026-11-10' },
   ];
 
-  const bookingKYCData = [
+  const bookingKYCData = isCustomOrNewKos ? [] : [
     { id: 'BK-2026-081', startDate: '2026-09-01', name: 'Dimas Anggoro', room: 'A-102', phone: '0812-9876-5432', email: 'dimas.anggoro@gmail.com', emergency: 'Bpk. Hendrawan (0811-2233-4455)', duration: '6 Bulan', reason: 'Mahasiswa S2 ITB', dp: 500000, status: 'VERIFIED_DP' },
     { id: 'BK-2026-082', startDate: '2026-09-15', name: 'Annisa Maharani', room: 'B-202', phone: '0813-4455-6677', email: 'annisa.m@company.id', emergency: 'Ibu Ratna (0812-3322-1100)', duration: '12 Bulan', reason: 'Karyawan Swasta', dp: 500000, status: 'VERIFIED_DP' },
     { id: 'BK-2026-083', startDate: '2026-10-01', name: 'Fikri Haikal', room: 'C-302', phone: '0815-6677-8899', email: 'fikri.haikal@univ.ac.id', emergency: 'Bpk. Suryanto (0818-5544-3322)', duration: '3 Bulan', reason: 'Dokter Muda (Koas)', dp: 500000, status: 'VERIFIED_DP' },
   ];
 
-  const inventoryAuditData = [
+  const inventoryAuditData = isCustomOrNewKos ? [] : [
     { code: 'INV-AC-01', item: 'Unit AC Daikin Inverter 1PK', location: 'Kamar A-101 s/d C-302', qty: 12, condition: 'GOOD', auditor: 'Bambang (Staf)' },
     { code: 'INV-TV-02', name: 'Smart TV Samsung 32 Inch', location: 'Kamar VIP B-201, B-202', qty: 2, condition: 'GOOD', auditor: 'Bambang (Staf)' },
     { code: 'INV-BED-03', name: 'Kasur Springbed KingKoil 160x200', location: 'Semua Kamar', qty: 12, condition: 'GOOD', auditor: 'Siti (Admin)' },
     { code: 'INV-GAS-04', name: 'Tabung Gas LPG 12kg Dapur Bersama', location: 'Dapur Utama Lt 1', qty: 4, condition: 'NEEDS_REPAIR', auditor: 'Bambang (Staf)' },
   ];
 
-  const vendorHistoryData = [
+  const vendorHistoryData = isCustomOrNewKos ? [] : [
     { id: 'VND-ORD-01', vendorName: 'Depot Air & Gas Suci', category: 'Galon Aqua & Gas', orderItem: '15 Galon Aqua 19L + 2 Gas LPG 12kg', totalCost: 380000, date: '2026-08-01', status: 'DELIVERED_PAID' },
     { id: 'VND-ORD-02', vendorName: 'Laundry Express Clean & Fresh', category: 'Laundry Linen & Sprei', orderItem: 'Cuci & Setrika Sprei Bedding (12 Set)', totalCost: 240000, date: '2026-08-05', status: 'DELIVERED_PAID' },
     { id: 'VND-ORD-03', vendorName: 'Teknisi AC Surya Kencana', category: 'Maintenance & Service', orderItem: 'Cuci & Service Rutin 6 Unit AC Lt 2', totalCost: 450000, date: '2026-08-08', status: 'COMPLETED' },
     { id: 'VND-ORD-04', vendorName: 'Depot Air & Gas Suci', category: 'Galon Aqua & Gas', orderItem: '10 Galon Aqua 19L', totalCost: 200000, date: '2026-08-10', status: 'DELIVERED_PAID' },
   ];
 
-  const employeeTaskData = [
+  const employeeTaskData = isCustomOrNewKos ? [] : [
     { taskId: 'TSK-2026-01', staffName: 'Bambang Supriyanto', role: 'Staf Maintenance & Lapangan', taskTitle: 'Pembersihan Filter AC & Cek Kran Bocor Kamar A-101', priority: 'HIGH', assignedBy: 'Pak Hendra (Owner)', date: '2026-08-09', status: 'COMPLETED_VERIFIED', score: '98/100 (Sangat Baik)' },
     { taskId: 'TSK-2026-02', staffName: 'Siti Aminah', role: 'Admin Operasional & Kasir', taskTitle: 'Stock Opname (SO) Fisik Inventori Sprei & LPG', priority: 'NORMAL', assignedBy: 'Pak Hendra (Owner)', date: '2026-08-10', status: 'COMPLETED_VERIFIED', score: '95/100 (Tepat Waktu)' },
     { taskId: 'TSK-2026-03', staffName: 'Bambang Supriyanto', role: 'Staf Maintenance & Lapangan', taskTitle: 'Penerimaan Delivery 15 Galon Aqua dari Vendor Suci', priority: 'NORMAL', assignedBy: 'AI Auto-Pilot Engine', date: '2026-08-11', status: 'IN_PROGRESS', score: 'On-Track' },

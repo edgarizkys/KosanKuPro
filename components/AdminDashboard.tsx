@@ -44,43 +44,9 @@ interface ComplaintTicket {
   adminNote?: string;
 }
 
-const FALLBACK_ROOMS: RoomData[] = [
-  { id: '1', number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000, status: 'OCCUPIED', floor: 1, tenant: { name: 'Budi Santoso' } },
-  { id: '2', number: 'A-102', type: 'Deluxe Studio Smart', price: 1500000, status: 'AVAILABLE', floor: 1, tenant: null },
-  { id: '3', number: 'B-201', type: 'VIP Balcony Resort', price: 2000000, status: 'OCCUPIED', floor: 2, tenant: { name: 'Siti Rahma' } },
-  { id: '4', number: 'B-202', type: 'VIP Balcony Resort', price: 2000000, status: 'MAINTENANCE', floor: 2, tenant: null },
-  { id: '5', number: 'C-301', type: 'Standard Smart Suite', price: 1200000, status: 'AVAILABLE', floor: 3, tenant: null },
-  { id: '6', number: 'C-302', type: 'Standard Smart Suite', price: 1200000, status: 'OCCUPIED', floor: 3, tenant: { name: 'Rian Pratama' } },
-];
-
-const FALLBACK_INVOICES: InvoiceData[] = [
-  { id: '1', invoiceNumber: 'INV-2026-0701', totalAmount: 1604500, paymentStatus: 'PENDING', user: { name: 'Budi Santoso' } },
-  { id: '2', invoiceNumber: 'INV-2026-0601', totalAmount: 2000000, paymentStatus: 'SETTLED', user: { name: 'Siti Rahma' } },
-  { id: '3', invoiceNumber: 'INV-2026-0602', totalAmount: 1200000, paymentStatus: 'SETTLED', user: { name: 'Rian Pratama' } },
-];
-
-const FALLBACK_COMPLAINTS: ComplaintTicket[] = [
-  {
-    id: 'c1',
-    title: 'AC Kamar A-101 Kurang Dingin',
-    description: 'Freon tampaknya perlu ditambah karena udara hanya keluar angin saja sejak kemarin sore.',
-    status: 'OPEN',
-    createdAt: '2026-07-06 14:20',
-    user: { name: 'Budi Santoso', email: 'budi@example.com' },
-    room: { number: 'A-101' },
-    adminNote: '',
-  },
-  {
-    id: 'c2',
-    title: 'Kran Air Kamar Mandi Bocor Halus',
-    description: 'Ada tetesan air dari kran wasteland bawah.',
-    status: 'IN_PROGRESS',
-    createdAt: '2026-07-05 09:15',
-    user: { name: 'Siti Rahma', email: 'siti@example.com' },
-    room: { number: 'B-201' },
-    adminNote: 'Teknisi dijadwalkan datang besok jam 10:00.',
-  },
-];
+const FALLBACK_ROOMS: RoomData[] = [];
+const FALLBACK_INVOICES: InvoiceData[] = [];
+const FALLBACK_COMPLAINTS: ComplaintTicket[] = [];
 
 function formatIDR(n: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -105,6 +71,7 @@ function statusBadge(status: string) {
 
 import SequenceSaaSLayout from './SequenceSaaSLayout';
 import type { RoleType } from '@/app/page';
+import { useProperty } from '@/lib/PropertyContext';
 
 export default function AdminDashboard({
   onSwitchRole = () => {},
@@ -113,11 +80,14 @@ export default function AdminDashboard({
   onSwitchRole?: (r: RoleType) => void;
   onLogout?: () => void;
 }) {
-  const [activeBranch, setActiveBranch] = useState('all');
-  const [rooms, setRooms] = useState<RoomData[]>(FALLBACK_ROOMS);
-  const [invoices, setInvoices] = useState<InvoiceData[]>(FALLBACK_INVOICES);
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
+  const [activeBranch, setActiveBranch] = useState(property.name || 'all');
+  const [rooms, setRooms] = useState<RoomData[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceData[]>(isCustomOrNewKos ? [] : FALLBACK_INVOICES);
   const [tenants, setTenants] = useState<TenantOption[]>([]);
-  const [complaints, setComplaints] = useState<ComplaintTicket[]>(FALLBACK_COMPLAINTS);
+  const [complaints, setComplaints] = useState<ComplaintTicket[]>(isCustomOrNewKos ? [] : FALLBACK_COMPLAINTS);
   const [tab, setTab] = useState<'overview' | 'financial' | 'tenants' | 'complaints' | 'master_data'>('overview');
   const [loading, setLoading] = useState(true);
 
@@ -160,7 +130,7 @@ export default function AdminDashboard({
   const fetchData = useCallback(async () => {
     try {
       const [roomsRes, invRes, tenantsRes, complaintsRes] = await Promise.all([
-        fetch('/api/rooms'),
+        fetch(`/api/rooms?property=${property.slug}`),
         fetch('/api/invoices'),
         fetch('/api/tenants'),
         fetch('/api/complaints'),

@@ -10,9 +10,15 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }: HeroSectionProps) {
+  const [mounted, setMounted] = useState(false);
   const [dismissCard, setDismissCard] = useState(false);
   const [doorOpen, setDoorOpen] = useState(false);
   const { property } = useProperty();
+  const isDemo = property.slug === 'default';
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync theme with document element
   useEffect(() => {
@@ -69,7 +75,7 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
               <img src="/images/kosanku_logo.svg" alt="KosanKu Pro Logo" className="w-full h-full object-contain rounded-xl" />
             </div>
             <div className="flex items-center gap-1.5 font-black text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
-              {property.slug === 'rshs' ? 'KosanKu' : 'KosanKu'}{' '}
+              <span>{property.slug === 'rshs' ? 'KosanKu' : 'KosanKu'}</span>{' '}
               <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 font-black text-[9px] sm:text-[10px] tracking-wider uppercase">
                 {property.slug === 'rshs' ? 'RSHS' : 'PRO'}
               </span>
@@ -100,13 +106,28 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             </a>
           </nav>
 
-          {/* Right Action Group: Theme Toggle + CTA Button */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Right Action Group: CTA Konsultasi / Daftar Sekarang + Theme Toggle + Login Button */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Direct WhatsApp Consultation / Register Button (Only for Demo SaaS Website) */}
+            {isDemo && (
+              <a
+                href="https://wa.me/6282114242634?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20punya%20kosan%20dan%20ingin%20daftar%20atau%20konsultasi%20setup%20sistem%20digital"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 sm:px-4 py-2 sm:py-2.5 neu-btn text-slate-800 dark:text-slate-100 hover:text-[#047857] dark:hover:text-emerald-400 font-extrabold rounded-2xl text-[11px] sm:text-xs shadow-xs hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer border border-white/60 dark:border-white/10"
+                title="Konsultasi Gratis & Pendaftaran Sistem KosanKu Pro via WhatsApp +6282114242634"
+              >
+                <i className="fa-brands fa-whatsapp text-emerald-600 dark:text-emerald-400 text-sm font-bold" />
+                <span className="hidden xs:inline">Daftar Sekarang</span>
+                <span className="xs:hidden">Daftar</span>
+              </a>
+            )}
+
             {/* Theme Toggle Button (Light/Dark Switcher) */}
             {onToggleTheme && (
               <button
                 onClick={onToggleTheme}
-                className="w-10 h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-800 dark:text-amber-400 transition-all text-xs sm:text-sm cursor-pointer"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl neu-btn flex items-center justify-center text-slate-800 dark:text-amber-400 transition-all text-xs sm:text-sm cursor-pointer"
                 title={theme === 'dark' ? 'Ganti ke Mode Clean White (Terang)' : 'Ganti ke Mode Dark (Gelap)'}
                 aria-label="Toggle Theme"
               >
@@ -114,13 +135,13 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
               </button>
             )}
 
-            {/* CTA Button */}
+            {/* Login CTA Button */}
             <button
               onClick={onLogin}
-              className="px-5 py-2.5 bg-[#047857] hover:bg-[#065f46] text-white rounded-2xl font-black text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+              className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#047857] hover:bg-[#065f46] text-white rounded-2xl font-black text-[11px] sm:text-xs shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <i className="fa-solid fa-arrow-right-to-bracket text-[11px]" />
-              <span>Login Portal</span>
+              <i className="fa-solid fa-arrow-right-to-bracket text-[10px]" />
+              <span>Login</span>
             </button>
           </div>
         </div>
@@ -150,12 +171,12 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
           
           {/* DESKTOP LAYER 1: Selling Display Typography (Harmonious & Perfectly Aligned) */}
           <div className="hidden sm:block hero-parallax-text absolute top-4 lg:top-6 w-full max-w-7xl mx-auto px-8 z-10 pointer-events-none select-none will-change-transform text-center sm:text-left">
-            <h1 className="text-[6.0rem] lg:text-[8.5rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.9] whitespace-nowrap drop-shadow-sm">
+            <h1 suppressHydrationWarning className="text-[6.0rem] lg:text-[8.5rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.9] whitespace-nowrap drop-shadow-sm">
               {property.heroHeadline}
             </h1>
             <div className="relative flex items-center justify-start gap-4 pl-4 lg:pl-12 -mt-4 lg:-mt-6">
               <span className="w-12 lg:w-20 h-1.5 bg-[#047857] dark:bg-emerald-400 rounded-full shadow-sm" />
-              <h2 className="text-[5.0rem] lg:text-[7.5rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-[0.9] whitespace-nowrap drop-shadow-sm">
+              <h2 suppressHydrationWarning className="text-[5.0rem] lg:text-[7.5rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-[0.9] whitespace-nowrap drop-shadow-sm">
                 {property.heroSubheadline}
               </h2>
             </div>
@@ -164,12 +185,12 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
           {/* MOBILE LAYER 1: Luxury Stacked Editorial Typography */}
           <div className="block sm:hidden hero-parallax-text absolute top-10 left-5 right-5 z-10 pointer-events-none select-none will-change-transform">
             <div className="flex flex-col items-start space-y-0">
-              <h1 className="text-[2.3rem] xs:text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.95]">
+              <h1 suppressHydrationWarning className="text-[2.3rem] xs:text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.95]">
                 {property.heroHeadline}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <div className="w-6 h-1 bg-amber-500 rounded-full" />
-                <span className="text-[1.7rem] xs:text-[1.9rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
+                <span suppressHydrationWarning className="text-[1.7rem] xs:text-[1.9rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
                   {property.heroSubheadline}
                 </span>
               </div>
@@ -218,27 +239,71 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
         </div>
 
         {/* LAYER 4: 100% NEUMORPHIC FLOATING WIDGET CARDS */}
-        {/* Bottom Left Card: +500 Penghuni & Rating (Full Neumorphic Extruded & Inset) */}
-        <div className="absolute bottom-3 sm:bottom-5 left-6 sm:left-14 lg:left-20 z-40 max-w-[210px] sm:max-w-[230px] p-4 neu-card rounded-3xl border border-white/80 dark:border-white/10 shadow-2xl text-slate-900 dark:text-white hidden sm:block hover:translate-y-[-3px] transition-all">
+        {/* Prominent Floating CTA Card for Kosan Owners (Only shown on Demo SaaS website, hidden on plotted/custom branches like RSHS) */}
+        {isDemo && (
+          <div className="absolute top-[28%] sm:top-[32%] lg:top-[34%] left-4 sm:left-10 lg:left-14 z-40 w-[88%] xs:w-80 sm:w-84 max-w-sm animate-scale-in">
+            <a
+              href="https://wa.me/6282114242634?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20punya%20kosan%20dan%20belum%20punya%20sistem%20digital.%20Mau%20konsultasi%20gratis%20dan%20daftar%20sekarang."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-4 sm:p-5 neu-card rounded-3xl border border-white/90 dark:border-white/15 shadow-2xl hover:scale-[1.03] active:scale-98 transition-all text-slate-800 dark:text-white group cursor-pointer"
+              title="Hubungi WhatsApp Konsultan KosanKu Pro +6282114242634"
+            >
+              {/* Top Badge & Live Status */}
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 neu-inset rounded-xl text-[10px] sm:text-[11px] font-black text-[#047857] dark:text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
+                  <span>Konsultasi Gratis</span>
+                </div>
+                <span className="text-[10px] font-extrabold text-amber-600 dark:text-amber-300 neu-card-sm px-2 py-0.5 rounded-lg border border-amber-500/20">
+                  ★ 1-on-1 Setup
+                </span>
+              </div>
+
+              {/* Headline & Description */}
+              <div className="space-y-1 mb-3.5">
+                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white group-hover:text-[#047857] dark:group-hover:text-emerald-400 transition-colors leading-tight">
+                  Punya Kosan Belum Ada Sistem?
+                </h3>
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-snug">
+                  Daftar sekarang atau tanya-tanya sistem operasional otomatis bersama kami.
+                </p>
+              </div>
+
+              {/* Neumorphic Big CTA Action Button */}
+              <div className="flex items-center justify-between gap-2 p-2 neu-inset rounded-2xl group-hover:border-emerald-500/30 transition-all">
+                <div className="flex items-center gap-2 pl-1">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-sm shadow-md">
+                    <i className="fa-brands fa-whatsapp text-base" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">WhatsApp Resmi</div>
+                    <div className="text-xs font-black text-slate-800 dark:text-slate-200 leading-tight">+62 821-1424-2634</div>
+                  </div>
+                </div>
+
+                <span className="px-3.5 py-2 rounded-xl bg-[#047857] hover:bg-[#065f46] text-white font-black text-[10px] sm:text-xs shadow-md group-hover:scale-105 transition-all flex items-center gap-1 shrink-0">
+                  <span>Daftar</span>
+                  <i className="fa-solid fa-arrow-right text-[9px]" />
+                </span>
+              </div>
+            </a>
+          </div>
+        )}
+
+        {/* Bottom Left Card: +500 Penghuni & Rating (Compact subtle card) */}
+        <div className="absolute bottom-3 sm:bottom-4 left-6 sm:left-10 lg:left-14 z-30 max-w-[200px] sm:max-w-[220px] p-3.5 neu-card-sm rounded-2xl border border-white/80 dark:border-white/10 shadow-lg text-slate-900 dark:text-white hidden lg:block hover:translate-y-[-2px] transition-all">
           <div className="flex items-baseline justify-between">
-            <div className="px-2.5 py-1 neu-inset rounded-2xl text-xl sm:text-2xl font-black text-[#047857] dark:text-emerald-400 shadow-inner">
+            <div className="px-2 py-0.5 neu-inset rounded-xl text-lg font-black text-[#047857] dark:text-emerald-400 shadow-inner">
               500+
             </div>
-            <span className="text-[10px] font-black neu-card-sm text-amber-600 dark:text-amber-300 px-2.5 py-1 rounded-xl border border-amber-500/20">
+            <span className="text-[9px] font-black neu-card-sm text-amber-600 dark:text-amber-300 px-2 py-0.5 rounded-lg border border-amber-500/20">
               ★ 4.9 / 5.0
             </span>
           </div>
-          <p className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 mt-2 leading-snug font-bold">
+          <p className="text-[9px] text-slate-600 dark:text-slate-400 mt-1.5 leading-tight font-bold">
             Penghuni &amp; pemilik kos mempercayai KosanKuPro
           </p>
-          <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-slate-200/60 dark:border-white/10">
-            <div className="flex -space-x-1.5">
-              <img src="/images/avatar1.png" alt="Avatar" className="w-6 h-6 rounded-full border-2 border-white dark:border-slate-800 object-cover" />
-              <div className="w-6 h-6 rounded-full bg-[#047857] border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">EK</div>
-              <div className="w-6 h-6 rounded-full bg-indigo-600 border-2 border-white dark:border-slate-800 flex items-center justify-center text-[7px] font-bold text-white">AR</div>
-            </div>
-            <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-extrabold neu-inset px-2.5 py-0.5 rounded-full">96% Terisi</span>
-          </div>
         </div>
 
         {/* Center Right Card: Smart Property Status (Full Neumorphic Extruded & Inset) */}

@@ -3,35 +3,29 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-let cachedComplaints: any[] = [
-  { id: 'cmp_1', title: 'AC Kurang Dingin', description: 'AC kamar A-101 terasa kurang dingin sejak kemarin sore, mohon bantuan cek freon.', category: 'maintenance', status: 'OPEN', user: { id: 'usr_tenant_01', name: 'Rian Pratama', phone: '0815-6677-8899' }, room: { id: '1', number: 'A-101' }, createdAt: new Date().toISOString() },
-];
-
-// GET /api/complaints — list complaints with optional filters - Instant <5ms
+// GET /api/complaints — list complaints with optional filters
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
     const userId = searchParams.get('userId');
 
-    let filtered = [...cachedComplaints];
-    if (status) filtered = filtered.filter((c) => c.status === status.toUpperCase());
-    if (userId) filtered = filtered.filter((c) => c.user?.id === userId);
+    const where: any = {};
+    if (status) where.status = status.toUpperCase();
+    if (userId) where.userId = userId;
 
-    // Background sync from DB non-blocking
-    prisma.complaint.findMany({
+    const dbComplaints = await prisma.complaint.findMany({
+      where,
       include: {
         user: { select: { id: true, name: true, phone: true } },
         room: { select: { id: true, number: true } },
       },
       orderBy: { createdAt: 'desc' },
-    }).then((dbComplaints) => {
-      if (dbComplaints && dbComplaints.length > 0) cachedComplaints = dbComplaints;
-    }).catch(() => {});
+    });
 
-    return NextResponse.json({ data: filtered, count: filtered.length });
+    return NextResponse.json({ data: dbComplaints || [], count: dbComplaints?.length || 0 });
   } catch (error) {
-    return NextResponse.json({ data: cachedComplaints, count: cachedComplaints.length });
+    return NextResponse.json({ data: [], count: 0 });
   }
 }
 

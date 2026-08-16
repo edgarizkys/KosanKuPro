@@ -10,13 +10,23 @@ let cachedRooms: any[] = [
   { id: '4', number: 'B-202', type: 'Standard Room Single', price: 1200000, floor: 2, capacity: 1, facilities: ['AC', 'WiFi', 'KM Luar'], status: 'AVAILABLE', tenant: null, imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=600' },
 ];
 
-// GET /api/rooms — list with optional filters (status, floor, type) - Instant <5ms
+// GET /api/rooms — list with optional filters (status, floor, type, property/kosan) - Instant <5ms
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
     const floor = searchParams.get('floor');
     const type = searchParams.get('type');
+    const propertyParam = searchParams.get('property') || searchParams.get('kosan');
+
+    if (propertyParam && propertyParam.toLowerCase() === 'rshs') {
+      const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
+      let filteredRshs = [...RSHS_ROOMS_DATA];
+      if (status) filteredRshs = filteredRshs.filter((r) => r.status === status.toUpperCase());
+      if (floor) filteredRshs = filteredRshs.filter((r) => r.floor === parseInt(floor, 10));
+      if (type) filteredRshs = filteredRshs.filter((r) => r.type.toLowerCase().includes(type.toLowerCase()));
+      return NextResponse.json({ data: filteredRshs, count: filteredRshs.length });
+    }
 
     let filtered = [...cachedRooms];
     if (status) filtered = filtered.filter((r) => r.status === status.toUpperCase());

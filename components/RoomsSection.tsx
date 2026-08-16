@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import BookingModal from './BookingModal';
+import { useProperty } from '@/lib/PropertyContext';
+
+import { RSHS_ROOMS_DATA } from '@/lib/rshsRoomsData';
 
 export interface RoomItem {
   id: string;
@@ -212,9 +215,13 @@ export default function RoomsSection({
   onLogin: () => void;
   onOpenBookingPage?: (roomObj: RoomItem) => void;
 }) {
+  const { property } = useProperty();
+  const isRshs = property.slug === 'rshs';
+  const defaultRoomsList = isRshs ? RSHS_ROOMS_DATA : FALLBACK_ROOMS;
+
   const swiperRef = useRef<HTMLDivElement>(null);
   const swiperInstance = useRef<any>(null);
-  const [rooms, setRooms] = useState<RoomItem[]>(FALLBACK_ROOMS);
+  const [rooms, setRooms] = useState<RoomItem[]>(defaultRoomsList);
   const [filter, setFilter] = useState<string>('all');
   const [detailRoom, setDetailRoom] = useState<RoomItem | null>(null);
   const [selectedMediaTab, setSelectedMediaTab] = useState<'photo' | 'video'>('photo');
@@ -223,20 +230,30 @@ export default function RoomsSection({
   const [bookingSent, setBookingSent] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [bookingRoom, setBookingRoom] = useState<RoomItem | null>(null);
-  const [visibleCount, setVisibleCount] = useState<number>(6);
+  const [visibleCount, setVisibleCount] = useState<number>(8);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    setRooms(isRshs ? RSHS_ROOMS_DATA : FALLBACK_ROOMS);
+  }, [property.slug, isRshs]);
+
   const loadRooms = () => {
-    // Get custom local created rooms first
+    // If we are on RSHS property, always use the dedicated Juragan Kost RSHS rooms
+    if (isRshs) {
+      setRooms(RSHS_ROOMS_DATA);
+      return;
+    }
+
+    // Otherwise load default demo rooms
     let localCustomRooms: RoomItem[] = [];
     try {
       localCustomRooms = JSON.parse(localStorage.getItem('kosanku_custom_rooms') || '[]');
     } catch {}
 
-    fetch('/api/rooms')
+    fetch(`/api/rooms?property=${property.slug}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         const dbList = (json?.data && Array.isArray(json.data)) ? json.data : [];
@@ -251,7 +268,7 @@ export default function RoomsSection({
 
         if (combined.length > 0) {
           const merged: RoomItem[] = combined.map((r: any, idx: number) => {
-            const fb = FALLBACK_ROOMS[idx % FALLBACK_ROOMS.length];
+            const fb = defaultRoomsList[idx % defaultRoomsList.length];
             return {
               id: r.id || `custom-${idx}`,
               number: r.number,
@@ -260,40 +277,26 @@ export default function RoomsSection({
               status: r.status || 'AVAILABLE',
               floor: r.floor || 1,
               imageUrl: r.imageUrl || fb.imageUrl,
-              gallery: r.gallery && r.gallery.length ? r.gallery : [r.imageUrl || fb.imageUrl, ...(fb.gallery || [])],
+              gallery: r.gallery && r.gallery.length ? r.gallery : (fb.gallery && fb.gallery.length ? fb.gallery : [r.imageUrl || fb.imageUrl]),
               videoUrl: r.videoUrl || fb.videoUrl,
               size: r.size || fb.size || '4 x 5 m (20 m²)',
-              bedType: r.bedType || fb.bedType || 'Queen Bed (160x200)',
-              electricity: r.electricity || fb.electricity || 'Token Mandiri 1300W',
-              view: r.view || fb.view || 'City / Garden View',
+              bedType: r.bedType || fb.bedType || 'Kasur Comfort',
+              electricity: r.electricity || fb.electricity || 'Token Mandiri',
+              view: r.view || fb.view || 'Area Tenang & Nyaman',
               capacity: r.capacity ? `${r.capacity} Orang` : fb.capacity || '1 - 2 Orang',
               facilities: r.facilities && r.facilities.length ? r.facilities : fb.facilities,
               categorizedFacilities: r.categorizedFacilities || fb.categorizedFacilities,
             };
           });
 
-          setRooms((prev) => {
-            if (
-              prev.length === merged.length &&
-              prev.every(
-                (p, i) =>
-                  p.id === merged[i].id &&
-                  p.status === merged[i].status &&
-                  p.number === merged[i].number &&
-                  p.videoUrl === merged[i].videoUrl
-              )
-            ) {
-              return prev;
-            }
-            return merged;
-          });
+          setRooms(merged);
+        } else {
+          setRooms(defaultRoomsList);
         }
       })
       .catch((err) => {
-        console.warn('Failed to load rooms from server, using local/fallback:', err);
-        if (localCustomRooms.length > 0) {
-          setRooms([...FALLBACK_ROOMS, ...localCustomRooms]);
-        }
+        console.warn('Failed to load rooms from server, using fallback:', err);
+        setRooms(defaultRoomsList);
       });
   };
 
@@ -367,7 +370,9 @@ export default function RoomsSection({
         <div>
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Katalog Kamar Eksklusif</span>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mt-1.5 sm:mt-2 tracking-tight">Pilihan Unit Terbaik</h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1.5 sm:mt-2">{rooms.length} unit kamar siap huni dengan video tour, fasilitas hotel, &amp; smart system di Dago</p>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1.5 sm:mt-2">
+            {rooms.length} tipe pilihan kamar siap huni dengan video tour &amp; fasilitas lengkap {isRshs ? 'di depan RS Hasan Sadikin Bandung' : 'di Bandung'}
+          </p>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2 self-start overflow-x-auto scrollbar-none p-1 neu-inset rounded-2xl">
           {['all', 'AVAILABLE', 'OCCUPIED'].map((f) => (
@@ -722,16 +727,26 @@ export default function RoomsSection({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
                   </>
                 ) : (
-                  <div className="w-full h-full relative">
-                    <video
-                      src={detailRoom.videoUrl}
-                      controls
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-full h-full relative bg-black flex items-center justify-center">
+                    {detailRoom.videoUrl && detailRoom.videoUrl.includes('youtube') ? (
+                      <iframe
+                        src={`${detailRoom.videoUrl}?autoplay=1&mute=1&loop=1&playsinline=1`}
+                        title={`Video Tour ${detailRoom.type}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                      />
+                    ) : (
+                      <video
+                        src={detailRoom.videoUrl}
+                        controls
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </div>
                 )}
 

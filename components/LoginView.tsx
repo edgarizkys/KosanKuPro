@@ -120,10 +120,6 @@ export default function LoginView({ onClose, onLogin }: LoginViewProps) {
                 <p className="text-xs text-slate-600 dark:text-slate-400">
                   {property.address}
                 </p>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-[#047857] dark:text-emerald-400 text-[11px] font-black mt-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Portal Keamanan Resmi
-                </div>
               </div>
 
               {error && (

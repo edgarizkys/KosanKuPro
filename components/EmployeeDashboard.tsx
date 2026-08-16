@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import SequenceSaaSLayout from './SequenceSaaSLayout';
+import ToastNotification from './ToastNotification';
+import type { RoleType } from '@/app/page';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface StaffTask {
   id: string;
@@ -29,26 +33,7 @@ interface StockOpnameItem {
   note?: string;
 }
 
-import SequenceSaaSLayout from './SequenceSaaSLayout';
-import ToastNotification from './ToastNotification';
-import type { RoleType } from '@/app/page';
-
-const INITIAL_TASKS: StaffTask[] = [
-  {
-    id: 'TSK-PL-01',
-    title: 'Plotting dari Owner: Antar Refill Galon Aqua 19L & Gas 3kg',
-    room: 'Kamar A-101 (Budi Santoso)',
-    category: 'OWNER_PLOTTED',
-    assignedTo: 'Bambang (Staf Maintenance)',
-    dueTime: 'Segera (Hari ini)',
-    completed: false,
-    ownerInstruction: 'Segera koordinasi & hubungi Depot Air & Gas Suci untuk pengantaran.',
-    connectedVendor: 'Depot Air & Gas Suci (Refill)',
-  },
-  { id: 'TSK-01', title: 'Pembersihan Total & Sterilisasi Cek-Out', room: 'Kamar A-102', category: 'CLEANING', assignedTo: 'Budi (Staf Kebersihan)', dueTime: '10:00 AM', completed: false },
-  { id: 'TSK-02', title: 'Pengecekan AC & Tambah Freon', room: 'Kamar A-101', category: 'MAINTENANCE', assignedTo: 'Bambang (Teknisi)', dueTime: '01:30 PM', completed: false },
-  { id: 'TSK-03', title: 'Pencatatan Meteran Listrik & Air Lt 1-3', room: 'Semua Lt', category: 'UTILITY_METER', assignedTo: 'Siti (Admin Staff)', dueTime: '04:00 PM', completed: true },
-];
+const INITIAL_TASKS: StaffTask[] = [];
 
 const CHECKIN_ITEMS: InventoryChecklist[] = [
   { item: 'Kunci Kamar & Card Key Access', status: 'ADA_BAIK' },
@@ -74,9 +59,12 @@ export default function EmployeeDashboard({
   onSwitchRole?: (r: RoleType) => void;
   onLogout?: () => void;
 }) {
-  const [tasks, setTasks] = useState<StaffTask[]>(INITIAL_TASKS);
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
+  const [tasks, setTasks] = useState<StaffTask[]>(isCustomOrNewKos ? [] : INITIAL_TASKS);
   const [checklist, setChecklist] = useState<InventoryChecklist[]>(CHECKIN_ITEMS);
-  const [soItems, setSoItems] = useState<StockOpnameItem[]>(INITIAL_SO_ITEMS);
+  const [soItems, setSoItems] = useState<StockOpnameItem[]>(isCustomOrNewKos ? [] : INITIAL_SO_ITEMS);
   const [activeTab, setActiveTab] = useState<'tasks' | 'stock_opname' | 'checkin' | 'expense_history'>('tasks');
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [reqTitle, setReqTitle] = useState('');

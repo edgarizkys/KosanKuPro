@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface ChatMsg {
   role: 'user' | 'assistant';
@@ -8,10 +9,30 @@ interface ChatMsg {
 }
 
 export default function WhatsAppWidget() {
+  const { property } = useProperty();
+  const isRshs = property.slug === 'rshs';
+  const isCustomOrNewKos = property.slug !== 'default';
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { role: 'assistant', content: 'Halo! 👋 Selamat datang di KosanKu Pro.\nAda yang bisa kami bantu? Tanya seputar kamar, harga, fasilitas, atau cara booking.' },
+    {
+      role: 'assistant',
+      content: isRshs
+        ? `Halo! 👋 Selamat datang di ${property.name} (Depan RS Hasan Sadikin Bandung).\nAda yang bisa kami bantu seputar kamar Eksekutif, Nyaman, Paviliun, harga, atau fasilitas kosan?`
+        : 'Halo! 👋 Selamat datang di KosanKu Pro.\nAda yang bisa kami bantu? Tanya seputar kamar, harga, fasilitas, atau cara booking.',
+    },
   ]);
+
+  useEffect(() => {
+    setMessages([
+      {
+        role: 'assistant',
+        content: isRshs
+          ? `Halo! 👋 Selamat datang di ${property.name} (Depan RS Hasan Sadikin Bandung).\nAda yang bisa kami bantu seputar kamar Eksekutif, Nyaman, Paviliun, harga, atau fasilitas kosan?`
+          : 'Halo! 👋 Selamat datang di KosanKu Pro.\nAda yang bisa kami bantu? Tanya seputar kamar, harga, fasilitas, atau cara booking.',
+      },
+    ]);
+  }, [property.slug, isRshs, property.name]);
+
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -31,7 +52,13 @@ export default function WhatsAppWidget() {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, history: messages.slice(-10) }),
+        body: JSON.stringify({
+          message: msg,
+          propertySlug: property.slug,
+          propertyName: property.name,
+          propertyAddress: property.address,
+          history: messages.slice(-10),
+        }),
       });
       const json = await res.json();
       const reply = json.data?.reply || 'Maaf, pesan belum terkirim. Silakan coba lagi ya.';
@@ -42,6 +69,12 @@ export default function WhatsAppWidget() {
       setTyping(false);
     }
   };
+
+  const adminTitle = property.slug === 'rshs'
+    ? 'Admin Juragan Kost RSHS'
+    : isCustomOrNewKos
+    ? `Admin ${property.name}`
+    : 'Admin Customer Service';
 
   return (
     <div className="fixed bottom-[5.5rem] right-4 sm:bottom-6 sm:right-6 z-50">
@@ -61,8 +94,8 @@ export default function WhatsAppWidget() {
                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-teal-800 rounded-full shadow-sm" />
               </div>
               <div>
-                <h4 className="font-bold text-[13px] text-white tracking-wide">AI Assistant KosanKu</h4>
-                <span className="text-[10px] text-emerald-200 font-medium">Online &bull; Siap Membantu</span>
+                <h4 className="font-bold text-[13px] text-white tracking-wide">{adminTitle}</h4>
+                <span className="text-[10px] text-emerald-200 font-medium">Online &bull; Respon Cepat</span>
               </div>
             </div>
             <button onClick={() => setOpen(false)} className="relative w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm text-white/80 hover:text-white hover:bg-white/20 transition-all flex items-center justify-center cursor-pointer">
@@ -123,13 +156,15 @@ export default function WhatsAppWidget() {
                 <span className="w-7 h-7 rounded-xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-xs shrink-0"><i className="fa-solid fa-tag" /></span>
                 <span>Info Harga &amp; Fasilitas</span>
               </button>
-              <button
-                onClick={() => sendMessage('Bagaimana cara booking kamar?')}
-                className="w-full text-left px-4 py-2.5 neu-btn rounded-2xl text-[11px] text-slate-800 dark:text-slate-200 font-bold transition-all flex items-center gap-3 cursor-pointer hover:scale-[1.01]"
+              <a
+                href={`https://wa.me/${(property.whatsapp || '6281223798307').replace(/[^0-9]/g, '')}?text=Halo%20Admin%20${encodeURIComponent(property.name)},%20saya%20ingin%20tanya%20langsung%20ke%20Owner%20mengenai%20sewa%20kamar`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-left px-4 py-2.5 neu-btn rounded-2xl text-[11px] text-emerald-700 dark:text-emerald-400 font-bold transition-all flex items-center gap-3 cursor-pointer hover:scale-[1.01]"
               >
-                <span className="w-7 h-7 rounded-xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-xs shrink-0"><i className="fa-solid fa-calendar-check" /></span>
-                <span>Cara Booking</span>
-              </button>
+                <span className="w-7 h-7 rounded-xl neu-inset text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs shrink-0"><i className="fa-brands fa-whatsapp" /></span>
+                <span>Hubungi Langsung Owner (WA: {property.whatsapp || '+62 812-2379-8307'})</span>
+              </a>
             </div>
           )}
 

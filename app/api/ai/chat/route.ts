@@ -9,57 +9,71 @@ import type OpenAI from 'openai';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, phone, history } = body;
+    const { message, phone, history, propertySlug, propertyName, propertyAddress } = body;
 
     if (!message) {
       return NextResponse.json({ error: 'message is required' }, { status: 400 });
     }
 
+    const isRshs = propertySlug === 'rshs' || (propertyName && propertyName.toLowerCase().includes('rshs'));
+    const activeKosName = isRshs ? 'Juragan Kost RSHS Bandung' : (propertyName || 'KosanKu Pro Residence');
+    const activeAddress = isRshs
+      ? 'Jl. Pasir Kaliki GG h tabri No.76/65, Sukabungah, Kec. Sukajadi, Kota Bandung (Persis di seberang / depan RS Hasan Sadikin Bandung)'
+      : (propertyAddress || 'Bandung');
+
     // Load FAQ knowledge base
     let knowledgeBase = '';
     let roomList = 'Belum ada data kamar.';
-    try {
-      const faqEntries = await prisma.faqEntry.findMany({ take: 50 });
-      knowledgeBase = faqEntries
-        .map((f: { question: string; answer: string }) => `Q: ${f.question}\nA: ${f.answer}`)
-        .join('\n\n');
-    } catch {
-      // DB might not be available
+
+    if (isRshs) {
+      const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
+      roomList = RSHS_ROOMS_DATA.map(
+        (r) =>
+          `- ${r.type} (${r.number}): Rp ${r.price.toLocaleString('id-ID')}/bln. Ukuran: ${r.size || 'Kamar Nyaman'}. Fasilitas: ${(r.facilities || []).join(', ')}`
+      ).join('\n');
+      knowledgeBase = `Lokasi: Tepat di depan RS Hasan Sadikin (RSHS) Bandung, sangat dekat untuk dokter jaga, koas, mahasiswa FK Unpad, perawat, atau keluarga pasien.
+Fasilitas Utama: Mini Gym, Dapur & Kulkas Bersama Lengkap, Laundry Room (Free Laundry 5-10kg/bln), Pembersihan kamar berkala, Parkir Motor, WiFi Kencang & CCTV 24 Jam.
+Kamar: Tipe Eksekutif (1.5jt), Nyaman (1jt), Nyaman 2 (1.4jt), Nyaman 3 (1.3jt), Nyaman 4 (1.4jt), Paviliun Eksekutif (2.8jt), Paviliun Tipe B (2.6jt), Super Nyaman (1.7jt).`;
+    } else {
+      try {
+        const faqEntries = await prisma.faqEntry.findMany({ take: 50 });
+        knowledgeBase = faqEntries
+          .map((f: { question: string; answer: string }) => `Q: ${f.question}\nA: ${f.answer}`)
+          .join('\n\n');
+      } catch {
+        // DB might not be available
+      }
+
+      try {
+        const availableRooms = await prisma.room.findMany({
+          where: { status: 'AVAILABLE' },
+          select: { number: true, type: true, price: true, facilities: true },
+          take: 10,
+        });
+        roomList = availableRooms.length > 0
+          ? availableRooms.map((r: { number: string; type: string; price: number; facilities: string[] }) => `- ${r.type} (${r.number}): Rp ${r.price.toLocaleString('id-ID')}/bln, fasilitas: ${r.facilities.join(', ')}`).join('\n')
+          : 'Belum ada kamar tersedia.';
+      } catch {
+        // DB might not be available
+      }
     }
 
-    try {
-      const availableRooms = await prisma.room.findMany({
-        where: { status: 'AVAILABLE' },
-        select: { number: true, type: true, price: true, facilities: true },
-        take: 10,
-      });
-      roomList = availableRooms.length > 0
-        ? availableRooms.map((r: { number: string; type: string; price: number; facilities: string[] }) => `- ${r.type} (${r.number}): Rp ${r.price.toLocaleString('id-ID')}/bln, fasilitas: ${r.facilities.join(', ')}`).join('\n')
-        : 'Belum ada kamar tersedia.';
-    } catch {
-      // DB might not be available
-    }
+    const ownerPhone = isRshs ? '+62 812-2379-8307' : '+62 812-3456-7890';
 
-    const systemPrompt = `Kamu adalah admin/staf KosanKu Pro, kos premium di Bandung. Bukan AI, tapi staf kos yang bertugas melayani calon dan penghuni kos.
+    const systemPrompt = `Kamu adalah Customer Service / Resepsionis resmi dari "${activeKosName}", berlokasi di ${activeAddress}. Kamu BUKAN AI, melainkan staf / admin pengelola kosan manusia yang ramah, sopan, dan sigap membantu calon penghuni maupun penghuni kos.
 
 Gaya bicara:
-- Ramah, santai tapi profesional, seperti admin kos yang baik
-- Panggil "kak" atau "mas/mbak" untuk calon penghuni
-- Jawaban singkat dan jelas (maksimal 3-4 kalimat)
-- Tidak perlu menyebut diri sendiri sebagai AI atau asisten virtual
-- Gunakan bahasa Indonesia sehari-hari yang natural
-- Emoji boleh digunakan secukupnya, tapi jangan berlebihan
-- Jangan gunakan markdown
+- Sangat ramah, bersahabat, dan profesional khas staf pengelola kos Indonesia
+- Panggil "kak" atau "dokter / mas / mbak" untuk calon penghuni
+- Jawaban ringkas, padat, dan jelas (maksimal 2-3 kalimat)
+- Selalu berikan info harga sewa, fasilitas, atau keunggulan lokasi yang akurat sesuai data di bawah
+- JIKA ada pertanyaan khusus di luar data (misal: negosiasi diskon khusus, aturan hewan peliharaan, atau hal yang tidak kamu ketahui pasti), JANGAN menebak! Arahkan calon penghuni untuk langsung menghubungi Owner / Pengelola melalui WhatsApp resmi: ${ownerPhone}
+- Jangan pernah menyebut dirimu sebagai robot/AI atau asisten kecerdasan buatan
 
-Tugas:
-- Jawab pertanyaan tentang kamar, harga, fasilitas, dan proses booking
-- Bantu calon penghuni memilih kamar yang cocok
-- Berikan info yang akurat berdasarkan data kamar
+Knowledge Base Kosan:
+${knowledgeBase || 'Belum ada FAQ khusus.'}
 
-Knowledge Base:
-${knowledgeBase || 'Belum ada FAQ.'}
-
-Kamar tersedia saat ini:
+Daftar Pilihan Kamar & Harga Resmi Saat Ini:
 ${roomList}`;
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [

@@ -275,12 +275,12 @@ export default function MasterDataSettings() {
     if (!confirmInject) return;
 
     const rshsProperty: PropertySettings = {
-      propertyName: 'KosanKu Premium RSHS Pasteur Bandung',
-      propertyAddress: 'Jl. Pasteur No. 38 (3 Menit Jalan Kaki ke Gate 2 RSHS), Bandung',
+      propertyName: 'Juragan Kost RSHS Bandung',
+      propertyAddress: 'Jl. Pasir Kaliki GG h tabri No.76/65, Sukabungah, Kec. Sukajadi, Kota Bandung, Jawa Barat 40162',
       propertyPhone: '0811-2233-4455',
       bankName: 'BCA (Bank Central Asia)',
       bankAccount: '8830-1928-44',
-      bankHolder: 'Ibu Dewi Tri Oktariani / Kos RSHS',
+      bankHolder: 'Owner Juragan Kost RSHS',
       allowanceLaundryKg: 5,
     };
     setProperty(rshsProperty);
@@ -318,59 +318,17 @@ export default function MasterDataSettings() {
   // 3. EXPORT / DOWNLOAD EXCEL TEMPLATE LANGSUNG DARI BROWSER
   const handleDownloadExcel = () => {
     try {
-      // Create workbook
-      const wb = XLSX.utils.book_new();
+      const link = document.createElement('a');
+      link.href = '/Template_Master_Data_KosanKu_Pro.xlsx';
+      link.download = 'Template_Master_Data_KosanKu_Pro.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      // Sheet 1: Identitas
-      const ws1Data = [
-        ['PARAMETER / FIELD PENGATURAN', 'NILAI / ISIAN OWNER', 'PETUNJUK & KETERANGAN'],
-        ['Nama Properti / Kosan', property.propertyName || 'Kosan RSHS Pasteur Bandung', 'Wajib diisi - Ditampilkan di header web & invoice'],
-        ['Alamat Lengkap', property.propertyAddress || 'Jl. Pasteur No. 38, Sukajadi', 'Wajib diisi'],
-        ['Kota / Wilayah', 'Bandung', 'Wajib diisi'],
-        ['No. WhatsApp Resmi Kosan', property.propertyPhone || '0811-2233-4455', 'Wajib diisi - Digunakan untuk notifikasi & komplain'],
-        ['Nama Bank Rekening Pencairan', property.bankName || 'BCA (Bank Central Asia)', 'Wajib diisi - Rekening penerimaan uang sewa'],
-        ['Nomor Rekening Bank', property.bankAccount || '8830-1928-44', 'Wajib diisi'],
-        ['Nama Pemilik Rekening (Holder)', property.bankHolder || 'Ibu Dewi Tri Oktariani', 'Wajib diisi'],
-        ['Batas Tanggal Jatuh Tempo Tagihan', 'Tanggal 1 - 5 setiap bulan', 'Default tanggal penagihan invoice otomatis'],
-        ['Jatah Kuota Laundry Free (Kg/Bln)', property.allowanceLaundryKg || 5, 'Isi 0 jika tidak ada fasilitas laundry gratis']
-      ];
-      const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
-      XLSX.utils.book_append_sheet(wb, ws1, '01_Identitas_Kosan');
-
-      // Sheet 2: Master Kamar
-      const ws2Data = [
-        ['No Kamar*', 'Lantai*', 'Tipe Kamar*', 'Harga Sewa / Bulan (Rp)*', 'Status (AVAILABLE/OCCUPIED/MAINTENANCE)*', 'Ukuran Kamar', 'Fasilitas Kamar', 'Kapasitas (Orang)'],
-        ['MED-101', 1, 'Deluxe Doctor Suite', 2200000, 'AVAILABLE', '4 x 5 m (20 m2)', 'AC Daikin, Meja Kerja, KM Dalam Water Heater', 1],
-        ['MED-102', 1, 'Deluxe Doctor Suite', 2200000, 'OCCUPIED', '4 x 5 m (20 m2)', 'AC Daikin, Meja Kerja, KM Dalam Water Heater', 1],
-        ['MED-201', 2, 'VIP Koas Balcony', 2500000, 'AVAILABLE', '5 x 5 m (25 m2)', 'AC Inverter, Smart TV, Balkon Private, Kulkas Mini', 2],
-        ['MED-301', 3, 'Standard Medico Room', 1800000, 'AVAILABLE', '3.5 x 4.5 m (16 m2)', 'AC Inverter, WiFi 100Mbps, Kasur Springbed', 1]
-      ];
-      const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
-      XLSX.utils.book_append_sheet(wb, ws2, '02_Master_Kamar');
-
-      // Sheet 3: Penghuni
-      const ws3Data = [
-        ['No Kamar*', 'Nama Lengkap Penghuni*', 'No WhatsApp*', 'Email*', 'Tanggal Masuk (DD/MM/YYYY)*', 'Periode Sewa (Bulanan/3 Bulan/Tahunan)', 'Deposit (Rp)', 'No KTP / NIK'],
-        ['MED-102', 'dr. Rizky Pratama, Sp.A', '081388776655', 'rizky.pratama@gmail.com', '01/02/2026', 'Bulanan', 500000, '3171012345670001']
-      ];
-      const ws3 = XLSX.utils.aoa_to_sheet(ws3Data);
-      XLSX.utils.book_append_sheet(wb, ws3, '03_Penghuni_Aktif');
-
-      // Sheet 4: Karyawan & Vendor
-      const ws4Data = [
-        ['Tipe (KARYAWAN/VENDOR)*', 'Nama Lengkap / Nama Usaha*', 'Kontak WhatsApp*', 'Email / Bidang Layanan*', 'Gaji / Biaya (Rp)', 'Alamat / Catatan'],
-        ['KARYAWAN', 'Bambang Prasetyo', '081355443322', 'staf.maintenance@kosanku.pro', 3500000, 'Teknisi Listrik & AC'],
-        ['VENDOR', 'Depot Air & Gas Suci', '081299887711', 'Refill Aqua 19L & Gas LPG', 0, 'Jl. Pemuda No. 12']
-      ];
-      const ws4 = XLSX.utils.aoa_to_sheet(ws4Data);
-      XLSX.utils.book_append_sheet(wb, ws4, '04_Karyawan_Vendor');
-
-      XLSX.writeFile(wb, 'Template_Master_Data_KosanKu_Pro.xlsx');
-      setToast('📥 Template Excel berhasil di-download! Siap disodorkan ke Owner / diimpor ke Google Sheets.');
+      setToast('📥 Template Formulir Excel berhasil di-download! Siap disodorkan ke Owner / diimpor ke Google Sheets.');
       setTimeout(() => setToast(null), 4500);
     } catch (err) {
       console.error('Download error:', err);
-      // Fallback direct link
       window.open('/Template_Master_Data_KosanKu_Pro.xlsx', '_blank');
     }
   };

@@ -26,11 +26,7 @@ function formatIDR(n: number) {
 }
 
 // --- Delivery tracking data ---
-const DELIVERY_TRACKING = [
-  { id: 'V-101', tenantName: 'Budi Santoso', roomNumber: 'A-101', item: 'Laundry Cuci Kiloan 7.5 Kg', courier: 'Bambang', status: 'PROCESSING', eta: '30 menit', updatedAt: '15 menit lalu' },
-  { id: 'V-102', tenantName: 'Siti Rahma', roomNumber: 'B-201', item: 'Refill Galon Aqua 19L + Gas LPG 3kg', courier: 'Bambang', status: 'NEW', eta: '1 jam', updatedAt: '45 menit lalu' },
-  { id: 'V-103', tenantName: 'Rian Pratama', roomNumber: 'C-302', item: 'Nasi Goreng Spesial + Es Teh', courier: 'Budi', status: 'DELIVERED', eta: '-', updatedAt: '3 jam lalu' },
-];
+const DELIVERY_TRACKING: any[] = [];
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   NEW:        { label: 'Menunggu Pickup',   color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' },
@@ -39,6 +35,8 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   SETTLED:    { label: 'Lunas',             color: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
 };
 
+import { useProperty } from '@/lib/PropertyContext';
+
 export default function VendorDashboard({
   onSwitchRole = () => {},
   onLogout = () => {},
@@ -46,9 +44,12 @@ export default function VendorDashboard({
   onSwitchRole?: (r: RoleType) => void;
   onLogout?: () => void;
 }) {
-  const [activeBranch, setActiveBranch] = useState('all');
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
+  const [activeBranch, setActiveBranch] = useState(property.name || 'all');
   const [activeTab, setActiveTab] = useState('tenant_requests');
-  const [orders, setOrders] = useState<VendorOrder[]>(INITIAL_VENDOR_ORDERS);
+  const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
   // Add-On Modal state
@@ -406,13 +407,13 @@ export default function VendorDashboard({
             <div className="border-b border-slate-200/60 dark:border-white/5 pb-5">
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <i className="fa-solid fa-truck-fast text-emerald-600 dark:text-emerald-400" />
-                Status Pengantaran Kurir ({orders.length} Pesanan)
+                Status Pengantaran Kurir ({isCustomOrNewKos ? 0 : orders.length} Pesanan)
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tracking pengiriman realtime — tersinkronisasi langsung dengan Tenant &amp; Owner.</p>
             </div>
 
             <div className="space-y-5">
-              {orders.map((delivery) => {
+              {!(isCustomOrNewKos) && orders.map((delivery) => {
                 // step index: 0=NEW, 1=PROCESSING, 2=DELIVERED/SETTLED
                 const stepIndex = delivery.status === 'NEW' ? 0 : delivery.status === 'PROCESSING' ? 1 : 2;
                 const steps = [

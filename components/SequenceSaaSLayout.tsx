@@ -6,6 +6,7 @@ import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from 
 import UserProfileModal from './UserProfileModal';
 import UserManagementView from './UserManagementView';
 import ToastNotification from './ToastNotification';
+import { useProperty } from '@/lib/PropertyContext';
 
 interface SequenceSaaSLayoutProps {
   role: RoleType;
@@ -36,9 +37,12 @@ export default function SequenceSaaSLayout({
   onLogout,
   activeTab = 'financial',
   onTabChange,
-  pendingRequestsCount = 1,
-  pendingApprovalsCount = 2,
+  pendingRequestsCount = 0,
+  pendingApprovalsCount = 0,
 }: SequenceSaaSLayoutProps) {
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [proMode, setProMode] = useState(true);
@@ -209,51 +213,53 @@ export default function SequenceSaaSLayout({
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
-    // 1. Immediate local cache load
-    const localProfiles = getStoredUserProfiles();
+    // 1. Immediate local cache load scoped to active property
+    const localProfiles = getStoredUserProfiles(property.slug);
     setUsers(localProfiles);
 
-    // 2. Live database sync from API for cross-browser consistency
-    fetch('/api/users/profile?all=true')
-      .then((res) => res.json())
-      .then((json) => {
-        if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-          const dbUsers: UserProfile[] = json.data.map((u: any) => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            phone: u.phone || '0812-3456-7890',
-            role: u.role?.toLowerCase() as any,
-            title: `${u.role} KosanKu`,
-            avatar: u.avatar || '👤',
-            avatarUrl: u.avatarUrl,
-            branchId: 'jkt',
-            branchName: 'KosanKu Pro Residence',
-            status: 'ACTIVE',
-            joinDate: 'Terverifikasi DB',
-          }));
+    // 2. If default SaaS demo, sync all. If custom kosan, only query property users
+    if (!isCustomOrNewKos) {
+      fetch('/api/users/profile?all=true')
+        .then((res) => res.json())
+        .then((json) => {
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            const dbUsers: UserProfile[] = json.data.map((u: any) => ({
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              phone: u.phone || '0812-3456-7890',
+              role: u.role?.toLowerCase() as any,
+              title: `${u.role} KosanKu`,
+              avatar: u.avatar || '👤',
+              avatarUrl: u.avatarUrl,
+              branchId: 'jkt',
+              branchName: 'KosanKu Pro Residence',
+              status: 'ACTIVE',
+              joinDate: 'Terverifikasi DB',
+            }));
 
-          const mergedMap = new Map<string, UserProfile>();
-          localProfiles.forEach((p) => mergedMap.set(p.email.toLowerCase(), p));
-          dbUsers.forEach((p) => {
-            const existing = mergedMap.get(p.email.toLowerCase());
-            mergedMap.set(p.email.toLowerCase(), {
-              ...existing,
-              ...p,
-              name: p.name || existing?.name || p.email,
-              phone: p.phone || existing?.phone || '0812-3456-7890',
-              avatarUrl: p.avatarUrl !== undefined ? p.avatarUrl : existing?.avatarUrl,
-              avatar: p.avatar || existing?.avatar || '👤',
+            const mergedMap = new Map<string, UserProfile>();
+            localProfiles.forEach((p) => mergedMap.set(p.email.toLowerCase(), p));
+            dbUsers.forEach((p) => {
+              const existing = mergedMap.get(p.email.toLowerCase());
+              mergedMap.set(p.email.toLowerCase(), {
+                ...existing,
+                ...p,
+                name: p.name || existing?.name || p.email,
+                phone: p.phone || existing?.phone || '0812-3456-7890',
+                avatarUrl: p.avatarUrl !== undefined ? p.avatarUrl : existing?.avatarUrl,
+                avatar: p.avatar || existing?.avatar || '👤',
+              });
             });
-          });
 
-          const mergedList = Array.from(mergedMap.values());
-          setUsers(mergedList);
-          saveStoredUserProfiles(mergedList);
-        }
-      })
-      .catch((err) => console.warn('[SequenceSaaSLayout] Failed to load DB profiles:', err));
-  }, []);
+            const mergedList = Array.from(mergedMap.values());
+            setUsers(mergedList);
+            saveStoredUserProfiles(mergedList, property.slug);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [property.slug, isCustomOrNewKos]);
 
   const handleAddUser = (newUser: UserProfile) => {
     const updated = [newUser, ...users];
@@ -520,7 +526,11 @@ export default function SequenceSaaSLayout({
     }
   }, []);
 
-  const selectedBranch = BRANCHES.find((b) => b.id === activeBranch) || BRANCHES[0];
+  const dynamicBranches = isCustomOrNewKos
+    ? [{ id: property.slug, name: property.name, totalRooms: property.totalRooms || 20, revenue: 0, occupancy: 0 }]
+    : BRANCHES;
+
+  const selectedBranch = dynamicBranches.find((b) => b.id === activeBranch) || dynamicBranches[0];
 
   const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info', targetTab?: string) => {
     setToast({ msg, type, targetTab });
@@ -1089,12 +1099,14 @@ export default function SequenceSaaSLayout({
                   <div className="absolute right-0 top-full mt-2 w-80 neu-card rounded-3xl p-3 z-50 shadow-2xl border border-white/80 dark:border-white/10 space-y-2 animate-scale-in">
                     <div className="px-3 py-1 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PILIH CABANG KOSAN</span>
-                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">4 Cabang Aktif</span>
+                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                        {isCustomOrNewKos ? '1 Cabang Aktif' : '4 Cabang Aktif'}
+                      </span>
                     </div>
 
                     <div className="space-y-1.5 max-h-72 overflow-y-auto scrollbar-none">
-                      {BRANCHES.map((b) => {
-                        const isSelected = activeBranch === b.id;
+                      {dynamicBranches.map((b) => {
+                        const isSelected = (activeBranch === b.id) || (isCustomOrNewKos);
                         return (
                           <div
                             key={b.id}
@@ -1186,7 +1198,7 @@ export default function SequenceSaaSLayout({
                   {role === 'admin' && 'TINGKAT OKUPANSI PROPERTI (ADMIN CONTROL)'}
                   {role === 'employee' && 'PORTAL OPERASIONAL STAF LAPANGAN & AUDIT SO'}
                   {role === 'vendor' && 'SALDO PAYOUT MITRA VENDOR KOSAN'}
-                  {role === 'tenant' && 'PORTAL PENGHUNI • KAMAR A-101 (BUDI SANTOSO)'}
+                  {role === 'tenant' && `PORTAL PENGHUNI • ${property.name || 'KOSANKU'}`}
                 </span>
                 <span className="px-3 py-1 neu-inset rounded-full text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 w-fit">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -1303,78 +1315,86 @@ export default function SequenceSaaSLayout({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 justify-between">
-                  {/* Total Income Card */}
-                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all hover:scale-[1.01]">
-                    <div className="space-y-1 min-w-0">
-                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                        <span className="w-2 h-2 rounded-full bg-[#047857] shrink-0" /> Total Income
-                      </span>
-                      <span className="text-base sm:text-2xl font-black text-slate-900 dark:text-white block truncate">Rp 34.5jt</span>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-[#047857] dark:text-emerald-300 text-[9px] sm:text-[10px] font-extrabold inline-block border border-emerald-300/60 dark:border-emerald-500/30 truncate max-w-full">45.0% ↗ Pemasukan</span>
-                    </div>
-                    {/* Inflow Icon Badge */}
-                    <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#047857] text-white flex items-center justify-center text-sm sm:text-xl shadow-md shrink-0 self-end sm:self-center" title="Cash Inflow (Uang Masuk)">
-                      <i className="fa-solid fa-arrow-down-left" />
-                    </div>
-                  </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 justify-between">
+                      {/* Total Income Card */}
+                      <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all hover:scale-[1.01]">
+                        <div className="space-y-1 min-w-0">
+                          <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                            <span className="w-2 h-2 rounded-full bg-[#047857] shrink-0" /> Total Income
+                          </span>
+                          <span className="text-base sm:text-2xl font-black text-slate-900 dark:text-white block truncate">
+                            {isCustomOrNewKos ? 'Rp 0' : 'Rp 34.5jt'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-[#047857] dark:text-emerald-300 text-[9px] sm:text-[10px] font-extrabold inline-block border border-emerald-300/60 dark:border-emerald-500/30 truncate max-w-full">
+                            {isCustomOrNewKos ? '0 Transaksi' : '45.0% ↗ Pemasukan'}
+                          </span>
+                        </div>
+                        {/* Inflow Icon Badge */}
+                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-[#047857] text-white flex items-center justify-center text-sm sm:text-xl shadow-md shrink-0 self-end sm:self-center" title="Cash Inflow (Uang Masuk)">
+                          <i className="fa-solid fa-arrow-down-left" />
+                        </div>
+                      </div>
 
-                  {/* Total Expense Card */}
-                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all hover:scale-[1.01]">
-                    <div className="space-y-1 min-w-0">
-                      <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                        <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" /> Total Expense
-                      </span>
-                      <span className="text-base sm:text-2xl font-black text-slate-900 dark:text-white block truncate">Rp 8.9jt</span>
-                      <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-[9px] sm:text-[10px] font-extrabold inline-block border border-rose-300/60 dark:border-rose-500/30 truncate max-w-full">12.5% ↘ Operasional</span>
+                      {/* Total Expense Card */}
+                      <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 transition-all hover:scale-[1.01]">
+                        <div className="space-y-1 min-w-0">
+                          <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                            <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" /> Total Expense
+                          </span>
+                          <span className="text-base sm:text-2xl font-black text-slate-900 dark:text-white block truncate">
+                            {isCustomOrNewKos ? 'Rp 0' : 'Rp 8.9jt'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-[9px] sm:text-[10px] font-extrabold inline-block border border-rose-300/60 dark:border-rose-500/30 truncate max-w-full">
+                            {isCustomOrNewKos ? '0 Pengeluaran' : '12.5% ↘ Operasional'}
+                          </span>
+                        </div>
+                        {/* Outflow Icon Badge */}
+                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-500 text-white flex items-center justify-center text-sm sm:text-xl shadow-md shrink-0 self-end sm:self-center" title="Cash Outflow (Uang Keluar)">
+                          <i className="fa-solid fa-arrow-up-right" />
+                        </div>
+                      </div>
                     </div>
-                    {/* Outflow Icon Badge */}
-                    <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-500 text-white flex items-center justify-center text-sm sm:text-xl shadow-md shrink-0 self-end sm:self-center" title="Cash Outflow (Uang Keluar)">
-                      <i className="fa-solid fa-arrow-up-right" />
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
+                  </section>
+                )}
 
-            {/* 4. METRIC CARDS ROW (Soft Raised Neumorphic Cards - 2 Cols on Mobile) */}
-            <section className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-              {role === 'owner' && (
-                <>
-                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-building-columns text-[#047857] dark:text-emerald-400 shrink-0" /> Rekening BCA</span>
-                    <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">Rp 8.672.200</div>
-                    <div className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">16.0% ↗ <span className="text-slate-400 font-normal">vs Last</span></div>
-                  </div>
-                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-piggy-bank text-[#047857] dark:text-emerald-400 shrink-0" /> Escrow Deposit</span>
-                    <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">Rp 3.765.350</div>
-                    <div className="text-[10px] sm:text-[11px] font-bold text-rose-600 dark:text-rose-400 truncate">8.2% ↘ <span className="text-slate-400 font-normal">vs Last</span></div>
-                  </div>
-                  <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3 col-span-2 sm:col-span-1">
-                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-receipt text-[#047857] dark:text-emerald-400 shrink-0" /> Cadangan Pajak &amp; Maint</span>
-                    <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">Rp 14.376.160</div>
-                    <div className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">35.2% ↗ <span className="text-slate-400 font-normal">vs Last</span></div>
-                  </div>
-                </>
-              )}
+                {/* 4. METRIC CARDS ROW (Soft Raised Neumorphic Cards - 2 Cols on Mobile) */}
+                <section className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
+                  {role === 'owner' && (
+                    <>
+                      <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3">
+                        <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-building-columns text-[#047857] dark:text-emerald-400 shrink-0" /> Rekening Bank</span>
+                        <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">{isCustomOrNewKos ? 'Rp 0' : 'Rp 8.672.200'}</div>
+                        <div className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">{isCustomOrNewKos ? 'Siap Transaksi' : '16.0% ↗ vs Last'}</div>
+                      </div>
+                      <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3">
+                        <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-piggy-bank text-[#047857] dark:text-emerald-400 shrink-0" /> Escrow Deposit</span>
+                        <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">{isCustomOrNewKos ? 'Rp 0' : 'Rp 3.765.350'}</div>
+                        <div className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">{isCustomOrNewKos ? '0 Deposit Masuk' : '8.2% ↘ vs Last'}</div>
+                      </div>
+                      <div className="neu-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 space-y-1.5 sm:space-y-3 col-span-2 sm:col-span-1">
+                        <span className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate"><i className="fa-solid fa-receipt text-[#047857] dark:text-emerald-400 shrink-0" /> Cadangan Operasional</span>
+                        <div className="text-sm sm:text-2xl font-black text-slate-900 dark:text-white truncate">{isCustomOrNewKos ? 'Rp 0' : 'Rp 14.376.160'}</div>
+                        <div className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">{isCustomOrNewKos ? 'Saldo Baru' : '35.2% ↗ vs Last'}</div>
+                      </div>
+                    </>
+                  )}
 
               {role === 'admin' && (
                 <>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-door-open text-[#047857] dark:text-emerald-400" /> Total Kamar Terisi</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">24 / 28 Kamar</div>
-                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">85.7% Okupansi</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{isCustomOrNewKos ? '0 / 8 Kamar' : '24 / 28 Kamar'}</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{isCustomOrNewKos ? '0% Okupansi' : '85.7% Okupansi'}</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-file-invoice-dollar text-[#047857] dark:text-emerald-400" /> Invoice Pending</span>
-                    <div className="text-2xl font-black text-amber-600 dark:text-amber-400">2 Tagihan</div>
-                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">Total Rp 3.774.500</div>
+                    <div className="text-2xl font-black text-amber-600 dark:text-amber-400">{isCustomOrNewKos ? '0 Tagihan' : '2 Tagihan'}</div>
+                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">{isCustomOrNewKos ? 'Total Rp 0' : 'Total Rp 3.774.500'}</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-headset text-[#047857] dark:text-emerald-400" /> Keluhan Aktif</span>
-                    <div className="text-2xl font-black text-rose-600 dark:text-rose-400">1 Tiket</div>
-                    <div className="text-[11px] font-bold text-rose-600 dark:text-rose-400">Kamar A-101 (AC)</div>
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{isCustomOrNewKos ? '0 Tiket' : '1 Tiket'}</div>
+                    <div className="text-[11px] font-bold text-slate-400">{isCustomOrNewKos ? 'Tidak ada tiket' : 'Kamar A-101 (AC)'}</div>
                   </div>
                 </>
               )}
@@ -1383,17 +1403,17 @@ export default function SequenceSaaSLayout({
                 <>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-list-check text-[#047857] dark:text-emerald-400" /> Tugas Plotting Owner</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">3 Tugas</div>
-                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">1 Selesai Hari Ini</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{isCustomOrNewKos ? '0 Tugas' : '3 Tugas'}</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{isCustomOrNewKos ? 'Standby Menunggu Plotting' : '1 Selesai Hari Ini'}</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-boxes-packing text-[#047857] dark:text-emerald-400" /> Status Audit SO</span>
-                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">Terverifikasi</div>
-                    <div className="text-[11px] font-bold text-slate-400">Terakhir: Hari ini 09:30</div>
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{isCustomOrNewKos ? 'Siap Audit' : 'Terverifikasi'}</div>
+                    <div className="text-[11px] font-bold text-slate-400">{isCustomOrNewKos ? 'Belum ada jadwal' : 'Terakhir: Hari ini 09:30'}</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-id-badge text-[#047857] dark:text-emerald-400" /> Petugas Piket</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">Bambang</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{isCustomOrNewKos ? 'Staf Lapangan' : 'Bambang'}</div>
                     <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Shift Pagi • Standby</div>
                   </div>
                 </>
@@ -1403,18 +1423,18 @@ export default function SequenceSaaSLayout({
                 <>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-store text-[#047857] dark:text-emerald-400" /> Order Pesanan Hari Ini</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">3 Order</div>
-                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">1 Baru • 1 Diproses</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{isCustomOrNewKos ? '0 Order' : '3 Order'}</div>
+                    <div className="text-[11px] font-bold text-slate-400">{isCustomOrNewKos ? 'Belum ada pesanan' : '1 Baru • 1 Diproses'}</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-receipt text-[#047857] dark:text-emerald-400" /> Add-On Billed Tenant</span>
-                    <div className="text-2xl font-black text-purple-600 dark:text-purple-400">Rp 20.000</div>
-                    <div className="text-[11px] font-bold text-purple-600 dark:text-purple-400">Laundry Exceed 2.5kg</div>
+                    <div className="text-2xl font-black text-purple-600 dark:text-purple-400">{isCustomOrNewKos ? 'Rp 0' : 'Rp 20.000'}</div>
+                    <div className="text-[11px] font-bold text-slate-400">{isCustomOrNewKos ? '0 Item' : 'Laundry Exceed 2.5kg'}</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-money-bill-wave text-[#047857] dark:text-emerald-400" /> Saldo Siap Cair</span>
-                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">Rp 2.450.000</div>
-                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Transfer Mandiri **** 8821</div>
+                    <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{isCustomOrNewKos ? 'Rp 0' : 'Rp 2.450.000'}</div>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Siap payout</div>
                   </div>
                 </>
               )}
@@ -1423,18 +1443,18 @@ export default function SequenceSaaSLayout({
                 <>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-door-open text-[#047857] dark:text-emerald-400" /> Kamar Tersewa</span>
-                    <div className="text-2xl font-black text-[#047857] dark:text-emerald-400">Kamar A-101</div>
-                    <div className="text-[11px] font-bold text-slate-400">Deluxe Studio Smart</div>
+                    <div className="text-2xl font-black text-[#047857] dark:text-emerald-400">{isCustomOrNewKos ? 'Unit Penghuni' : 'Kamar A-101'}</div>
+                    <div className="text-[11px] font-bold text-slate-400">{isCustomOrNewKos ? (property.name || 'Kost') : 'Deluxe Studio Smart'}</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-key text-[#047857] dark:text-emerald-400" /> Kode Akses Kunci Digital</span>
-                    <div className="text-2xl font-mono font-black text-purple-600 dark:text-purple-400">#9920</div>
+                    <div className="text-2xl font-mono font-black text-purple-600 dark:text-purple-400">{isCustomOrNewKos ? '#0000' : '#9920'}</div>
                     <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Aktif • Tap NFC / PIN</div>
                   </div>
                   <div className="neu-card rounded-3xl p-6 space-y-3">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2"><i className="fa-solid fa-shirt text-[#047857] dark:text-emerald-400" /> Sisa Kuota Laundry</span>
-                    <div className="text-2xl font-black text-slate-900 dark:text-white">2.5 Kg Sisa</div>
-                    <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">Terpakai 7.5 Kg (Exceed 2.5kg)</div>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white">{isCustomOrNewKos ? '0 Kg Sisa' : '2.5 Kg Sisa'}</div>
+                    <div className="text-[11px] font-bold text-slate-400">{isCustomOrNewKos ? 'Belum ada paket' : 'Terpakai 7.5 Kg (Exceed 2.5kg)'}</div>
                   </div>
                 </>
               )}

@@ -51,6 +51,8 @@ function formatIDR(n: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 }
 
+import { useProperty } from '@/lib/PropertyContext';
+
 export default function TenantDashboard({
   user,
   onSwitchRole = () => {},
@@ -60,11 +62,14 @@ export default function TenantDashboard({
   onSwitchRole?: (r: RoleType) => void;
   onLogout?: () => void;
 }) {
-  const [activeBranch, setActiveBranch] = useState('all');
+  const { property } = useProperty();
+  const isCustomOrNewKos = property.slug !== 'default';
+
+  const [activeBranch, setActiveBranch] = useState(property.name || 'all');
   const [activeTab, setActiveTab] = useState('invoices');
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [invoice, setInvoice] = useState(FALLBACK_INVOICE);
-  const [addOns, setAddOns] = useState<AddOnBillItem[]>(INITIAL_ADDONS);
+  const [invoice, setInvoice] = useState(isCustomOrNewKos ? null : FALLBACK_INVOICE);
+  const [addOns, setAddOns] = useState<AddOnBillItem[]>(isCustomOrNewKos ? [] : INITIAL_ADDONS);
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -254,7 +259,8 @@ export default function TenantDashboard({
   }, []);
 
   const totalAddons = addOns.reduce((acc, item) => acc + item.amount, 0);
-  const grandTotalPayment = invoice.amount + totalAddons;
+  const baseAmount = invoice ? invoice.amount : 0;
+  const grandTotalPayment = baseAmount + totalAddons;
 
   const handleSubmitComplaint = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -286,6 +292,10 @@ export default function TenantDashboard({
   };
 
   const handlePayMidtrans = async () => {
+    if (!invoice && totalAddons === 0) {
+      alert('Belum ada tagihan berjalan.');
+      return;
+    }
     setPaying(true);
     setPayError(null);
     try {
@@ -293,12 +303,12 @@ export default function TenantDashboard({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: `${invoice.id}-${Date.now()}`,
+          orderId: `${invoice?.id || 'INV-CUST'}-${Date.now()}`,
           amount: grandTotalPayment,
           customerName: tenantName,
           customerEmail: user?.email || 'tenant@kosanku.com',
           itemDetails: [
-            { id: 'RENT', name: 'Sewa Kamar + Utilitas Base', price: invoice.amount, quantity: 1 },
+            ...(invoice ? [{ id: 'RENT', name: 'Sewa Kamar + Utilitas Base', price: invoice.amount, quantity: 1 }] : []),
             ...addOns.map((a, i) => ({ id: `ADDON-${i}`, name: a.description, price: a.amount, quantity: 1 })),
           ],
         }),
@@ -315,7 +325,9 @@ export default function TenantDashboard({
         (window as any).snap.pay(snapToken, {
           onSuccess: function () {
             alert('🎉 Pembayaran sewa & add-on berhasil! Terima kasih.');
-            setInvoice((prev) => ({ ...prev, daysLeft: 30 }));
+            if (invoice) {
+              setInvoice({ ...invoice, daysLeft: 30 });
+            }
             setPaying(false);
           },
           onPending: function () {
@@ -659,29 +671,41 @@ export default function TenantDashboard({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
             <div className="lg:col-span-2 space-y-6">
               <div className="neu-card p-6 sm:p-8 rounded-3xl space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-4">
-                  <div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">INVOICE SEWA TERBIT</span>
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white font-mono mt-0.5">{invoice.id}</h3>
-                  </div>
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 font-extrabold rounded-full text-xs animate-pulse">
-                    Jatuh Tempo: {invoice.dueDate}
-                  </span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div className="flex justify-between py-2 border-b border-slate-200/50 dark:border-white/5 font-medium">
-                    <span className="text-slate-600 dark:text-slate-400">Sewa Kamar {roomInfo?.number || 'A-101'} (Agustus 2026)</span>
-                    <span className="font-black text-slate-900 dark:text-white">{formatIDR(invoice.amount)}</span>
-                  </div>
-
-                  {addOns.map((add) => (
-                    <div key={add.id} className="flex justify-between py-2 border-b border-slate-200/50 dark:border-white/5 font-medium text-purple-700 dark:text-purple-300">
-                      <span>+ {add.description}</span>
-                      <span className="font-bold">{formatIDR(add.amount)}</span>
+                {invoice ? (
+                  <>
+                    <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 pb-4">
+                      <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">INVOICE SEWA TERBIT</span>
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white font-mono mt-0.5">{invoice.id}</h3>
+                      </div>
+                      <span className="px-3 py-1 bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 font-extrabold rounded-full text-xs animate-pulse">
+                        Jatuh Tempo: {invoice.dueDate}
+                      </span>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="space-y-3 text-xs">
+                      <div className="flex justify-between py-2 border-b border-slate-200/50 dark:border-white/5 font-medium">
+                        <span className="text-slate-600 dark:text-slate-400">Sewa Kamar {roomInfo?.number || 'A-101'} (Bulan Ini)</span>
+                        <span className="font-black text-slate-900 dark:text-white">{formatIDR(invoice.amount)}</span>
+                      </div>
+
+                      {addOns.map((add) => (
+                        <div key={add.id} className="flex justify-between py-2 border-b border-slate-200/50 dark:border-white/5 font-medium text-purple-700 dark:text-purple-300">
+                          <span>+ {add.description}</span>
+                          <span className="font-bold">{formatIDR(add.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-8 text-center space-y-2">
+                    <div className="w-12 h-12 rounded-2xl neu-inset mx-auto flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xl">
+                      <i className="fa-solid fa-receipt" />
+                    </div>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Belum Ada Tagihan Berjalan</h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">Tagihan sewa bulanan dan pesanan suplai akan otomatis muncul di sini setelah diterbitkan pengelola.</p>
+                  </div>
+                )}
 
                 <div className="p-5 bg-gradient-to-br from-purple-900 to-indigo-950 text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
                   <div>
