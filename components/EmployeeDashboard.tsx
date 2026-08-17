@@ -320,6 +320,19 @@ export default function EmployeeDashboard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actionType: 'STAFF_EXPENSE', payload: newApproval }),
       });
+      await fetch('/api/operational-reserves', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newReqId,
+          title: reqTitle,
+          category: 'KAS_KECIL',
+          amount: amountNum,
+          requestedBy: 'Bambang Prasetyo (Staf Lapangan)',
+          notes: reqReason,
+          property: property.slug || 'default',
+        }),
+      });
     } catch {}
 
     // 2. Save to shared localStorage for Owner sync

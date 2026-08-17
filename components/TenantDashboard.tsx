@@ -140,6 +140,7 @@ export default function TenantDashboard({
       item: `${orderTitle} (${orderQty}x)`,
       notes: customNotes || 'Tidak ada catatan tambahan',
       status: 'PENDING_DISPATCH',
+      property: property?.slug || 'default',
       createdAt: 'Baru saja',
     };
 
@@ -272,8 +273,11 @@ export default function TenantDashboard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id || 'demo_user',
+          tenantName: tenantName,
+          roomNumber: roomInfo?.number || 'A-101',
           title,
           description: desc,
+          property: property?.slug || 'default',
         }),
       });
       if (res.ok) {

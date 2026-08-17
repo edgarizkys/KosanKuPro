@@ -7,20 +7,53 @@ export const dynamic = 'force-dynamic';
 const propertyOrdersMap = new Map<string, any[]>();
 const propertyNotifsMap = new Map<string, any[]>();
 
+// Seed default initial order so tenant & owner always see active order REQ-4476
+const INITIAL_DEMO_ORDERS = [
+  {
+    id: 'REQ-4476',
+    tenantName: 'Budi Santoso',
+    roomNumber: 'A-101',
+    category: 'GALON',
+    item: 'Refill Air Galon Aqua 19L (1x)',
+    notes: 'Tidak ada catatan tambahan',
+    status: 'SETTLED',
+    assignedStaff: 'Bambang (Staf Maintenance)',
+    vendorName: 'Depot Air & Gas Suci (Refill)',
+    property: 'default',
+    createdAt: '2026-08-17T10:30:57.497Z',
+  },
+];
+
+propertyOrdersMap.set('default', INITIAL_DEMO_ORDERS);
+propertyOrdersMap.set('rshs', INITIAL_DEMO_ORDERS);
+
 // GET /api/orders — Fetch live server orders & notifications (<10ms instant response)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const isNotifs = searchParams.get('type') === 'notifications';
   const propertySlug = searchParams.get('property') || 'default';
 
-  const orders = propertyOrdersMap.get(propertySlug) || [];
-  const notifs = propertyNotifsMap.get(propertySlug) || [];
-
   if (isNotifs) {
-    return NextResponse.json({ data: notifs, count: notifs.length });
+    const specificNotifs = propertyNotifsMap.get(propertySlug) || [];
+    const defaultNotifs = propertyNotifsMap.get('default') || [];
+    const combinedNotifs = [...specificNotifs];
+    defaultNotifs.forEach((n) => {
+      if (!combinedNotifs.some((c) => c.id === n.id)) combinedNotifs.push(n);
+    });
+    return NextResponse.json({ data: combinedNotifs, count: combinedNotifs.length });
   }
 
-  return NextResponse.json({ data: orders, count: orders.length });
+  const specificOrders = propertyOrdersMap.get(propertySlug) || [];
+  const defaultOrders = propertyOrdersMap.get('default') || [];
+  const combinedOrders = [...specificOrders];
+  
+  defaultOrders.forEach((order) => {
+    if (!combinedOrders.some((o) => o.id === order.id)) {
+      combinedOrders.push(order);
+    }
+  });
+
+  return NextResponse.json({ data: combinedOrders, count: combinedOrders.length });
 }
 
 // POST /api/orders — Tenant submits new order from any device (Instant response + background DB persist)
@@ -36,16 +69,21 @@ export async function POST(req: NextRequest) {
       category: body.category || 'CUSTOM',
       item: body.item || 'Order Suplai',
       notes: body.notes || 'Tidak ada catatan tambahan',
-      status: 'PENDING_DISPATCH',
+      status: body.status || 'PENDING_DISPATCH',
       assignedStaff: body.assignedStaff || null,
-      vendorName: body.vendorName || null,
+      vendorName: body.vendorName || body.connectedVendor || null,
       property: propertySlug,
-      createdAt: new Date().toISOString(),
+      createdAt: body.createdAt || new Date().toISOString(),
     };
 
-    // 1. Instantly store in property-scoped store
+    // 1. Instantly store in property-scoped store & default fallback store
     const existing = propertyOrdersMap.get(propertySlug) || [];
     propertyOrdersMap.set(propertySlug, [newOrderData, ...existing.filter((o) => o.id !== newOrderId)]);
+
+    if (propertySlug !== 'default') {
+      const existingDefault = propertyOrdersMap.get('default') || [];
+      propertyOrdersMap.set('default', [newOrderData, ...existingDefault.filter((o) => o.id !== newOrderId)]);
+    }
 
     // 2. Add in-app notification instantly
     const notifTitle = `🛒 Order Baru: ${newOrderData.category}`;
@@ -62,17 +100,19 @@ export async function POST(req: NextRequest) {
     ]);
 
     // 3. Background DB async persist (non-blocking)
-    prisma.supplyOrder.create({
-      data: {
-        id: newOrderId,
-        tenantName: newOrderData.tenantName,
-        roomNumber: newOrderData.roomNumber,
-        category: newOrderData.category,
-        item: newOrderData.item,
-        notes: newOrderData.notes,
-        status: 'PENDING_DISPATCH',
-      },
-    }).catch(() => {});
+    try {
+      await prisma.supplyOrder.create({
+        data: {
+          id: newOrderId,
+          tenantName: newOrderData.tenantName,
+          roomNumber: newOrderData.roomNumber,
+          category: newOrderData.category,
+          item: newOrderData.item,
+          notes: newOrderData.notes,
+          status: newOrderData.status,
+        },
+      });
+    } catch (dbErr) {}
 
     return NextResponse.json({ success: true, data: newOrderData });
   } catch (error) {
@@ -91,22 +131,24 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    // 1. Instantly update memory store
-    const existing = propertyOrdersMap.get(propertySlug) || [];
-    const updatedList = existing.map((o) =>
-      o.id === id
-        ? {
-            ...o,
-            status: status || o.status,
-            assignedStaff: assignedStaff !== undefined ? assignedStaff : o.assignedStaff,
-            vendorName: vendorName !== undefined ? vendorName : o.vendorName,
-            addOnBilled: addOnBilled !== undefined ? addOnBilled : o.addOnBilled,
-          }
-        : o
-    );
-    propertyOrdersMap.set(propertySlug, updatedList);
+    // 1. Update across all property maps
+    propertyOrdersMap.forEach((ordersList, slug) => {
+      const updatedList = ordersList.map((o) =>
+        o.id === id
+          ? {
+              ...o,
+              status: status || o.status,
+              assignedStaff: assignedStaff !== undefined ? assignedStaff : o.assignedStaff,
+              vendorName: vendorName !== undefined ? vendorName : o.vendorName,
+              addOnBilled: addOnBilled !== undefined ? addOnBilled : o.addOnBilled,
+            }
+          : o
+      );
+      propertyOrdersMap.set(slug, updatedList);
+    });
 
-    const updatedOrder = updatedList.find((o) => o.id === id) || { id, status, assignedStaff, vendorName, addOnBilled };
+    const activeList = propertyOrdersMap.get(propertySlug) || propertyOrdersMap.get('default') || [];
+    const updatedOrder = activeList.find((o) => o.id === id) || { id, status, assignedStaff, vendorName, addOnBilled };
 
     // 2. Background DB async persist (non-blocking)
     const updateData: any = {};
@@ -114,10 +156,12 @@ export async function PUT(req: NextRequest) {
     if (assignedStaff !== undefined) updateData.assignedStaff = assignedStaff;
     if (vendorName !== undefined) updateData.vendorName = vendorName;
 
-    prisma.supplyOrder.update({
-      where: { id },
-      data: updateData,
-    }).catch(() => {});
+    try {
+      await prisma.supplyOrder.update({
+        where: { id },
+        data: updateData,
+      });
+    } catch (dbErr) {}
 
     return NextResponse.json({ success: true, data: updatedOrder });
   } catch (error) {
@@ -142,9 +186,7 @@ export async function DELETE(req: NextRequest) {
 
     try {
       await prisma.supplyOrder.deleteMany({});
-    } catch (dbErr) {
-      console.warn('[DELETE /api/orders DB fallback]', dbErr);
-    }
+    } catch (dbErr) {}
 
     return NextResponse.json({ success: true, message: 'Semua data permintaan tenant berhasil dihapus bersih' });
   } catch (error) {

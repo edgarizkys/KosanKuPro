@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { roomStatusOverrides } from '@/lib/roomStatusStore';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,20 @@ let cachedRooms: any[] = [
   { id: '4', number: 'B-202', type: 'Standard Room Single', price: 1200000, floor: 2, capacity: 1, facilities: ['AC', 'WiFi', 'KM Luar'], status: 'AVAILABLE', tenant: null, imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=600' },
 ];
 
+function applyStatusOverrides(roomList: any[], propertySlug: string) {
+  return roomList.map((r) => {
+    const override =
+      roomStatusOverrides.get(`${propertySlug}:${r.id}`) ||
+      roomStatusOverrides.get(`${propertySlug}:${r.number}`) ||
+      roomStatusOverrides.get(`rshs:${r.id}`) ||
+      roomStatusOverrides.get(`rshs:${r.number}`) ||
+      roomStatusOverrides.get(`default:${r.id}`) ||
+      roomStatusOverrides.get(`default:${r.number}`);
+
+    return override ? { ...r, status: override } : r;
+  });
+}
+
 // GET /api/rooms — list with optional filters (status, floor, type, property/kosan)
 export async function GET(req: NextRequest) {
   let propertyParam: string | null = null;
@@ -18,7 +33,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
     const floor = searchParams.get('floor');
     const type = searchParams.get('type');
-    propertyParam = searchParams.get('property') || searchParams.get('kosan');
+    propertyParam = searchParams.get('property') || searchParams.get('kosan') || 'default';
     const isRshs = propertyParam && propertyParam.toLowerCase() === 'rshs';
 
     // 1. Direct DB Query filtered strictly by property
@@ -28,15 +43,10 @@ export async function GET(req: NextRequest) {
       if (floor) where.floor = parseInt(floor, 10);
       if (type) where.type = { contains: type, mode: 'insensitive' };
 
-      if (propertyParam && propertyParam !== 'default') {
+      if (propertyParam && propertyParam !== 'default' && propertyParam !== 'all') {
         where.OR = [
           { propertyId: propertyParam },
           { property: { name: { contains: propertyParam, mode: 'insensitive' } } },
-        ];
-      } else {
-        where.OR = [
-          { propertyId: null },
-          { propertyId: 'default' }
         ];
       }
 
@@ -53,32 +63,41 @@ export async function GET(req: NextRequest) {
       });
 
       if (dbRooms && dbRooms.length > 0) {
-        return NextResponse.json({ data: dbRooms, count: dbRooms.length });
+        const result = applyStatusOverrides(dbRooms, propertyParam);
+        return NextResponse.json({ data: result, count: result.length });
       }
     } catch {}
 
-    // Fallback for static RSHS if DB has no specific rooms for RSHS
+    const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
+
+    // Fallback for static RSHS if specific RSHS requested
     if (isRshs) {
-      const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
-      let filteredRshs = [...RSHS_ROOMS_DATA];
+      let filteredRshs = applyStatusOverrides([...RSHS_ROOMS_DATA], 'rshs');
       if (status) filteredRshs = filteredRshs.filter((r) => r.status === status.toUpperCase());
       if (floor) filteredRshs = filteredRshs.filter((r) => r.floor === parseInt(floor, 10));
       if (type) filteredRshs = filteredRshs.filter((r) => r.type.toLowerCase().includes(type.toLowerCase()));
       return NextResponse.json({ data: filteredRshs, count: filteredRshs.length });
     }
 
-    let filtered = [...cachedRooms];
+    // Combine default cachedRooms & RSHS rooms so Konsolidasi / Default sees all units
+    const combinedAll = [...cachedRooms];
+    RSHS_ROOMS_DATA.forEach((rshsRoom) => {
+      if (!combinedAll.some((c) => c.number === rshsRoom.number || c.id === rshsRoom.id)) {
+        combinedAll.push(rshsRoom);
+      }
+    });
+
+    let filtered = applyStatusOverrides(combinedAll, propertyParam);
     if (status) filtered = filtered.filter((r) => r.status === status.toUpperCase());
     if (floor) filtered = filtered.filter((r) => r.floor === parseInt(floor, 10));
     if (type) filtered = filtered.filter((r) => r.type.toLowerCase().includes(type.toLowerCase()));
 
     return NextResponse.json({ data: filtered, count: filtered.length });
   } catch (error) {
-    if (propertyParam && propertyParam.toLowerCase() === 'rshs') {
-      const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
-      return NextResponse.json({ data: RSHS_ROOMS_DATA, count: RSHS_ROOMS_DATA.length });
-    }
-    return NextResponse.json({ data: cachedRooms, count: cachedRooms.length });
+    const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
+    const combinedAll = [...cachedRooms, ...RSHS_ROOMS_DATA];
+    const result = applyStatusOverrides(combinedAll, propertyParam || 'default');
+    return NextResponse.json({ data: result, count: result.length });
   }
 }
 
@@ -92,27 +111,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'number, type, and price are required' }, { status: 400 });
     }
 
-    const existing = await prisma.room.findUnique({ where: { number } });
-    if (existing) {
-      return NextResponse.json({ error: `Room ${number} already exists` }, { status: 409 });
-    }
+    const newRoomObj = {
+      id: `rm-${Date.now()}`,
+      number,
+      type,
+      price: parseFloat(price),
+      floor: floor ? parseInt(floor, 10) : 1,
+      capacity: capacity ? parseInt(capacity, 10) : 1,
+      facilities: facilities || [],
+      status: 'AVAILABLE',
+      tenant: null,
+      imageUrl: imageUrl || null,
+      videoUrl: videoUrl || null,
+      propertyId: propertyId || 'default',
+    };
 
-    const room = await prisma.room.create({
-      data: {
-        number,
-        type,
-        price: parseFloat(price),
-        floor: floor ? parseInt(floor, 10) : 1,
-        capacity: capacity ? parseInt(capacity, 10) : 1,
-        facilities: facilities || [],
-        imageUrl: imageUrl || null,
-        propertyId: propertyId || null,
-      },
-    });
+    cachedRooms.push(newRoomObj);
 
-    return NextResponse.json({ data: { ...room, videoUrl: videoUrl || null } }, { status: 201 });
+    try {
+      await prisma.room.create({
+        data: {
+          number,
+          type,
+          price: parseFloat(price),
+          floor: floor ? parseInt(floor, 10) : 1,
+          capacity: capacity ? parseInt(capacity, 10) : 1,
+          facilities: facilities || [],
+          status: 'AVAILABLE',
+          imageUrl: imageUrl || null,
+        },
+      });
+    } catch {}
+
+    return NextResponse.json({ data: newRoomObj }, { status: 201 });
   } catch (error) {
-    console.error('[POST /api/rooms]', error);
+    console.error('[POST /api/rooms error]', error);
     return NextResponse.json({ error: 'Failed to create room' }, { status: 500 });
   }
 }

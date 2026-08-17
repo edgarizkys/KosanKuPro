@@ -353,17 +353,38 @@ export default function AdminDashboard({
     e.preventDefault();
     setSaving(true);
     try {
+      const selectedTenant = tenants.find((t) => t.id === invForm.userId);
+      const selectedRoom = rooms.find((r) => r.id === invForm.roomId);
+      
+      const payload = {
+        userId: invForm.userId,
+        roomId: invForm.roomId,
+        tenantName: selectedTenant ? selectedTenant.name : (invForm.userId || 'Budi Santoso'),
+        roomNumber: selectedRoom ? selectedRoom.number : (invForm.roomId || 'A-101'),
+        amount: invForm.amount || '1500000',
+        dueDate: invForm.dueDate || new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 10),
+        property: property.slug || 'default',
+      };
+
       const res = await fetch('/api/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(invForm),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
-      if (res.ok) {
-        setInvoices((prev) => [json.data, ...prev]);
+      if (res.ok && json?.data) {
+        const createdInv = json.data;
+        setInvoices((prev) => [createdInv, ...prev]);
         setShowAddInvoice(false);
         setInvForm({ userId: '', roomId: '', amount: '', dueDate: '' });
-        showToast('Invoice berhasil dibuat');
+        
+        try {
+          const savedInvoices = JSON.parse(localStorage.getItem(`kosanku_shared_invoices_${property.slug}`) || '[]');
+          localStorage.setItem(`kosanku_shared_invoices_${property.slug}`, JSON.stringify([createdInv, ...savedInvoices]));
+          window.dispatchEvent(new CustomEvent('invoices_updated'));
+        } catch (e) {}
+
+        showToast(`Invoice ${createdInv.invoiceNumber} berhasil dibuat & masuk laporan!`);
       } else {
         showToast(json.error || 'Gagal membuat invoice', 'error');
       }

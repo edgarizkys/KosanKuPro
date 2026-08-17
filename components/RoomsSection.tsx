@@ -270,12 +270,15 @@ export default function RoomsSection({
         if (combined.length > 0) {
           const merged: RoomItem[] = combined.map((r: any, idx: number) => {
             const fb = activeDefaultList[idx % activeDefaultList.length];
+            const localOverride =
+              localStorage.getItem(`kosanku_room_status_${r.id}`) ||
+              localStorage.getItem(`kosanku_room_status_${r.number}`);
             return {
               id: r.id || `custom-${idx}`,
               number: r.number,
               type: r.type || fb?.type || 'Standard',
               price: typeof r.price === 'number' ? r.price : parseFloat(r.price) || fb?.price || 1000000,
-              status: r.status || 'AVAILABLE',
+              status: localOverride || r.status || 'AVAILABLE',
               floor: r.floor || 1,
               imageUrl: r.imageUrl || fb?.imageUrl || DEFAULT_IMG,
               gallery: r.gallery && r.gallery.length ? r.gallery : (fb?.gallery && fb.gallery.length ? fb.gallery : [r.imageUrl || fb?.imageUrl || DEFAULT_IMG]),
@@ -292,7 +295,13 @@ export default function RoomsSection({
 
           setRooms(merged);
         } else {
-          setRooms(activeDefaultList);
+          const overriddenDefault = activeDefaultList.map((r) => {
+            const localOverride =
+              localStorage.getItem(`kosanku_room_status_${r.id}`) ||
+              localStorage.getItem(`kosanku_room_status_${r.number}`);
+            return localOverride ? { ...r, status: localOverride } : r;
+          });
+          setRooms(overriddenDefault);
         }
       })
       .catch((err) => {
@@ -319,8 +328,20 @@ export default function RoomsSection({
       };
     }
 
+    const handleStatusChanged = (e: any) => {
+      const { roomId, roomNumber, status: newStatus } = e.detail || {};
+      setRooms((prev) =>
+        prev.map((r) => (r.id === roomId || r.number === roomNumber ? { ...r, status: newStatus || 'BOOKED' } : r))
+      );
+    };
+
+    window.addEventListener('kosanku_room_status_changed', handleStatusChanged);
+    window.addEventListener('kosanku_booking_created', handleStatusChanged);
+
     return () => {
       if (bc) bc.close();
+      window.removeEventListener('kosanku_room_status_changed', handleStatusChanged);
+      window.removeEventListener('kosanku_booking_created', handleStatusChanged);
     };
   }, [property.slug]);
 

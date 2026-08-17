@@ -121,6 +121,7 @@ export default function BookingModal({
       const payload = {
         roomId: room.id,
         roomNumber: room.number,
+        roomType: room.type,
         tenantName: form.namaLengkap || 'Calon Penghuni',
         tenantPhone: form.noTlp || '08123456789',
         email: form.email,
@@ -133,6 +134,7 @@ export default function BookingModal({
         otherReason: form.alasanLainnya,
         idCardUrl: form.fotoIdDataUrl ? 'uploaded_ktp_secure' : null,
         paymentMethod,
+        property: property?.slug || 'default',
       };
 
       const res = await fetch('/api/bookings', {
@@ -179,8 +181,23 @@ export default function BookingModal({
         } catch {}
       }
 
+      try {
+        const propSlug = property?.slug || 'default';
+        const newBkg = resData?.data || payload;
+        const savedBkgs = JSON.parse(localStorage.getItem(`kosanku_shared_bookings_${propSlug}`) || '[]');
+        localStorage.setItem(`kosanku_shared_bookings_${propSlug}`, JSON.stringify([newBkg, ...savedBkgs]));
+        localStorage.setItem('kosanku_shared_bookings_default', JSON.stringify([newBkg, ...savedBkgs]));
+        localStorage.setItem('kosanku_shared_bookings_rshs', JSON.stringify([newBkg, ...savedBkgs]));
+        
+        // Save room status override to local storage
+        localStorage.setItem(`kosanku_room_status_${room.id}`, 'BOOKED');
+        localStorage.setItem(`kosanku_room_status_${room.number}`, 'BOOKED');
+      } catch (e) {}
+
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('notifs_updated'));
+        window.dispatchEvent(new CustomEvent('kosanku_booking_created', { detail: payload }));
+        window.dispatchEvent(new CustomEvent('kosanku_room_status_changed', { detail: { roomId: room.id, roomNumber: room.number, status: 'BOOKED' } }));
       }
 
       // Notify parent component & switch to Step 3

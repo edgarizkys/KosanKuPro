@@ -352,13 +352,33 @@ export default function OwnerDashboard({
 
     const loadBookings = async () => {
       try {
-        const res = await fetch('/api/bookings');
+        let serverBookings: any[] = [];
+        const res = await fetch(`/api/bookings?property=${property.slug}`);
         if (res.ok) {
           const json = await res.json();
           if (json?.data && Array.isArray(json.data)) {
-            setBookings(json.data);
-            return;
+            serverBookings = json.data;
           }
+        }
+        
+        let localBookings: any[] = [];
+        try {
+          const b1 = JSON.parse(localStorage.getItem(`kosanku_shared_bookings_${property.slug}`) || '[]');
+          const b2 = JSON.parse(localStorage.getItem('kosanku_shared_bookings_rshs') || '[]');
+          const b3 = JSON.parse(localStorage.getItem('kosanku_shared_bookings_default') || '[]');
+          const b4 = JSON.parse(localStorage.getItem('kosanku_shared_bookings') || '[]');
+          localBookings = [...b1, ...b2, ...b3, ...b4];
+        } catch {}
+
+        const combined = [...serverBookings];
+        localBookings.forEach((lb) => {
+          if (!combined.some((c) => c.id === lb.id || (c.roomNumber === lb.roomNumber && c.tenantName === lb.tenantName))) {
+            combined.push(lb);
+          }
+        });
+
+        if (combined.length > 0) {
+          setBookings(combined);
         }
       } catch {}
     };
@@ -369,7 +389,13 @@ export default function OwnerDashboard({
         if (res.ok) {
           const json = await res.json();
           if (json?.data && Array.isArray(json.data)) {
-            setRooms(json.data);
+            const mapped = json.data.map((r: any) => {
+              const override =
+                localStorage.getItem(`kosanku_room_status_${r.id}`) ||
+                localStorage.getItem(`kosanku_room_status_${r.number}`);
+              return override ? { ...r, status: override } : r;
+            });
+            setRooms(mapped);
           }
         }
       } catch {}
@@ -377,7 +403,7 @@ export default function OwnerDashboard({
 
     const loadInvoices = async () => {
       try {
-        const res = await fetch('/api/invoices');
+        const res = await fetch(`/api/invoices?property=${property.slug}`);
         if (res.ok) {
           const json = await res.json();
           if (json?.data && Array.isArray(json.data)) {
@@ -456,6 +482,7 @@ export default function OwnerDashboard({
         }
         if (msg.data?.type === 'NEW_ROOM_BOOKING') {
           loadBookings();
+          loadRooms();
           const b = msg.data.booking;
           showToast(`🎉 BOOKING BARU MASUK: ${b?.tenantName || 'Calon Penghuni'} memesan Kamar ${b?.roomNumber} (DP: Rp ${Number(b?.dpAmount || 500000).toLocaleString('id-ID')}).`, 'success', 'rooms_ai');
         }
@@ -469,6 +496,7 @@ export default function OwnerDashboard({
       loadRoomInspections();
       loadSOAudit();
       loadBookings();
+      loadRooms();
     }, 2500);
 
     // 4. Switch Dashboard Tab Event Listener (Triggered by Notification Drawer click)
