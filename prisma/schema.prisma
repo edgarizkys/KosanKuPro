@@ -55,6 +55,13 @@ model Property {
   ownerName  String?
   ownerPhone String?
   description String?
+  bankName   String?
+  bankAccount String?
+  bankHolder String?
+  whatsappNumber String?
+  whatsappToken  String?
+  midtransServerKey String?
+  midtransClientKey String?
   isActive   Boolean    @default(true)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt

@@ -13,6 +13,11 @@ interface PropertySettings {
   bankAccount: string;
   bankHolder: string;
   allowanceLaundryKg: number;
+  whatsappNumber?: string;
+  whatsappToken?: string;
+  midtransServerKey?: string;
+  midtransClientKey?: string;
+  adminFeeFlat?: number;
 }
 
 interface InventoryMaster {
@@ -75,6 +80,11 @@ const INITIAL_PROPERTY: PropertySettings = {
   bankAccount: '8830-1928-44',
   bankHolder: 'PT KosanKu Pro Indonesia',
   allowanceLaundryKg: 5,
+  whatsappNumber: '0812-2379-8307',
+  whatsappToken: '',
+  midtransServerKey: '',
+  midtransClientKey: '',
+  adminFeeFlat: 5000,
 };
 
 const INITIAL_INVENTORY_MASTER: InventoryMaster[] = [
@@ -224,10 +234,32 @@ export default function MasterDataSettings() {
     } catch {}
   }, []);
 
-  const handleSaveProperty = (e: React.FormEvent) => {
+  const handleSaveProperty = async (e: React.FormEvent) => {
     e.preventDefault();
     localStorage.setItem('kosanku_master_property', JSON.stringify(property));
-    setToast('✅ PENGATURAN MASTER PROPERTI BERHASIL DISIMPAN!');
+
+    try {
+      await fetch('/api/properties', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: 'prop-001',
+          name: property.propertyName,
+          address: property.propertyAddress,
+          bankName: property.bankName,
+          bankAccount: property.bankAccount,
+          bankHolder: property.bankHolder,
+          whatsappNumber: property.whatsappNumber,
+          whatsappToken: property.whatsappToken,
+          midtransServerKey: property.midtransServerKey,
+          midtransClientKey: property.midtransClientKey,
+        }),
+      });
+      setToast('✅ MASTER PROPERTI, REKENING OWNER & TOKEN WHATSAPP BERHASIL TERSINKRON!');
+    } catch {
+      setToast('✅ PENGATURAN MASTER PROPERTI BERHASIL DISIMPAN LOKAL!');
+    }
+
     setTimeout(() => setToast(null), 3500);
   };
 
@@ -613,28 +645,52 @@ export default function MasterDataSettings() {
             />
           </div>
 
+          {/* 1. Rekening Bank Pencairan Owner */}
           <div className="p-5 neu-card-sm rounded-2xl space-y-3">
-            <span className="font-black text-[#047857] dark:text-emerald-400 block">💳 Rekening Bank Pencairan Owner &amp; Midtrans Payout</span>
+            <div className="flex items-center justify-between">
+              <span className="font-black text-[#047857] dark:text-emerald-400 flex items-center gap-2">
+                <i className="fa-solid fa-building-columns text-emerald-600" />
+                <span>Rekening Bank Pencairan Dana Owner (Midtrans Auto-Payout)</span>
+              </span>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                Pencairan Otomatis Aktif
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Setiap uang sewa masuk via QRIS / Virtual Account akan otomatis dipotong biaya admin dan ditransfer ke rekening bank Owner di bawah ini.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Nama Bank</label>
-                <input
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Nama Bank *</label>
+                <select
                   value={property.bankName}
                   onChange={(e) => setProperty({ ...property, bankName: e.target.value })}
                   className="w-full p-2.5 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white"
-                />
+                >
+                  <option value="BCA">BCA (Bank Central Asia)</option>
+                  <option value="Mandiri">Bank Mandiri</option>
+                  <option value="BRI">BRI (Bank Rakyat Indonesia)</option>
+                  <option value="BNI">BNI (Bank Negara Indonesia)</option>
+                  <option value="CIMB">CIMB Niaga</option>
+                  <option value="BSI">Bank Syariah Indonesia (BSI)</option>
+                  <option value="Permata">Bank Permata</option>
+                </select>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">No. Rekening</label>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">No. Rekening *</label>
                 <input
+                  required
+                  placeholder="Contoh: 8830192844"
                   value={property.bankAccount}
                   onChange={(e) => setProperty({ ...property, bankAccount: e.target.value })}
                   className="w-full p-2.5 neu-input rounded-xl outline-none font-mono font-bold text-slate-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Atas Nama (Holder)</label>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Atas Nama Pemilik Rekening *</label>
                 <input
+                  required
+                  placeholder="Contoh: Dewi Tri Oktariani"
                   value={property.bankHolder}
                   onChange={(e) => setProperty({ ...property, bankHolder: e.target.value })}
                   className="w-full p-2.5 neu-input rounded-xl outline-none font-bold text-slate-900 dark:text-white"
@@ -643,12 +699,72 @@ export default function MasterDataSettings() {
             </div>
           </div>
 
+          {/* 2. Integrasi WhatsApp Bot Khusus Properti */}
+          <div className="p-5 neu-card-sm rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-black text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                <i className="fa-brands fa-whatsapp text-emerald-500 text-base" />
+                <span>Integrasi WhatsApp Bot Properti (White-Label Gateway)</span>
+              </span>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                Multi-Device Ready
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Tiap kosan dapat memiliki nomor WhatsApp Bot tersendiri. Masukkan nomor WhatsApp operasional dan token Fonnte kosan Anda.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Nomor WhatsApp Bot Properti Ini</label>
+                <input
+                  placeholder="Contoh: 0812-2379-8307"
+                  value={property.whatsappNumber || ''}
+                  onChange={(e) => setProperty({ ...property, whatsappNumber: e.target.value })}
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Token Fonnte Device Properti (Opsional)</label>
+                <input
+                  type="password"
+                  placeholder="Isi token Fonnte jika ingin nomor terpisah"
+                  value={property.whatsappToken || ''}
+                  onChange={(e) => setProperty({ ...property, whatsappToken: e.target.value })}
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Pengaturan Biaya Admin / Markup Transaksi */}
+          <div className="p-5 neu-card-sm rounded-2xl space-y-3">
+            <span className="font-black text-amber-600 dark:text-amber-400 flex items-center gap-2">
+              <i className="fa-solid fa-receipt text-amber-500" />
+              <span>Pengaturan Biaya Layanan Transaksi (Fintech Margin)</span>
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+              <div>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Biaya Layanan Admin per Transaksi (Rp)</label>
+                <input
+                  type="number"
+                  placeholder="5000"
+                  value={property.adminFeeFlat ?? 5000}
+                  onChange={(e) => setProperty({ ...property, adminFeeFlat: parseInt(e.target.value || '0', 10) })}
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-3">
+                Biaya ini akan ditambahkan di atas invoice tagihan kamar untuk menutup biaya payment gateway dan margin platform.
+              </div>
+            </div>
+          </div>
+
           <button
             type="submit"
-            className="px-6 py-3 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
+            className="px-6 py-3.5 bg-[#047857] hover:bg-[#065f46] text-white font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-2"
           >
             <i className="fa-solid fa-floppy-disk" />
-            <span>Simpan Master Pengaturan Properti</span>
+            <span>Simpan Pengaturan Properti &amp; Integrasi Gateway</span>
           </button>
         </form>
       )}

@@ -9,10 +9,10 @@ function formatIDR(amount: number) {
 }
 
 /**
- * Send text message via Fonnte WhatsApp API
+ * Send text message via Fonnte WhatsApp API (Supports per-property custom device token)
  */
-export async function sendWhatsApp(target: string, message: string) {
-  const token = process.env.FONNTE_WHATSAPP_TOKEN;
+export async function sendWhatsApp(target: string, message: string, customToken?: string) {
+  const token = customToken || process.env.FONNTE_WHATSAPP_TOKEN;
   const cleanTarget = target.replace(/[^0-9]/g, '');
 
   if (!token || token === 'YOUR_FONNTE_TOKEN' || token.includes('TOKEN')) {
@@ -40,14 +40,15 @@ export async function sendWhatsApp(target: string, message: string) {
 }
 
 /**
- * Send WhatsApp message with Image attachment
+ * Send WhatsApp message with Image attachment (Supports per-property custom device token)
  */
 export async function sendWhatsAppWithImage(
   target: string,
   message: string,
-  imageUrl: string
+  imageUrl: string,
+  customToken?: string
 ) {
-  const token = process.env.FONNTE_WHATSAPP_TOKEN;
+  const token = customToken || process.env.FONNTE_WHATSAPP_TOKEN;
   const cleanTarget = target.replace(/[^0-9]/g, '');
 
   if (!token || token === 'YOUR_FONNTE_TOKEN' || token.includes('TOKEN')) {
