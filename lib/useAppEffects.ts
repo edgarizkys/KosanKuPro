@@ -45,7 +45,7 @@ export function useAppEffects() {
     );
 
     const observeElements = () => {
-      document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .stagger-item').forEach((el) => {
+      document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-blur, .reveal-diagonal, .stagger-item').forEach((el) => {
         obs.observe(el);
       });
     };

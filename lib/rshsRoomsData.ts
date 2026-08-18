@@ -1,6 +1,28 @@
-import { RoomItem } from '@/components/RoomsSection';
+export interface RshsRoomItem {
+  id: string;
+  number: string;
+  type: string;
+  price: number;
+  status: string;
+  floor: number;
+  size?: string;
+  bedType?: string;
+  electricity?: string;
+  view?: string;
+  capacity?: string;
+  videoUrl?: string;
+  gallery?: string[];
+  facilities?: string[];
+  categorizedFacilities?: {
+    kamar: string[];
+    kamarMandi: string[];
+    smart: string[];
+    bersama: string[];
+  };
+  imageUrl?: string | null;
+}
 
-export const RSHS_ROOMS_DATA: RoomItem[] = [
+export const RSHS_ROOMS_DATA: RshsRoomItem[] = [
   {
     id: 'rshs-eksekutif',
     number: 'EKS-01',

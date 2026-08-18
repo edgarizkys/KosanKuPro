@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { roomStatusOverrides } from '@/lib/roomStatusStore';
+import { ALL_MULTI_PROPERTY_ROOMS } from '@/lib/multiPropertyRoomsData';
 
 export const dynamic = 'force-dynamic';
-
-let cachedRooms: any[] = [
-  { id: '1', number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000, floor: 1, capacity: 1, facilities: ['AC', 'WiFi', 'KM Dalam', 'Water Heater', 'Smart TV'], status: 'OCCUPIED', tenant: { id: 'usr_tenant_01', name: 'Rian Pratama', phone: '0815-6677-8899' }, imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600' },
-  { id: '2', number: 'A-102', type: 'Standard Room Single', price: 1200000, floor: 1, capacity: 1, facilities: ['AC', 'WiFi', 'KM Luar'], status: 'AVAILABLE', tenant: null, imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=600' },
-  { id: '3', number: 'B-201', type: 'Executive Suite Balcony', price: 2100000, floor: 2, capacity: 2, facilities: ['AC', 'WiFi', 'KM Dalam', 'Balkon', 'Kulkas'], status: 'OCCUPIED', tenant: { id: 'usr_tnt_02', name: 'Siti Rahma', phone: '0812-3344-5566' }, imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600' },
-  { id: '4', number: 'B-202', type: 'Standard Room Single', price: 1200000, floor: 2, capacity: 1, facilities: ['AC', 'WiFi', 'KM Luar'], status: 'AVAILABLE', tenant: null, imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=600' },
-];
 
 function applyStatusOverrides(roomList: any[], propertySlug: string) {
   return roomList.map((r) => {
@@ -25,7 +19,7 @@ function applyStatusOverrides(roomList: any[], propertySlug: string) {
   });
 }
 
-// GET /api/rooms — list with optional filters (status, floor, type, property/kosan)
+// GET /api/rooms — list with optional filters (status, floor, type, property, rentalType, city)
 export async function GET(req: NextRequest) {
   let propertyParam: string | null = null;
   try {
@@ -33,17 +27,18 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
     const floor = searchParams.get('floor');
     const type = searchParams.get('type');
-    propertyParam = searchParams.get('property') || searchParams.get('kosan') || 'default';
-    const isRshs = propertyParam && propertyParam.toLowerCase() === 'rshs';
+    const rentalType = searchParams.get('rentalType'); // daily | monthly
+    const city = searchParams.get('city');
+    propertyParam = searchParams.get('property') || searchParams.get('kosan') || 'all';
 
-    // 1. Direct DB Query filtered strictly by property
+    // 1. Check Database first if available
     try {
       const where: any = {};
-      if (status) where.status = status.toUpperCase();
-      if (floor) where.floor = parseInt(floor, 10);
+      if (status && status !== 'ALL') where.status = status.toUpperCase();
+      if (floor && floor !== 'ALL') where.floor = parseInt(floor, 10);
       if (type) where.type = { contains: type, mode: 'insensitive' };
 
-      if (propertyParam && propertyParam !== 'default' && propertyParam !== 'all') {
+      if (propertyParam && propertyParam !== 'all' && propertyParam !== 'default') {
         where.OR = [
           { propertyId: propertyParam },
           { property: { name: { contains: propertyParam, mode: 'insensitive' } } },
@@ -68,35 +63,37 @@ export async function GET(req: NextRequest) {
       }
     } catch {}
 
-    const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
+    // 2. Multi-Property Unified In-Memory Registry
+    let rooms = [...ALL_MULTI_PROPERTY_ROOMS];
 
-    // Fallback for static RSHS if specific RSHS requested
-    if (isRshs) {
-      let filteredRshs = applyStatusOverrides([...RSHS_ROOMS_DATA], 'rshs');
-      if (status) filteredRshs = filteredRshs.filter((r) => r.status === status.toUpperCase());
-      if (floor) filteredRshs = filteredRshs.filter((r) => r.floor === parseInt(floor, 10));
-      if (type) filteredRshs = filteredRshs.filter((r) => r.type.toLowerCase().includes(type.toLowerCase()));
-      return NextResponse.json({ data: filteredRshs, count: filteredRshs.length });
+    if (propertyParam && propertyParam !== 'all' && propertyParam !== 'default') {
+      rooms = rooms.filter((r) => r.propertySlug === propertyParam);
     }
 
-    // Combine default cachedRooms & RSHS rooms so Konsolidasi / Default sees all units
-    const combinedAll = [...cachedRooms];
-    RSHS_ROOMS_DATA.forEach((rshsRoom) => {
-      if (!combinedAll.some((c) => c.number === rshsRoom.number || c.id === rshsRoom.id)) {
-        combinedAll.push(rshsRoom);
-      }
-    });
+    if (city && city !== 'all') {
+      rooms = rooms.filter((r) => r.propertyCity.toLowerCase().includes(city.toLowerCase()));
+    }
 
-    let filtered = applyStatusOverrides(combinedAll, propertyParam);
-    if (status) filtered = filtered.filter((r) => r.status === status.toUpperCase());
-    if (floor) filtered = filtered.filter((r) => r.floor === parseInt(floor, 10));
-    if (type) filtered = filtered.filter((r) => r.type.toLowerCase().includes(type.toLowerCase()));
+    if (rentalType === 'daily') {
+      rooms = rooms.filter((r) => r.allowDailyBooking);
+    }
 
-    return NextResponse.json({ data: filtered, count: filtered.length });
+    if (status && status !== 'ALL') {
+      rooms = rooms.filter((r) => (roomStatusOverrides.get(r.id) || r.status) === status.toUpperCase());
+    }
+
+    if (floor && floor !== 'ALL') {
+      rooms = rooms.filter((r) => r.floor === parseInt(floor, 10));
+    }
+
+    if (type) {
+      rooms = rooms.filter((r) => r.type.toLowerCase().includes(type.toLowerCase()));
+    }
+
+    const result = applyStatusOverrides(rooms, propertyParam || 'all');
+    return NextResponse.json({ data: result, count: result.length });
   } catch (error) {
-    const { RSHS_ROOMS_DATA } = await import('@/lib/rshsRoomsData');
-    const combinedAll = [...cachedRooms, ...RSHS_ROOMS_DATA];
-    const result = applyStatusOverrides(combinedAll, propertyParam || 'default');
+    const result = applyStatusOverrides(ALL_MULTI_PROPERTY_ROOMS, propertyParam || 'all');
     return NextResponse.json({ data: result, count: result.length });
   }
 }
@@ -105,7 +102,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { number, type, price, floor, capacity, facilities, propertyId, imageUrl, videoUrl } = body;
+    const { number, type, price, dailyPrice, floor, capacity, facilities, propertyId, propertySlug, propertyName, propertyCity, propertyAddress, imageUrl, videoUrl } = body;
 
     if (!number || !type || !price) {
       return NextResponse.json({ error: 'number, type, and price are required' }, { status: 400 });
@@ -115,7 +112,13 @@ export async function POST(req: NextRequest) {
       id: `rm-${Date.now()}`,
       number,
       type,
+      propertySlug: propertySlug || propertyId || 'default',
+      propertyName: propertyName || 'KosanKu Pro Residence',
+      propertyCity: propertyCity || 'Bandung',
+      propertyAddress: propertyAddress || 'Jl. Merdeka No. 123, Bandung',
       price: parseFloat(price),
+      dailyPrice: dailyPrice ? parseFloat(dailyPrice) : undefined,
+      allowDailyBooking: !!dailyPrice,
       floor: floor ? parseInt(floor, 10) : 1,
       capacity: capacity ? parseInt(capacity, 10) : 1,
       facilities: facilities || [],
@@ -123,10 +126,7 @@ export async function POST(req: NextRequest) {
       tenant: null,
       imageUrl: imageUrl || null,
       videoUrl: videoUrl || null,
-      propertyId: propertyId || 'default',
     };
-
-    cachedRooms.push(newRoomObj);
 
     try {
       await prisma.room.create({

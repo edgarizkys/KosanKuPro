@@ -46,16 +46,23 @@ enum Channel {
 model Property {
   id         String     @id @default(uuid())
   name       String
+  slug       String?    @unique
   address    String
   city       String
   mapsUrl    String?
   photos     String[]
   totalRooms Int
+  ownerName  String?
+  ownerPhone String?
+  description String?
+  isActive   Boolean    @default(true)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
   rooms      Room[]
   users      User[]
   faqEntries FaqEntry[]
+  expenses   Expense[]
+  surveys    SurveySchedule[]
 }
 
 model FaqEntry {
@@ -167,28 +174,38 @@ model NotificationLog {
 }
 
 model Expense {
-  id          String   @id @default(uuid())
-  category    String // listrik, air, perbaikan, internet, lain_lain
+  id          String    @id @default(uuid())
+  propertyId  String?
+  property    Property? @relation(fields: [propertyId], references: [id])
+  category    String    // listrik, air, perbaikan, internet, lain_lain
   amount      Float
   description String
   receiptUrl  String?
   ocrRaw      Json?
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 model Booking {
-  id          String   @id @default(uuid())
-  roomId      String
-  room        Room     @relation(fields: [roomId], references: [id])
-  tenantName  String
-  tenantPhone String
-  checkInDate DateTime
-  dpAmount    Float
-  dpOrderId   String?
-  status      String   @default("PENDING_DP") // PENDING_DP, CONFIRMED, CANCELLED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(uuid())
+  roomId          String
+  room            Room      @relation(fields: [roomId], references: [id])
+  tenantName      String
+  tenantEmail     String?
+  tenantPhone     String
+  tenantIdNumber  String?   // KTP/SIM number
+  checkInDate     DateTime
+  contractEnd     DateTime?
+  rentalDuration  Int       @default(1) // months
+  dpAmount        Float
+  dpOrderId       String?
+  dpSnapToken     String?
+  notes           String?
+  status          String    @default("PENDING_DP") // PENDING_DP, CONFIRMED, CANCELLED, CHECKED_IN
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([roomId, status])
 }
 
 model Conversation {
@@ -235,3 +252,36 @@ model SupplyOrder {
   @@index([status, createdAt])
 }
 
+model SurveySchedule {
+  id           String    @id @default(uuid())
+  propertyId   String
+  property     Property  @relation(fields: [propertyId], references: [id])
+  roomId       String?
+  prospectName String
+  prospectPhone String
+  prospectEmail String?
+  scheduledAt  DateTime
+  notes        String?
+  status       String    @default("PENDING") // PENDING, CONFIRMED, DONE, CANCELLED
+  surveyType   String    @default("ONSITE")  // ONSITE, VIDEO_CALL
+  handledBy    String?   // staff name/id
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([propertyId, scheduledAt])
+  @@index([status])
+}
+
+model OperationalReserve {
+  id          String   @id @default(uuid())
+  propertyId  String
+  month       Int      // 1-12
+  year        Int
+  targetAmount Float
+  currentAmount Float  @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([propertyId, month, year])
+}

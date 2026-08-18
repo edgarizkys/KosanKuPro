@@ -7,6 +7,9 @@ import RoomsSection from '@/components/RoomsSection';
 import AmenitiesSection from '@/components/AmenitiesSection';
 import ReviewsSection from '@/components/ReviewsSection';
 import LocationSection from '@/components/LocationSection';
+import HowItWorksSection from '@/components/HowItWorksSection';
+import PartnerAndAppSection from '@/components/PartnerAndAppSection';
+import FaqSection from '@/components/FaqSection';
 import Navbar from '@/components/Navbar';
 import WhatsAppWidget from '@/components/WhatsAppWidget';
 import LoginView from '@/components/LoginView';
@@ -217,8 +220,12 @@ export default function Home() {
                 onToggleTheme={toggleTheme}
               />
             </div>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-28">
+            <div className="max-w-[1600px] w-full mx-auto px-2 sm:px-6 lg:px-8 space-y-12 sm:space-y-20">
+
+              {/* 1. Brand trust signal — ticker langsung setelah hero */}
               <MarqueeTicker />
+
+              {/* 2. Produk utama — Kamar listing + peta, inti dari platform */}
               <RoomsSection 
                 onLogin={() => setView('login')} 
                 onOpenBookingPage={(roomObj) => {
@@ -226,9 +233,25 @@ export default function Home() {
                   setView('booking');
                 }}
               />
+
+              {/* 3. Cara kerja — hilangkan friction, jelaskan prosesnya sebelum visitor kabur */}
+              <HowItWorksSection />
+
+              {/* 4. Fasilitas — perkuat value setelah mereka lihat kamar & proses */}
               <AmenitiesSection />
+
+              {/* 5. Testimoni — social proof dari penghuni nyata, bangun trust emosional */}
               <ReviewsSection />
+
+              {/* 6+7. Kemitraan & App Mobile — digabung jadi satu baris visual yang padat */}
+              <PartnerAndAppSection onOpenConsultation={() => setShowRegisterOwner(true)} />
+
+              {/* 8. FAQ — atasi keberatan terakhir sebelum mereka hubungi atau booking */}
+              <FaqSection />
+
+              {/* 9. Lokasi & Footer — penutup dengan info kontak & kredibilitas */}
               <LocationSection />
+
             </div>
           </div>
         )}

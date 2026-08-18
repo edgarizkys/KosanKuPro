@@ -40,6 +40,11 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css"
           crossOrigin="anonymous"
         />
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="min-h-screen flex flex-col antialiased selection:bg-orchid-violet/40 noise-overlay">
         <PropertyProvider>

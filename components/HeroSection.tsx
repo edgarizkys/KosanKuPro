@@ -239,57 +239,7 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
         </div>
 
         {/* LAYER 4: 100% NEUMORPHIC FLOATING WIDGET CARDS */}
-        {/* Prominent Floating CTA Card for Kosan Owners (Only shown on Demo SaaS website on tablet/desktop to keep mobile house view 100% clean & unblocked) */}
-        {isDemo && (
-          <div className="hidden sm:block absolute top-[32%] lg:top-[34%] left-10 lg:left-14 z-40 w-80 sm:w-84 max-w-sm animate-scale-in">
-            <a
-              href="https://wa.me/6282114242634?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20punya%20kosan%20dan%20belum%20punya%20sistem%20digital.%20Mau%20konsultasi%20gratis%20dan%20daftar%20sekarang."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block p-4 sm:p-5 neu-card rounded-3xl border border-white/90 dark:border-white/15 shadow-2xl hover:scale-[1.03] active:scale-98 transition-all text-slate-800 dark:text-white group cursor-pointer"
-              title="Hubungi WhatsApp Konsultan KosanKu Pro +6282114242634"
-            >
-              {/* Top Badge & Live Status */}
-              <div className="flex items-center justify-between gap-2 mb-2.5">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 neu-inset rounded-xl text-[10px] sm:text-[11px] font-black text-[#047857] dark:text-emerald-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
-                  <span>Konsultasi Gratis</span>
-                </div>
-                <span className="text-[10px] font-extrabold text-amber-600 dark:text-amber-300 neu-card-sm px-2 py-0.5 rounded-lg border border-amber-500/20">
-                  ★ 1-on-1 Setup
-                </span>
-              </div>
 
-              {/* Headline & Description */}
-              <div className="space-y-1 mb-3.5">
-                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white group-hover:text-[#047857] dark:group-hover:text-emerald-400 transition-colors leading-tight">
-                  Punya Kosan Belum Ada Sistem?
-                </h3>
-                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-snug">
-                  Daftar sekarang atau tanya-tanya sistem operasional otomatis bersama kami.
-                </p>
-              </div>
-
-              {/* Neumorphic Big CTA Action Button */}
-              <div className="flex items-center justify-between gap-2 p-2 neu-inset rounded-2xl group-hover:border-emerald-500/30 transition-all">
-                <div className="flex items-center gap-2 pl-1">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-sm shadow-md">
-                    <i className="fa-brands fa-whatsapp text-base" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">WhatsApp Resmi</div>
-                    <div className="text-xs font-black text-slate-800 dark:text-slate-200 leading-tight">+62 821-1424-2634</div>
-                  </div>
-                </div>
-
-                <span className="px-3.5 py-2 rounded-xl bg-[#047857] hover:bg-[#065f46] text-white font-black text-[10px] sm:text-xs shadow-md group-hover:scale-105 transition-all flex items-center gap-1 shrink-0">
-                  <span>Daftar</span>
-                  <i className="fa-solid fa-arrow-right text-[9px]" />
-                </span>
-              </div>
-            </a>
-          </div>
-        )}
 
         {/* Bottom Left Card: +500 Penghuni & Rating (Compact subtle card) */}
         <div className="absolute bottom-3 sm:bottom-4 left-6 sm:left-10 lg:left-14 z-30 max-w-[200px] sm:max-w-[220px] p-3.5 neu-card-sm rounded-2xl border border-white/80 dark:border-white/10 shadow-lg text-slate-900 dark:text-white hidden lg:block hover:translate-y-[-2px] transition-all">
