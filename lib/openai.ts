@@ -52,6 +52,20 @@ export async function chatCompletion(
   messages: OpenAI.Chat.ChatCompletionMessageParam[],
   tools?: OpenAI.Chat.ChatCompletionTool[]
 ) {
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+  if (!apiKey || apiKey === 'YOUR_OPENROUTER_KEY') {
+    return {
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            content: `Halo Kak! 👋 Terima kasih telah menghubungi *KosanKu Pro Residence*. Kamar siap huni kami dilengkapi AC, Smart Lock pintu, Free WiFi 100Mbps, dan Free Laundry 5kg/bulan. Ada yang bisa kami bantu? Silakan cek kamar kami di https://kosankupro.cloud`,
+          },
+        },
+      ],
+    } as any;
+  }
+
   // Try models in order until one works
   for (const model of MODELS) {
     const params: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
@@ -77,13 +91,26 @@ export async function chatCompletion(
 
   // All models failed, try fallback with longer retry
   console.log('[AI] All primary models failed, trying fallback:', FALLBACK_MODEL);
-  const fallbackParams: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
-    model: FALLBACK_MODEL,
-    messages,
-    temperature: 0.7,
-    max_tokens: 1024,
-  };
-  return withRetry(() => getOpenAI().chat.completions.create(fallbackParams), 2);
+  try {
+    const fallbackParams: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
+      model: FALLBACK_MODEL,
+      messages,
+      temperature: 0.7,
+      max_tokens: 1024,
+    };
+    return await withRetry(() => getOpenAI().chat.completions.create(fallbackParams), 2);
+  } catch {
+    return {
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            content: `Halo Kak! 👋 Terima kasih telah menghubungi *KosanKu Pro*. Kamar siap huni kami dilengkapi Smart Lock, AC, WiFi 100Mbps, dan Free Laundry. Kakak berminat untuk sewa harian atau bulanan? Cek ketersediaan di: https://kosankupro.cloud`,
+          },
+        },
+      ],
+    } as any;
+  }
 }
 
 export async function visionOCR(imageBase64: string, mimeType: string) {

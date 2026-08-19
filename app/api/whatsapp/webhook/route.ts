@@ -54,10 +54,32 @@ const DEMO_PHONE_ROLES: Record<string, { role: string; name: string; property: s
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    let body: any = {};
+    const contentType = req.headers.get('content-type') || '';
+    
+    if (contentType.includes('application/json')) {
+      body = await req.json().catch(() => ({}));
+    } else if (contentType.includes('form') || contentType.includes('urlencoded')) {
+      const formData = await req.formData().catch(() => null);
+      if (formData) {
+        formData.forEach((value, key) => {
+          body[key] = value.toString();
+        });
+      }
+    } else {
+      try {
+        body = await req.json();
+      } catch {
+        const text = await req.text();
+        const params = new URLSearchParams(text);
+        params.forEach((value, key) => {
+          body[key] = value;
+        });
+      }
+    }
     
     // Support payloads from Fonnte, Meta Cloud API, or direct simulator test
-    const rawSender = body.sender || body.from || body.phone || body.wa_id || '';
+    const rawSender = body.sender || body.from || body.phone || body.wa_id || body.target || '';
     const rawMessage = body.message || body.text || body.body || '';
     const cleanPhone = rawSender.replace(/[^0-9]/g, '');
     const msg = rawMessage.trim();
