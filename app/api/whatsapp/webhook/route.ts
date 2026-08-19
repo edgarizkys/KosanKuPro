@@ -491,7 +491,7 @@ export async function POST(req: NextRequest) {
           });
 
           if (rooms && rooms.length > 0) {
-            const types = [...new Set(rooms.map((r) => r.type))];
+            const types = Array.from(new Set(rooms.map((r) => r.type)));
             roomListText = types
               .map((type, idx) => {
                 const sample = rooms.find((r) => r.type === type);
