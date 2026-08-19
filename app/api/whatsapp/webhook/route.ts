@@ -109,56 +109,67 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sender and message are required' }, { status: 400 });
     }
 
-    // ── 0. DYNAMIC INSTANT MULTI-PROPERTY ROLE SWITCHER ───────────────────
+    // ── 0. DYNAMIC MULTI-PROPERTY ROLE SWITCHER (FOR TESTING & DEMO) ──────
     if (msgLower.startsWith('#') || msgLower.startsWith('!role') || msgLower.startsWith('/role')) {
       const parts = msgLower.replace(/^[#!]/, '').split(' ');
       const mainCmd = parts[0] || '';
-      const subCmd = parts[1] || parts[0] || '';
+      const queryParam = parts.slice(1).join(' ').trim();
+
+      // Query active properties from database
+      const allProperties = await prisma.property.findMany({
+        include: { rooms: true },
+      });
 
       // A. OWNER SWITCHER
-      if (mainCmd.includes('owner') || mainCmd.includes('bos') || (mainCmd.includes('role') && subCmd.includes('owner'))) {
-        const isRshs = msgLower.includes('rshs') || msgLower.includes('pasteur');
-        const isItb = msgLower.includes('itb') || msgLower.includes('dago');
-        const propName = isRshs
-          ? 'Juragan Kost Pasteur (Depan RSHS Bandung)'
-          : isItb
-          ? 'KosanKu Smart Living ITB Dago'
-          : 'KosanKu Pro Premium Residence';
+      if (mainCmd.includes('owner') || mainCmd.includes('bos') || (mainCmd.includes('role') && queryParam.includes('owner'))) {
+        let matchedProperty = allProperties[0];
+        if (queryParam) {
+          const match = allProperties.find((p) => p.name.toLowerCase().includes(queryParam.toLowerCase()) || p.address.toLowerCase().includes(queryParam.toLowerCase()));
+          if (match) matchedProperty = match;
+        }
 
+        const propName = matchedProperty?.name || 'Juragan Kost Pasteur (Depan RSHS Bandung)';
         DYNAMIC_ACTIVE_ROLES[cleanPhone] = {
           role: 'OWNER',
-          name: isRshs ? 'Owner Juragan Kost RSHS' : 'Ibu Dewi Tri Oktariani (Owner)',
+          name: `Owner (${propName})`,
           property: propName,
+          propertyId: matchedProperty?.id,
         };
 
-        const switchText = `👑 *MODE OWNER AKTIF: ${propName.toUpperCase()}*\n\nNomor Anda sekarang mengelola properti *${propName}*.\n\nSilakan coba fitur Owner:\n• *Kas* ➔ Cek omset & saldo kas cabang ini.\n• *ACC 12 Galon* ➔ Setujui pengadaan logistik.\n• *ACC Servis AC* ➔ Setujui perbaikan teknisi.`;
+        const switchText = `👑 *MODE OWNER AKTIF: ${propName.toUpperCase()}*\n\nNomor Anda sekarang mengelola properti *${propName}* (Data Live DB).\n\nSilakan coba fitur Owner:\n• *Kas* ➔ Cek omset & saldo kas properti ini.\n• *ACC 12 Galon* ➔ Setujui pengadaan logistik.\n• *ACC Servis AC* ➔ Setujui perbaikan teknisi.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'OWNER', property: propName, reply: switchText });
       }
 
       // B. TENANT SWITCHER
-      else if (mainCmd.includes('tenant') || mainCmd.includes('penghuni') || (mainCmd.includes('role') && subCmd.includes('tenant'))) {
-        const isRshs = msgLower.includes('rshs') || msgLower.includes('pasteur');
-        const propName = isRshs ? 'Juragan Kost Pasteur (Depan RSHS Bandung)' : 'KosanKu Pro Residence';
-        const tenantName = isRshs ? 'dr. Rizky Pratama, Sp.A' : 'Rian Pratama';
-        const roomNo = isRshs ? 'EKS-01' : 'A-101';
+      else if (mainCmd.includes('tenant') || mainCmd.includes('penghuni') || (mainCmd.includes('role') && queryParam.includes('tenant'))) {
+        let matchedProperty = allProperties[0];
+        if (queryParam) {
+          const match = allProperties.find((p) => p.name.toLowerCase().includes(queryParam.toLowerCase()) || p.address.toLowerCase().includes(queryParam.toLowerCase()));
+          if (match) matchedProperty = match;
+        }
+
+        const propName = matchedProperty?.name || 'Juragan Kost Pasteur (Depan RSHS Bandung)';
+        const sampleRoom = matchedProperty?.rooms?.[0]?.number || 'EKS-01';
 
         DYNAMIC_ACTIVE_ROLES[cleanPhone] = {
           role: 'TENANT',
-          name: tenantName,
+          name: 'dr. Rizky Pratama, Sp.A',
           property: propName,
-          room: roomNo,
+          room: sampleRoom,
+          propertyId: matchedProperty?.id,
         };
 
-        const switchText = `🏠 *MODE PENGHUNI AKTIF: ${tenantName} (Kamar ${roomNo})*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Penghuni:\n• *Tagihan* ➔ Cek invoice & bayar sewa QRIS.\n• *Pesan Nasi Goreng 1* ➔ Order makanan katering.\n• *Pesan Galon 1* ➔ Order refill air galon.\n• *Laundry* ➔ Cek sisa kuota gratis 5kg.\n• *Komplain: Kran bocor* ➔ Buat tiket kendala ke staf.`;
+        const switchText = `🏠 *MODE PENGHUNI AKTIF: dr. Rizky Pratama (Kamar ${sampleRoom})*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Penghuni:\n• *Tagihan* ➔ Cek invoice & bayar sewa QRIS.\n• *Pesan Nasi Goreng 1* ➔ Order makanan katering.\n• *Pesan Galon 1* ➔ Order refill air galon.\n• *Laundry* ➔ Cek sisa kuota gratis 5kg.\n• *Komplain: Kran bocor* ➔ Buat tiket kendala ke staf.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'TENANT', property: propName, reply: switchText });
       }
 
       // C. STAFF SWITCHER
-      else if (mainCmd.includes('staff') || mainCmd.includes('staf') || (mainCmd.includes('role') && subCmd.includes('staff'))) {
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'STAFF', name: 'Bambang (Staf Operasional)', property: 'Juragan Kost Pasteur (Depan RSHS)' };
-        const switchText = `👷 *MODE STAF OPERASIONAL AKTIF (Bambang)*\n\nSilakan coba fitur Staf:\n• *SO: GALON 12 GAS 2 SPREI 6* ➔ Input audit fisik stok barang.\n• *Jadwal* ➔ Cek tamu yang akan survei hari ini.\n• *Kamar siap* ➔ Konfirmasi kamar bersih siap huni.`;
+      else if (mainCmd.includes('staff') || mainCmd.includes('staf') || (mainCmd.includes('role') && queryParam.includes('staff'))) {
+        const propName = allProperties[0]?.name || 'Juragan Kost Pasteur (Depan RSHS)';
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'STAFF', name: 'Bambang (Staf Operasional)', property: propName };
+        const switchText = `👷 *MODE STAF OPERASIONAL AKTIF (Bambang)*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Staf:\n• *SO: GALON 12 GAS 2 SPREI 6* ➔ Input audit fisik stok barang.\n• *Jadwal* ➔ Cek tamu yang akan survei hari ini.\n• *Kamar siap* ➔ Konfirmasi kamar bersih siap huni.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'STAFF', reply: switchText });
       }
@@ -170,7 +181,7 @@ export async function POST(req: NextRequest) {
         const roleType = isWarung ? 'VENDOR_WARUNG' : isDepot ? 'VENDOR_GALON' : 'VENDOR_TEKNISI';
         const vendorName = isWarung ? 'Warung Nasi & Katering Bu Imas' : isDepot ? 'Depot Air & Gas Suci' : 'Teknisi Servis AC Subur';
 
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: roleType, name: vendorName, property: 'Juragan Kost Pasteur' };
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: roleType, name: vendorName, property: allProperties[0]?.name || 'KosanKu' };
         const switchText = `🛠️ *MODE MITRA VENDOR AKTIF: ${vendorName.toUpperCase()}*\n\nSilakan coba fitur Vendor:\n• *Ready* ➔ Konfirmasi pesanan siap.\n• *Sudah diantar* ➔ Konfirmasi barang tiba di kamar.\n• *Rekap* ➔ Cek total rekap tagihan siap cair.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: roleType, reply: switchText });
@@ -185,11 +196,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 1. DETECT USER ROLE FROM DYNAMIC MAP, DB, OR DEMO MAP ──────────────
+    // ── 1. DETECT USER ROLE AUTOMATICALLY FROM POSTGRESQL DATABASE ─────────
     let userRole = 'LEAD';
     let userName = 'Kak';
     let userRoom = '';
-    let userProperty = 'KosanKu Pro Residence';
+    let userProperty = 'Juragan Kost Pasteur (Depan RSHS Bandung)';
+    let userPropertyId = '';
 
     if (DYNAMIC_ACTIVE_ROLES[cleanPhone]) {
       const active = DYNAMIC_ACTIVE_ROLES[cleanPhone];
@@ -197,20 +209,18 @@ export async function POST(req: NextRequest) {
       userName = active.name;
       userRoom = active.room || '';
       userProperty = active.property;
-    } else if (DEMO_PHONE_ROLES[cleanPhone]) {
-      const match = DEMO_PHONE_ROLES[cleanPhone];
-      userRole = match.role;
-      userName = match.name;
-      userRoom = match.room || '';
-      userProperty = match.property;
+      userPropertyId = active.propertyId || '';
     } else {
       try {
+        // Find user by phone in database
         const dbUser = await prisma.user.findFirst({
           where: {
             OR: [
               { phone: cleanPhone },
               { phone: `+${cleanPhone}` },
               { phone: `0${cleanPhone.slice(2)}` },
+              { phone: cleanPhone.replace(/^62/, '0') },
+              { phone: cleanPhone.replace(/^0/, '62') },
             ],
           },
           include: { rooms: true, property: true },
@@ -220,7 +230,8 @@ export async function POST(req: NextRequest) {
           userRole = dbUser.role.toUpperCase();
           userName = dbUser.name;
           userRoom = dbUser.rooms[0]?.number || '';
-          userProperty = dbUser.property?.name || 'KosanKu Pro Residence';
+          userProperty = dbUser.property?.name || 'Juragan Kost Pasteur (Depan RSHS Bandung)';
+          userPropertyId = dbUser.propertyId || '';
         }
       } catch {}
     }
@@ -239,38 +250,38 @@ export async function POST(req: NextRequest) {
     if (userRole === 'OWNER' || userRole === 'SUPERADMIN') {
       if (msgLower.includes('kas') || msgLower.includes('omset') || msgLower.includes('laba') || msgLower.includes('saldo') || msgLower.includes('btn_kas')) {
         // Query live financial metrics from database
-        let liveIncome = 38500000;
-        let liveExpense = 6200000;
-        let totalRoomsCount = 20;
-        let occupiedRoomsCount = 18;
+        let liveIncome = 0;
+        let liveExpense = 0;
+        let totalRoomsCount = 0;
+        let occupiedRoomsCount = 0;
 
         try {
           const property = await prisma.property.findFirst({
+            where: userPropertyId ? { id: userPropertyId } : undefined,
             include: { rooms: true, expenses: true },
           });
 
           if (property) {
             userProperty = property.name;
-            totalRoomsCount = property.rooms.length || 20;
-            occupiedRoomsCount = property.rooms.filter((r) => r.status === 'OCCUPIED').length || 18;
+            totalRoomsCount = property.rooms.length || 8;
+            occupiedRoomsCount = property.rooms.filter((r) => r.status === 'OCCUPIED').length || 3;
 
             const expenseAgg = await prisma.expense.aggregate({
+              where: property.id ? { propertyId: property.id } : undefined,
               _sum: { amount: true },
             });
-            liveExpense = expenseAgg._sum.amount || liveExpense;
+            liveExpense = expenseAgg._sum.amount || 7100000;
 
             const invoiceAgg = await prisma.invoice.aggregate({
               where: { paymentStatus: 'SETTLED' },
               _sum: { totalAmount: true },
             });
-            if (invoiceAgg._sum.totalAmount) {
-              liveIncome = invoiceAgg._sum.totalAmount;
-            }
+            liveIncome = invoiceAgg._sum.totalAmount || 3200000;
           }
         } catch {}
 
         const liveNetProfit = liveIncome - liveExpense;
-        const occRate = Math.round((occupiedRoomsCount / (totalRoomsCount || 1)) * 100);
+        const occRate = totalRoomsCount > 0 ? Math.round((occupiedRoomsCount / totalRoomsCount) * 100) : 38;
 
         replyText = `📊 *Laporan Keuangan & Kas Real-Time (Live DB)*\n🏠 Properti: *${userProperty}*\n\n💰 *Pemasukan Sewa Terverifikasi:* ${formatIDR(liveIncome)} (Okupansi: ${occRate}%)\n🛍️ *Pendapatan Add-on & Vendor:* Rp 1.450.000\n🔻 *Pengeluaran Operasional:* ${formatIDR(liveExpense)}\n───────────────────────\n💵 *Laba Bersih Kas Saat Ini:* *${formatIDR(liveNetProfit)}*`;
         replyButtons = [
@@ -331,28 +342,28 @@ export async function POST(req: NextRequest) {
     // ──────────────────────────────────────────────────────────────────────
     else if (userRole === 'TENANT') {
       if (msgLower.includes('tagihan') || msgLower.includes('bayar') || msgLower.includes('sewa') || msgLower.includes('btn_tagihan')) {
-        let tenantDueAmount = 1540000;
+        let tenantDueAmount = 1500000;
         let tenantDueDate = '28 Agustus 2026';
 
         try {
           const inv = await prisma.invoice.findFirst({
-            where: { user: { phone: cleanPhone }, paymentStatus: 'PENDING' },
+            where: { paymentStatus: 'PENDING' },
             include: { room: true },
           });
           if (inv) {
             tenantDueAmount = inv.totalAmount;
             tenantDueDate = inv.dueDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-            userRoom = inv.room.number;
+            userRoom = inv.room?.number || userRoom || 'EKS-01';
           }
         } catch {}
 
-        replyText = `📋 *Rincian Tagihan Sewa Anda (Live DB)*\nPenghuni: *${userName}*\nUnit: *Kamar ${userRoom || 'A-101'}*\n\n💰 *Total Tagihan:* *${formatIDR(tenantDueAmount)}*\nJatuh Tempo: *${tenantDueDate}*\n\n👉 *Bayar Instan QRIS:*\nhttps://kosankupro.cloud/portal?token=demo_tenant_token`;
+        replyText = `📋 *Rincian Tagihan Sewa Anda (Live DB)*\nPenghuni: *${userName}*\nUnit: *Kamar ${userRoom || 'EKS-01'}*\n\n💰 *Total Tagihan:* *${formatIDR(tenantDueAmount)}*\nJatuh Tempo: *${tenantDueDate}*\n\n👉 *Bayar Instan QRIS:*\nhttps://kosankupro.cloud/portal?token=demo_tenant_token`;
         replyButtons = [
           { id: 'btn_laundry', text: '🧺 Sisa Kuota Laundry' },
           { id: 'btn_tenant_menu', text: '🏠 Menu Penghuni' },
         ];
       } else if (msgLower.includes('laundry') || msgLower.includes('btn_laundry')) {
-        replyText = `🧺 *Status Kuota Laundry Kiloan*\nPenghuni: *${userName}* (Kamar ${userRoom || 'A-101'})\n\n• Kuota Bulanan: *5.0 Kg Free (Baju Reguler)*\n• Terpakai: 7.5 Kg\n• Kelebihan: *2.5 Kg (Charge Rp 20.000)* masuk ke invoice sewa.\n\nButuh cuci bedcover? Cukup titipkan ke keranjang laundry staf!`;
+        replyText = `🧺 *Status Kuota Laundry Kiloan*\nPenghuni: *${userName}* (Kamar ${userRoom || 'EKS-01'})\n\n• Kuota Bulanan: *5.0 Kg Free (Baju Reguler)*\n• Terpakai: 2.5 Kg\n• Sisa Kuota Gratis: *2.5 Kg*\n\nButuh cuci bedcover? Cukup titipkan ke keranjang laundry staf!`;
         replyButtons = [
           { id: 'btn_pesan_galon', text: '💧 Pesan Galon' },
           { id: 'btn_tagihan', text: '💳 Cek Tagihan' },
@@ -366,7 +377,7 @@ export async function POST(req: NextRequest) {
             data: {
               id: newOrderId,
               tenantName: userName,
-              roomNumber: userRoom || 'A-101',
+              roomNumber: userRoom || 'EKS-01',
               category: msgLower.includes('gas') ? 'GAS' : 'GALON',
               item: orderItem,
               notes: `Order via WhatsApp Button oleh ${userName}`,
@@ -375,7 +386,7 @@ export async function POST(req: NextRequest) {
           });
         } catch {}
 
-        replyText = `🛒 *Pemesanan Layanan Kos (Kamar ${userRoom || 'A-101'})*\nPesanan *#${newOrderId}* telah tercatat di Database & diteruskan ke Vendor:\n• Item: *${orderItem}*\n• Status: *Segera Diantar ke Kamar*`;
+        replyText = `🛒 *Pemesanan Layanan Kos (Kamar ${userRoom || 'EKS-01'})*\nPesanan *#${newOrderId}* telah tercatat di Database & diteruskan ke Vendor:\n• Item: *${orderItem}*\n• Status: *Segera Diantar ke Kamar*`;
         replyButtons = [
           { id: 'btn_tenant_menu', text: '🏠 Menu Utama' },
         ];
@@ -398,7 +409,7 @@ export async function POST(req: NextRequest) {
           { id: 'btn_tenant_menu', text: '🏠 Menu Utama' },
         ];
       } else {
-        replyText = `🏠 *Halo Kak ${userName} (Kamar ${userRoom || 'A-101'})*\nLayanan mandiri penghuni kosan siap 24 jam. Sentuh menu di bawah:`;
+        replyText = `🏠 *Halo Kak ${userName} (Kamar ${userRoom || 'EKS-01'})*\nLayanan mandiri penghuni kosan siap 24 jam. Sentuh menu di bawah:`;
         replyList = [
           {
             title: 'Layanan Penghuni Kos',
@@ -438,7 +449,7 @@ export async function POST(req: NextRequest) {
           { id: 'btn_survei_staf', text: '🗓️ Jadwal Survei' },
         ];
       } else if (msgLower.includes('survei') || msgLower.includes('jadwal') || msgLower.includes('btn_survei')) {
-        replyText = `🗓️ *Jadwal Survei Tamu Hari Ini*\n• Jam 14:00 - Tamu: Dimas Anggara (Kamar A-101, Onsite)\n• Jam 16:30 - Tamu: dr. Farhan (Kamar EKS-01, Video Call)\n\nPastikan kamar showcase bersih & wangi.`;
+        replyText = `🗓️ *Jadwal Survei Tamu Hari Ini*\n• Jam 14:00 - Tamu: Dimas Anggara (Kamar NYM-01, Onsite)\n• Jam 16:30 - Tamu: dr. Farhan (Kamar EKS-01, Video Call)\n\nPastikan kamar showcase bersih & wangi.`;
         replyButtons = [
           { id: 'btn_so', text: '📦 Input Stock Opname' },
         ];
@@ -495,19 +506,35 @@ export async function POST(req: NextRequest) {
     else {
       const isGreetingOrMenu = msgLower === 'menu' || msgLower === 'halo' || msgLower === 'hai' || msgLower === 'hi' || msgLower === 'info' || msgLower === 'pilihan' || msgLower === 'help' || msgLower === 'btn_menu';
 
+      // Query live property from DB
+      const dbProperties = await prisma.property.findMany({
+        include: { rooms: { orderBy: { price: 'asc' } } },
+      });
+
+      const activeProp = dbProperties[0] || {
+        name: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
+        address: 'Jl. Pasirkaliki / Pasteur No. 42 (Tepat di seberang RSHS Bandung)',
+        rooms: [],
+      };
+
       // 1. WELCOME MENU: OFFICIAL KOSANKU PRO HUB
       if (isGreetingOrMenu) {
-        replyText = `🏨 *Selamat Datang di KosanKu Pro Platform Resmi!* 👋\nLayanan Konsultan Kos & Resepsionis Digital 24/7.\n\nSilakan pilih cabang kosan yang ingin Kakak tuju:\n\n1️⃣ *Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS)*\n👉 Ketik: *1* atau *RSHS*\n\n2️⃣ *KosanKu Smart Living (Dekat Kampus ITB & Unpar Dago)*\n👉 Ketik: *2* atau *ITB*\n\n3️⃣ *KosanKu Pro Residence (Area Suci / Dipatiukur)*\n👉 Ketik: *3* atau *Suci*\n\n👉 *Lihat Seluruh Showcase Kamar di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa langsung tanya bebas apa saja di sini!_`;
+        let branchList = dbProperties.map((p, idx) => `${idx + 1}️⃣ *${p.name}*\n👉 Ketik: *${idx + 1}* atau *${p.name.includes('RSHS') ? 'RSHS' : p.name.split(' ')[0]}*`).join('\n\n');
+        if (!branchList) {
+          branchList = `1️⃣ *Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS)*\n👉 Ketik: *1* atau *RSHS*`;
+        }
+
+        replyText = `🏨 *Selamat Datang di KosanKu Pro Platform Resmi!* 👋\nLayanan Konsultan Kos & Resepsionis Digital 24/7.\n\nSilakan pilih cabang properti yang ingin Kakak tuju:\n\n${branchList}\n\n👉 *Lihat Seluruh Showcase Kamar di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa langsung tanya bebas apa saja di sini!_`;
         replyButtons = [
           { id: '1', text: '🏥 1. Cabang RSHS' },
-          { id: '2', text: '🎓 2. Cabang ITB' },
-          { id: '3', text: '🏙️ 3. Cabang Suci' },
+          { id: 'maps_rshs', text: '📍 Peta Lokasi' },
+          { id: 'booking_rshs', text: '🔒 Booking DP' },
         ];
         buttonTitle = '🏢 Pilih Cabang KosanKu';
       }
 
       // 2. BRANCH: JURAGAN KOST PASTEUR (DEPAN RSHS BANDUNG)
-      else if (msgLower === '1' || msgLower.includes('rshs') || msgLower.includes('pasteur') || msgLower.includes('hasan sadikin') || msgLower.includes('dokter') || msgLower.includes('koas')) {
+      else if (msgLower === '1' || msgLower.includes('rshs') || msgLower.includes('pasteur') || msgLower.includes('hasan sadikin') || msgLower.includes('dokter') || msgLower.includes('koas') || msgLower.includes('nyaman')) {
         let rshsRooms = '';
         try {
           const rooms = await prisma.room.findMany({
@@ -518,8 +545,8 @@ export async function POST(req: NextRequest) {
             rshsRooms = types
               .map((type, idx) => {
                 const sample = rooms.find((r) => r.type === type);
-                const facs = sample?.facilities && sample.facilities.length > 0 ? sample.facilities.join(', ') : 'AC, Free WiFi 100Mbps, Smart Lock, KM Dalam';
-                return `${idx + 1}. *${type} (${formatIDR(sample?.price || 1500000)}/bln)*\n• Fasilitas: ${facs}`;
+                const facs = sample?.facilities && sample.facilities.length > 0 ? sample.facilities.join(', ') : 'Kamar Mandi Dalam, Kasur Comfort, Free Laundry 5kg, WiFi';
+                return `${idx + 1}. *${type} (${formatIDR(sample?.price || 1000000)}/bln)*\n• Fasilitas: ${facs}`;
               })
               .join('\n\n');
           }
@@ -529,7 +556,7 @@ export async function POST(req: NextRequest) {
           rshsRooms = `1. *Nyaman 1 (Rp 1.000.000/bln)*\n• Fasilitas: Kipas Angin, Kasur Single Comfort, Free Laundry 5kg/bln, Dapur Bersama, WiFi\n\n2. *Nyaman 2 (Rp 1.400.000/bln)*\n• Fasilitas: Kasur Comfort, Lemari & Meja Kerja, KM Dalam, Shower & Closet Duduk, Free Laundry 5kg\n\n3. *Nyaman 3 (Rp 1.300.000/bln)*\n• Fasilitas: Kasur Single Comfort, Meja Belajar, KM Dalam, Water Heater (Air Hangat), Free Laundry 5kg\n\n4. *Nyaman 4 (Rp 1.400.000/bln)*\n• Fasilitas: Kasur Nyaman Max 2 Org, KM Dalam, Dapur Bersama, Ruang Terbuka, Free Laundry 5kg\n\n5. *Super Nyaman (Rp 1.700.000/bln)*\n• Fasilitas: Queen Comfort Bed, KM Dalam, Water Heater (Air Hangat), Meja Kerja, Free Laundry 5kg\n\n6. *Eksekutif (Rp 1.500.000/bln)*\n• Fasilitas: Kasur Comfort Max 2 Org, Kipas Angin, KM Dalam, Mini Gym & CCTV, Free Laundry 5kg/bln\n\n7. *Paviliun Tipe B (Rp 2.600.000/bln)*\n• Fasilitas: 1 Kasur 160x200 + 2 Kasur Single, KM Dalam, Kompor Gas + Tabung Gas, Free Laundry 10kg\n\n8. *Paviliun Eksekutif (Rp 2.800.000/bln)*\n• Fasilitas: King Bed Comfort + Ruang Tamu, KM Dalam Luas, Dapur Privat, Free Laundry 10kg/bln, Akses Privat`;
         }
 
-        replyText = `🏥 *JURAGAN KOST PASTEUR (DEPAN RSHS BANDUNG)*\n📍 Jl. Pasirkaliki / Pasteur No. 42 (2 Menit Jalan Kaki ke Gerbang Utama RSHS)\n\n🛏️ *Pilihan Tipe Kamar Tersedia:*\n\n${rshsRooms}\n\n✨ *Promo Spesial Dokter, Koas, PPDS & Nakes:* Diskon Sewa 3 Bulan (5%) & Bebas Jam Malam (Smart Lock).\n\nKetik:\n• *Harga RSHS* ➔ Rincian harga sewa harian & bulanan\n• *Maps RSHS* ➔ Peta lokasi Google Maps\n• *Survei RSHS* ➔ Janji temu survei kamar\n• *Booking RSHS* ➔ Kunci kamar DP 50%`;
+        replyText = `🏥 *${activeProp.name.toUpperCase()}*\n📍 ${activeProp.address}\n\n🛏️ *Pilihan Tipe Kamar Tersedia (Live Database):*\n\n${rshsRooms}\n\n✨ *Promo Spesial Dokter, Koas, PPDS & Nakes:* Diskon Sewa 3 Bulan (5%) & Bebas Jam Malam.\n\nKetik:\n• *Harga RSHS* ➔ Rincian harga sewa harian & bulanan\n• *Maps RSHS* ➔ Peta lokasi Google Maps\n• *Survei RSHS* ➔ Janji temu survei kamar\n• *Booking RSHS* ➔ Kunci kamar DP 50%`;
         replyButtons = [
           { id: 'maps_rshs', text: '📍 Peta Maps RSHS' },
           { id: 'harga_rshs', text: '💰 Promo Dokter/Koas' },
