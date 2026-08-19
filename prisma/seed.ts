@@ -77,8 +77,8 @@ async function main() {
 
   const tenants = [multiRoleUsers[6]];
 
-  // Create property
-  const property = await prisma.property.upsert({
+  // Create properties
+  const propRshs = await prisma.property.upsert({
     where: { id: 'prop-001' },
     update: {
       name: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
@@ -92,10 +92,47 @@ async function main() {
       city: 'Bandung',
       mapsUrl: 'https://maps.google.com/?q=-6.8988,107.5976',
       photos: [],
-      totalRooms: 12,
+      totalRooms: 8,
     },
   });
-  console.log(`✅ Property: ${property.name}`);
+
+  const propItb = await prisma.property.upsert({
+    where: { id: 'prop-002' },
+    update: {
+      name: 'KosanKu Smart Living (Dekat ITB & Unpar Dago)',
+      address: 'Jl. Dago Asri No. 18 Bandung',
+      city: 'Bandung',
+    },
+    create: {
+      id: 'prop-002',
+      name: 'KosanKu Smart Living (Dekat ITB & Unpar Dago)',
+      address: 'Jl. Dago Asri No. 18 Bandung',
+      city: 'Bandung',
+      mapsUrl: 'https://maps.google.com/?q=-6.8824,107.6160',
+      photos: [],
+      totalRooms: 6,
+    },
+  });
+
+  const propSuci = await prisma.property.upsert({
+    where: { id: 'prop-003' },
+    update: {
+      name: 'KosanKu Pro Residence (Suci / Dipatiukur)',
+      address: 'Jl. Surapati / Suci No. 88 Bandung',
+      city: 'Bandung',
+    },
+    create: {
+      id: 'prop-003',
+      name: 'KosanKu Pro Residence (Suci / Dipatiukur)',
+      address: 'Jl. Surapati / Suci No. 88 Bandung',
+      city: 'Bandung',
+      mapsUrl: 'https://maps.google.com/?q=-6.8972,107.6250',
+      photos: [],
+      totalRooms: 6,
+    },
+  });
+
+  console.log(`✅ Properties: ${propRshs.name}, ${propItb.name}, ${propSuci.name}`);
 
   // Create rooms from Real RSHS Data
   const roomData = [
@@ -113,12 +150,12 @@ async function main() {
   for (const rd of roomData) {
     const room = await prisma.room.upsert({
       where: { number: rd.number },
-      update: { type: rd.type, price: rd.price, imageUrl: rd.imageUrl, facilities: rd.facilities },
-      create: { ...rd, propertyId: property.id },
+      update: { type: rd.type, price: rd.price, imageUrl: rd.imageUrl, facilities: rd.facilities, propertyId: propRshs.id },
+      create: { ...rd, propertyId: propRshs.id },
     });
     rooms.push(room);
   }
-  console.log(`✅ Rooms: ${rooms.length} created`);
+  console.log(`✅ Rooms: ${rooms.length} created for RSHS`);
 
   // Assign tenants to rooms
   await prisma.room.update({ where: { number: 'EKS-01' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });

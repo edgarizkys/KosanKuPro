@@ -492,16 +492,11 @@ export async function POST(req: NextRequest) {
 
       // 1. WELCOME MENU: OFFICIAL KOSANKU PRO HUB
       if (isGreetingOrMenu) {
-        let branchList = dbProperties.map((p, idx) => `${idx + 1}️⃣ *${p.name}*\n👉 Ketik: *${idx + 1}* atau *${p.name.includes('RSHS') ? 'RSHS' : p.name.split(' ')[0]}*`).join('\n\n');
-        if (!branchList) {
-          branchList = `1️⃣ *Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS)*\n👉 Ketik: *1* atau *RSHS*`;
-        }
-
-        replyText = `🏨 *Selamat Datang di KosanKu Pro Platform Resmi!* 👋\nLayanan Konsultan Kos & Resepsionis Digital 24/7.\n\nSilakan pilih cabang properti yang ingin Kakak tuju:\n\n${branchList}\n\n👉 *Lihat Seluruh Showcase Kamar di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa langsung tanya bebas apa saja di sini!_`;
+        replyText = `🏨 *Selamat Datang di KosanKu Pro Platform Resmi!* 👋\nLayanan Konsultan Kos & Resepsionis Digital 24/7.\n\nSilakan pilih cabang kosan yang ingin Kakak tuju:\n\n1️⃣ *Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS)*\n👉 Ketik: *1* atau *RSHS*\n\n2️⃣ *KosanKu Smart Living (Dekat Kampus ITB & Unpar Dago)*\n👉 Ketik: *2* atau *ITB*\n\n3️⃣ *KosanKu Pro Residence (Area Suci / Dipatiukur)*\n👉 Ketik: *3* atau *Suci*\n\n👉 *Lihat Seluruh Showcase Kamar di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa langsung tanya bebas apa saja di sini!_`;
         replyButtons = [
           { id: '1', text: '🏥 1. Cabang RSHS' },
-          { id: 'maps_rshs', text: '📍 Peta Lokasi' },
-          { id: 'booking_rshs', text: '🔒 Booking DP' },
+          { id: '2', text: '🎓 2. Cabang ITB' },
+          { id: '3', text: '🏙️ 3. Cabang Suci' },
         ];
         buttonTitle = '🏢 Pilih Cabang KosanKu';
       }
