@@ -349,20 +349,34 @@ export async function POST(req: NextRequest) {
       if (msgLower.includes('tagihan') || msgLower.includes('bayar') || msgLower.includes('sewa') || msgLower.includes('btn_tagihan')) {
         let tenantDueAmount = 1500000;
         let tenantDueDate = '28 Agustus 2026';
+        let tenantInvoiceNumber = 'INV-20260701-0001';
 
         try {
-          const inv = await prisma.invoice.findFirst({
-            where: { paymentStatus: 'PENDING' },
-            include: { room: true },
-          });
+          let inv = null;
+          if (userRoom) {
+            inv = await prisma.invoice.findFirst({
+              where: {
+                paymentStatus: 'PENDING',
+                room: { number: userRoom },
+              },
+              include: { room: true },
+            });
+          }
+          if (!inv) {
+            inv = await prisma.invoice.findFirst({
+              where: { paymentStatus: 'PENDING' },
+              include: { room: true },
+            });
+          }
           if (inv) {
             tenantDueAmount = inv.totalAmount;
             tenantDueDate = inv.dueDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            tenantInvoiceNumber = inv.invoiceNumber;
             userRoom = inv.room?.number || userRoom || 'EKS-01';
           }
         } catch {}
 
-        replyText = `📋 *Rincian Tagihan Sewa Anda (Live DB)*\nPenghuni: *${userName}*\nUnit: *Kamar ${userRoom || 'EKS-01'}*\n\n💰 *Total Tagihan:* *${formatIDR(tenantDueAmount)}*\nJatuh Tempo: *${tenantDueDate}*\n\n👉 *Bayar Instan QRIS:*\nhttps://kosankupro.cloud/portal?token=demo_tenant_token`;
+        replyText = `📋 *Rincian Tagihan Sewa Anda (Live DB)*\nPenghuni: *${userName}*\nUnit: *Kamar ${userRoom || 'EKS-01'}*\nNo. Invoice: *${tenantInvoiceNumber}*\n\n💰 *Total Tagihan:* *${formatIDR(tenantDueAmount)}*\nJatuh Tempo: *${tenantDueDate}*\n\n👉 *Bayar Instan QRIS & VA Midtrans:*\nhttps://kosankupro.cloud/portal?invoice=${tenantInvoiceNumber}`;
         replyButtons = [
           { id: 'btn_laundry', text: '🧺 Sisa Kuota Laundry' },
           { id: 'btn_tenant_menu', text: '🏠 Menu Penghuni' },
