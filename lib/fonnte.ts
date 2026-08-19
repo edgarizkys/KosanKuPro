@@ -9,14 +9,20 @@ function formatIDR(amount: number) {
 }
 
 /**
- * Send text message via Fonnte WhatsApp API (Supports per-property custom device token)
+ * Send text or interactive button message via Fonnte WhatsApp API (Supports per-property custom device token)
  */
-export async function sendWhatsApp(target: string, message: string, customToken?: string) {
+export async function sendWhatsApp(
+  target: string,
+  message: string,
+  customToken?: string,
+  buttons?: Array<{ id: string; text: string }> | string,
+  footer?: string
+) {
   const token = customToken || process.env.FONNTE_WHATSAPP_TOKEN;
   const cleanTarget = target.replace(/[^0-9]/g, '');
 
   if (!token || token === 'YOUR_FONNTE_TOKEN' || token.includes('TOKEN')) {
-    console.log(`[Fonnte WhatsApp Simulation] To: ${cleanTarget}\n${message}\n---`);
+    console.log(`[Fonnte WhatsApp Simulation] To: ${cleanTarget}\n${message}\nButtons: ${JSON.stringify(buttons)}\n---`);
     return {
       success: true,
       simulated: true,
@@ -25,10 +31,27 @@ export async function sendWhatsApp(target: string, message: string, customToken?
   }
 
   try {
+    const payload: Record<string, string> = {
+      target: cleanTarget,
+      message,
+    };
+
+    if (buttons) {
+      if (typeof buttons === 'string') {
+        payload.button = buttons;
+      } else {
+        payload.button = buttons.map((b) => `${b.id}|${b.text}`).join(',');
+      }
+    }
+
+    if (footer) {
+      payload.footer = footer;
+    }
+
     const response = await fetch(`${FONNTE_API_URL}/send`, {
       method: 'POST',
       headers: { Authorization: token },
-      body: new URLSearchParams({ target: cleanTarget, message }),
+      body: new URLSearchParams(payload),
     });
 
     const data = await response.json();

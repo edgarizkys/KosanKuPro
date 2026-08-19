@@ -37,3 +37,9 @@ _reference/
 
 # graphify output
 graphify-out/
+
+# investor documents & pdf reports (keep local only)
+*.pdf
+*.html
+!app/**/*.html
+scripts/generate_*.js
