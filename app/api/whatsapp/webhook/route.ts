@@ -60,13 +60,6 @@ export async function GET() {
   });
 }
 
-/**
- * POST /api/whatsapp/webhook
- * Multi-Actor Inbound WhatsApp Router for KosanKu Pro:
- * 1. Owner -> 1-Click Approval, Live Ledger & Cash Summary
- * 2. Tenant -> Bill QRIS, Report Maintenance, Order Laundry/Galon, Magic Link
- * 3. Staff -> Stock Opname (SO), Task Checklist, Survey Schedule
- * 4. Vendor -> Receive Orders, Update Status (READY/DELIVERED), 2-Week Payout
 // In-memory dynamic test role switcher state per phone
 const DYNAMIC_ACTIVE_ROLES: Record<string, { role: string; name: string; property: string; room?: string }> = {};
 
