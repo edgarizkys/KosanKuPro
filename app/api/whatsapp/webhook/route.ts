@@ -477,7 +477,29 @@ export async function POST(req: NextRequest) {
     // E. ROLE: LEAD / CALON PENGHUNI (Marketing & AI Sales Agent 24/7)
     // ──────────────────────────────────────────────────────────────────────
     else {
-      const isGreetingOrMenu = msgLower === 'menu' || msgLower === 'halo' || msgLower === 'hai' || msgLower === 'hi' || msgLower === 'info' || msgLower === 'pilihan' || msgLower === 'help' || msgLower === 'btn_menu';
+      const isGreetingOrMenu =
+        msgLower.includes('menu') ||
+        msgLower.includes('halo') ||
+        msgLower.includes('hallo') ||
+        msgLower.includes('hello') ||
+        msgLower.includes('helo') ||
+        msgLower.includes('hai') ||
+        msgLower.includes('hi') ||
+        msgLower.includes('info') ||
+        msgLower.includes('pilihan') ||
+        msgLower.includes('help') ||
+        msgLower.includes('selamat') ||
+        msgLower.includes('pagi') ||
+        msgLower.includes('siang') ||
+        msgLower.includes('malam') ||
+        msgLower.includes('sore') ||
+        msgLower.includes('assalamu') ||
+        msgLower.includes('cabang') ||
+        msgLower.includes('kosan') ||
+        msgLower.includes('start') ||
+        msgLower.includes('mulai') ||
+        msgLower.includes('official') ||
+        msgLower.includes('btn_menu');
 
       // Query live property from DB
       const dbProperties = await prisma.property.findMany({
