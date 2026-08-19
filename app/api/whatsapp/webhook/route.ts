@@ -511,7 +511,6 @@ export async function POST(req: NextRequest) {
         let rshsRooms = '';
         try {
           const rooms = await prisma.room.findMany({
-            take: 4,
             orderBy: { price: 'asc' },
           });
           if (rooms && rooms.length > 0) {
@@ -519,7 +518,8 @@ export async function POST(req: NextRequest) {
             rshsRooms = types
               .map((type, idx) => {
                 const sample = rooms.find((r) => r.type === type);
-                return `${idx + 1}. *${type} (${formatIDR(sample?.price || 1500000)}/bln)*\n• Fasilitas: ${sample?.facilities?.join(', ') || 'AC, Free WiFi 100Mbps, Smart Lock, KM Dalam'}`;
+                const facs = sample?.facilities && sample.facilities.length > 0 ? sample.facilities.join(', ') : 'AC, Free WiFi 100Mbps, Smart Lock, KM Dalam';
+                return `${idx + 1}. *${type} (${formatIDR(sample?.price || 1500000)}/bln)*\n• Fasilitas: ${facs}`;
               })
               .join('\n\n');
           }
