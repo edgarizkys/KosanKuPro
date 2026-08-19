@@ -449,7 +449,15 @@ Jawab pertanyaan calon penyewa dengan singkat (maksimal 2-3 kalimat), berikan in
     // ── 4. SEND WHATSAPP REPLY (Fonnte API or Simulation Logger) ─────────
     const sendResult = await sendWhatsApp(cleanPhone, replyText, undefined, replyButtons, replyFooter);
 
+    // Format button string for Fonnte auto-reply compatibility
+    const buttonStr = replyButtons ? replyButtons.map((b) => `${b.id}|${b.text}`).join(',') : undefined;
+
     return NextResponse.json({
+      reply: replyText,
+      response: replyText,
+      message: replyText,
+      button: buttonStr,
+      footer: replyFooter,
       success: true,
       sender: cleanPhone,
       detectedRole: userRole,
