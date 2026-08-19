@@ -61,7 +61,7 @@ export async function GET() {
 }
 
 // In-memory dynamic test role switcher state per phone
-const DYNAMIC_ACTIVE_ROLES: Record<string, { role: string; name: string; property: string; room?: string }> = {};
+const DYNAMIC_ACTIVE_ROLES: Record<string, { role: string; name: string; property: string; room?: string; propertyId?: string }> = {};
 
 /**
  * POST /api/whatsapp/webhook
