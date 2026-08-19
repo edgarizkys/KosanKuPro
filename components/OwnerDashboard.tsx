@@ -497,6 +497,7 @@ export default function OwnerDashboard({
       loadSOAudit();
       loadBookings();
       loadRooms();
+      loadComplaints();
     }, 2500);
 
     // 4. Switch Dashboard Tab Event Listener (Triggered by Notification Drawer click)
@@ -1563,19 +1564,27 @@ export default function OwnerDashboard({
 
             <div className="space-y-3">
               {complaints.map((c: any) => (
-                <div key={c.id} className="p-4 neu-card-sm rounded-2xl space-y-2">
+                <div key={c.id} className="p-4 neu-card-sm rounded-2xl space-y-2 border border-slate-200/60 dark:border-white/10">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-slate-900 dark:text-white">{c.title} - Kamar {c.room?.number || '-'}</span>
+                    <span className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-[#047857]/10 text-[#047857] dark:text-emerald-400 font-mono text-[10px] font-black">
+                        #{c.id}
+                      </span>
+                      {c.title} — Kamar {c.roomNumber || c.room?.number || 'EKS-01'}
+                    </span>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
                       c.status === 'OPEN' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
                     }`}>
                       {c.status || 'OPEN'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500">&quot;{c.description}&quot;</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 italic">&quot;{c.description}&quot;</p>
                   <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400">Tenant: {c.user?.name || 'Penghuni'}</span>
-                    <button onClick={() => showToast(`Tiket keluhan Kamar ${c.room?.number || ''} telah ditugaskan ke Teknisi`)} className="px-3 py-1 bg-[#047857] text-white font-bold rounded-lg text-[10px]">Tugaskan Teknisi</button>
+                    <span className="text-slate-400">Tenant: <strong className="text-slate-800 dark:text-slate-200">{c.tenantName || c.user?.name || 'Penghuni Kos (WhatsApp)'}</strong></span>
+                    <button onClick={() => showToast(`Tiket keluhan #${c.id} (Kamar ${c.roomNumber || 'EKS-01'}) telah ditugaskan ke Teknisi`)} className="px-3 py-1 bg-[#047857] hover:bg-[#035e44] text-white font-bold rounded-lg text-[10px] transition-all cursor-pointer">
+                      <i className="fa-solid fa-screwdriver-wrench mr-1" />
+                      Tugaskan Teknisi
+                    </button>
                   </div>
                 </div>
               ))}
