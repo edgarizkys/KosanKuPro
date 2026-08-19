@@ -6,6 +6,7 @@ import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from 
 import UserProfileModal from './UserProfileModal';
 import UserManagementView from './UserManagementView';
 import ToastNotification from './ToastNotification';
+import WhatsAppLiveMonitor from './WhatsAppLiveMonitor';
 import { useProperty } from '@/lib/PropertyContext';
 
 interface SequenceSaaSLayoutProps {
@@ -49,6 +50,7 @@ export default function SequenceSaaSLayout({
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' | 'info'; targetTab?: string } | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+  const [showWaLiveMonitor, setShowWaLiveMonitor] = useState(false);
 
   // Global Cross-Role Live Notification Listener + Server Polling for Toast Popups
   useEffect(() => {
@@ -1153,6 +1155,17 @@ export default function SequenceSaaSLayout({
               <i className={`fa-solid ${theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'}`} />
             </button>
 
+            {/* Live WhatsApp Stream Monitor Trigger Button */}
+            <button
+              onClick={() => setShowWaLiveMonitor(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl neu-btn text-emerald-700 dark:text-emerald-400 font-bold hover:scale-105 transition-all cursor-pointer text-xs"
+              title="Buka Live WhatsApp Stream Monitor"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <i className="fa-brands fa-whatsapp text-sm" />
+              <span className="hidden xl:inline">Live WA Monitor</span>
+            </button>
+
             {/* Executive Notification Bell Trigger */}
             <button
               onClick={(e) => {
@@ -1573,6 +1586,12 @@ export default function SequenceSaaSLayout({
         allUsers={users}
         onSwitchUser={handleSwitchUserProfile}
         onUpdateUser={handleUpdateUser}
+      />
+
+      {/* Live WhatsApp Activity Stream Monitor Modal / Drawer */}
+      <WhatsAppLiveMonitor
+        isOpen={showWaLiveMonitor}
+        onClose={() => setShowWaLiveMonitor(false)}
       />
 
       {/* Toast Notification (All-Device Friendly & Clickable) */}

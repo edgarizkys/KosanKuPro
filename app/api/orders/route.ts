@@ -1,12 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { pushActivityNotification, pushWaLiveLog } from '@/lib/activityEvents';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/orders — Fetch live server orders directly from PostgreSQL DB
+// GET /api/orders — Fetch live server orders with category & vendor isolation
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const category = searchParams.get('category');
+    const vendorName = searchParams.get('vendorName');
+
+    const where: any = {};
+    if (category && category !== 'all') {
+      if (category === 'WATER_GAS') {
+        where.category = { in: ['GALON', 'GAS', 'WATER_GAS'] };
+      } else {
+        where.category = category;
+      }
+    }
+    if (vendorName && vendorName !== 'all') {
+      where.vendorName = { contains: vendorName, mode: 'insensitive' };
+    }
+
     const dbOrders = await prisma.supplyOrder.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -19,7 +37,7 @@ export async function GET(req: NextRequest) {
       notes: o.notes || '',
       status: o.status,
       assignedStaff: o.assignedStaff || 'Bambang (Staf Maintenance)',
-      vendorName: o.vendorName || 'Depot Air & Gas Suci',
+      vendorName: o.vendorName || (o.category === 'LAUNDRY' ? 'Mitra Laundry Bersih Express' : o.category === 'WARUNG' ? 'Warung Makan Bu Imas' : 'Depot Air & Gas Suci'),
       property: 'rshs',
       createdAt: o.createdAt.toISOString(),
     }));
@@ -36,6 +54,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const newOrderId = body.id || `REQ-${Date.now().toString().slice(-4)}`;
+    const vendor = body.vendorName || (body.category === 'LAUNDRY' ? 'Mitra Laundry Bersih Express' : body.category === 'WARUNG' ? 'Warung Makan Bu Imas' : 'Depot Air & Gas Suci');
 
     const order = await prisma.supplyOrder.create({
       data: {
@@ -47,8 +66,18 @@ export async function POST(req: NextRequest) {
         notes: body.notes || 'Tidak ada catatan tambahan',
         status: body.status || 'PENDING_DISPATCH',
         assignedStaff: body.assignedStaff || null,
-        vendorName: body.vendorName || 'Depot Air & Gas Suci',
+        vendorName: vendor,
       },
+    });
+
+    // Push real-time toast to Owner and Vendor
+    pushActivityNotification('default', {
+      id: `ord_${order.id}`,
+      title: `🛒 Pesanan Suplai Baru: Kamar ${order.roomNumber}`,
+      message: `${order.tenantName}: "${order.item}". Vendor: ${vendor}.`,
+      targetRole: ['owner', 'admin', 'vendor'],
+      targetTab: 'tenant_requests',
+      badgeColor: 'bg-emerald-100 text-emerald-800',
     });
 
     return NextResponse.json({
@@ -61,6 +90,7 @@ export async function POST(req: NextRequest) {
         item: order.item,
         notes: order.notes,
         status: order.status,
+        vendorName: order.vendorName,
         createdAt: order.createdAt.toISOString(),
       },
     });
@@ -88,6 +118,19 @@ export async function PUT(req: NextRequest) {
         vendorName: vendorName || undefined,
       },
     });
+
+    // Push activity update
+    if (status === 'PROCESSING' || status === 'DELIVERED') {
+      const statusLabel = status === 'PROCESSING' ? 'Sedang Diproses/Diantar' : 'Sudah Tiba di Depan Kamar';
+      pushActivityNotification('default', {
+        id: `ord_stat_${id}_${Date.now()}`,
+        title: `🚚 Update Pengantaran: Pesanan #${id}`,
+        message: `${updated.item} untuk ${updated.tenantName} (${updated.roomNumber}): ${statusLabel}.`,
+        targetRole: ['owner', 'tenant'],
+        targetTab: 'tenant_requests',
+        badgeColor: 'bg-blue-100 text-blue-800',
+      });
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {

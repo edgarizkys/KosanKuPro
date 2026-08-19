@@ -8,6 +8,7 @@ import SecurityDepositEscrow from './SecurityDepositEscrow';
 import UserManagementView from './UserManagementView';
 import SequenceSaaSLayout from './SequenceSaaSLayout';
 import ToastNotification from './ToastNotification';
+import WhatsAppLiveMonitor from './WhatsAppLiveMonitor';
 import type { RoleType } from '@/app/page';
 import { useProperty } from '@/lib/PropertyContext';
 import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from '@/lib/userProfiles';
@@ -222,6 +223,7 @@ export default function OwnerDashboard({
   const [assignedStaff, setAssignedStaff] = useState(STAFF_LIST[0]);
   const [selectedVendor, setSelectedVendor] = useState(VENDOR_LIST[0]);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error'; targetTab?: string } | null>(null);
+  const [showWaLiveMonitor, setShowWaLiveMonitor] = useState(false);
 
   // Sync latest Stock Opname & Tenant Supply Requests (Server API + Realtime Cross-Tab Sync)
   useEffect(() => {
@@ -510,6 +512,27 @@ export default function OwnerDashboard({
       };
     }
 
+    // 0. Real-Time Server Activity & WhatsApp Notification Polling (< 1.5s)
+    const pollServerNotifs = async () => {
+      try {
+        const res = await fetch('/api/activity?type=notifs&role=owner');
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            const newest = json.data[0];
+            const toastedKey = `kosanku_owner_toasted_${newest.id}`;
+            if (!sessionStorage.getItem(toastedKey)) {
+              sessionStorage.setItem(toastedKey, 'true');
+              showToast(`${newest.title}: ${newest.message}`, newest.badgeColor?.includes('rose') ? 'error' : 'success', newest.targetTab);
+            }
+          }
+        }
+      } catch {}
+    };
+
+    pollServerNotifs();
+    const notifInterval = setInterval(pollServerNotifs, 1500);
+
     // 3. Fallback Interval Polling to Server API & Storage (every 2.5s)
     const interval = setInterval(() => {
       loadSharedRequests();
@@ -558,6 +581,7 @@ export default function OwnerDashboard({
       window.removeEventListener('staff_expense_updated', handleStaffExpenseUpdate);
       if (bc) bc.close();
       clearInterval(interval);
+      clearInterval(notifInterval);
     };
   }, []);
 
@@ -1692,6 +1716,25 @@ export default function OwnerDashboard({
             </div>
           </div>
         )}
+
+        {/* Floating WhatsApp Live Monitor Trigger */}
+        <button
+          onClick={() => setShowWaLiveMonitor(true)}
+          className="fixed bottom-6 left-6 z-50 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#047857] to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs shadow-2xl shadow-emerald-500/30 flex items-center gap-2.5 border border-emerald-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        >
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+          </span>
+          <i className="fa-brands fa-whatsapp text-sm" />
+          <span>📡 Live WA Activity Monitor</span>
+        </button>
+
+        {/* WhatsApp Live Activity Stream Monitor Drawer */}
+        <WhatsAppLiveMonitor
+          isOpen={showWaLiveMonitor}
+          onClose={() => setShowWaLiveMonitor(false)}
+        />
 
         {/* Toast Notification (All-Device Friendly: Top floating on mobile, bottom right on desktop) */}
         {toast && (

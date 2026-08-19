@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { pushActivityNotification } from '@/lib/activityEvents';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,27 +48,40 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/complaints — Submit new complaint to Database
+// POST /api/complaints — Submit new complaint to Database & trigger real-time toast
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const newId = body.id || `CMP-${Date.now().toString().slice(-4)}`;
+    const tenant = body.tenantName || 'Penghuni Kos';
+    const room = body.roomNumber || 'A-101';
+    const cleanTitle = body.title || body.description || 'Keluhan Kerusakan Kamar';
 
     const complaint = await prisma.complaint.create({
       data: {
         id: newId,
-        title: body.title || body.description || 'Keluhan Tenant',
+        title: cleanTitle,
         description: body.description || body.desc || body.message || 'Tidak ada uraian detail',
         status: 'OPEN',
       },
+    });
+
+    // Push real-time toast to Owner & Staff
+    pushActivityNotification('default', {
+      id: `cmp_${complaint.id}`,
+      title: `🛠️ Keluhan Baru Masuk: Kamar ${room}`,
+      message: `${tenant}: "${cleanTitle}". Segera periksa di tab Complaints.`,
+      targetRole: ['owner', 'admin', 'employee'],
+      targetTab: 'complaints',
+      badgeColor: 'bg-rose-100 text-rose-800',
     });
 
     return NextResponse.json({
       success: true,
       data: {
         id: complaint.id,
-        tenantName: body.tenantName || 'Penghuni Kos (WhatsApp)',
-        roomNumber: body.roomNumber || 'EKS-01',
+        tenantName: tenant,
+        roomNumber: room,
         title: complaint.title,
         description: complaint.description,
         status: complaint.status,
@@ -84,7 +98,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, status } = body;
+    const { id, status, assignedStaff, resolutionNotes } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Complaint ID is required' }, { status: 400 });
@@ -96,6 +110,18 @@ export async function PUT(req: NextRequest) {
         status: status || undefined,
       },
     });
+
+    if (status === 'RESOLVED' || status === 'IN_PROGRESS') {
+      const statusLabel = status === 'RESOLVED' ? 'Selesai Diperbaiki' : 'Sedang Dikerjakan Teknisi';
+      pushActivityNotification('default', {
+        id: `cmp_stat_${id}_${Date.now()}`,
+        title: `🛠️ Status Tiket #${id} Diperbarui`,
+        message: `Tiket keluhan "${updated.title}": ${statusLabel}.`,
+        targetRole: ['owner', 'tenant'],
+        targetTab: 'complaints',
+        badgeColor: status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800',
+      });
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
