@@ -334,40 +334,40 @@ export async function POST(req: NextRequest) {
       const isGreetingOrMenu = msgLower === 'menu' || msgLower === 'halo' || msgLower === 'hai' || msgLower === 'hi' || msgLower === 'info' || msgLower === 'pilihan' || msgLower === 'help' || msgLower === 'btn_menu';
 
       if (isGreetingOrMenu) {
-        replyText = `🏨 *Selamat Datang di KosanKu Pro!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan sentuh tombol di bawah untuk info cepat, atau ketik langsung pertanyaan Kakak:`;
+        replyText = `🏨 *Selamat Datang di KosanKu Pro Residence!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan sentuh tombol di bawah atau ketik nomor pilihan Anda:\n\n1️⃣ *Pilihan Kamar & Fasilitas* (Ketik: 1)\n2️⃣ *Daftar Harga Sewa & Promo* (Ketik: 2)\n3️⃣ *Jadwal Survei Lokasi* (Ketik: 3)\n4️⃣ *Kunci Kamar / Booking DP 50%* (Ketik: 4)\n5️⃣ *Lokasi Google Maps* (Ketik: 5)\n\n💬 Atau ketik langsung pertanyaan Kakak (misal: _"Boleh bawa mobil?", "Ada water heater?"_)`;
         replyButtons = [
           { id: 'btn_tipe', text: '🛏️ Pilihan Kamar' },
           { id: 'btn_harga', text: '💰 Daftar Harga' },
           { id: 'btn_booking', text: '🔒 Booking DP 50%' },
         ];
       } else if (msgLower === '1' || msgLower.includes('info kamar') || msgLower.includes('tipe') || msgLower.includes('btn_tipe')) {
-        replyText = `🛏️ *Pilihan Tipe Kamar KosanKu Pro:*\n\n1. *Standar:* AC, WiFi 100Mbps, Springbed, Smart Lock (Rp 1.300.000/bln | Rp 135rb/hari)\n2. *Deluxe:* Tambahan TV LED, Kamar Mandi Dalam Water Heater + Free Laundry 5kg (Rp 1.600.000/bln | Rp 165rb/hari)\n3. *Eksekutif:* Balkon Pribadi, Kulkas Mini, Dapur Kamar (Rp 2.200.000/bln | Rp 200rb/hari)`;
+        replyText = `🛏️ *PILIHAN TIPE KAMAR KOSANKU PRO:*\n\n1. *Standar (Rp 1.300.000/bln | Rp 135rb/hari)*\n• AC, Free WiFi 100Mbps, Springbed, Meja Belajar, Smart Lock.\n\n2. *Deluxe (Rp 1.600.000/bln | Rp 165rb/hari)*\n• TV LED, KM Dalam Water Heater, Free Laundry 5kg/bln, Smart Lock.\n\n3. *Eksekutif (Rp 2.200.000/bln | Rp 200rb/hari)*\n• Balkon Pribadi, Kulkas Mini, Dapur Pribadi, Smart Lock.\n\nKetik *2* untuk Promo | Ketik *3* untuk Jadwal Survei | Ketik *4* untuk Booking Unit`;
         replyButtons = [
           { id: 'btn_harga', text: '💰 Cek Harga & Promo' },
           { id: 'btn_survei', text: '🗓️ Jadwal Survei' },
           { id: 'btn_booking', text: '🔒 Booking Sekarang' },
         ];
       } else if (msgLower === '2' || msgLower.includes('harga') || msgLower.includes('tarif') || msgLower.includes('biaya') || msgLower.includes('btn_harga')) {
-        replyText = `💰 *Daftar Harga & Promo KosanKu Pro:*\n\n• Sewa Harian: *Mulai Rp 135.000 - Rp 200.000 / malam*\n• Sewa Bulanan: *Mulai Rp 1.300.000 - Rp 2.200.000 / bulan*\n• Sewa 3 Bulan (Diskon 5%)\n• Sewa 1 Tahun (Diskon 1 Bulan Sewa Gratis!)\n\n✨ *FREE Listrik, WiFi 100Mbps, Air & Bebas Jam Malam.*`;
+        replyText = `💰 *DAFTAR HARGA & PROMO SEWA:*\n\n• Sewa Harian: *Mulai Rp 135.000 - Rp 200.000 / malam*\n• Sewa Bulanan: *Mulai Rp 1.300.000 - Rp 2.200.000 / bulan*\n🎁 *PROMO:* Sewa 3 Bulan (Diskon 5%) | Sewa 1 Tahun (Diskon 1 Bulan Gratis!)\n\n✨ *FREE Listrik, WiFi 100Mbps, Air & Bebas Jam Malam.*\n\nKetik *4* untuk Booking DP 50% via QRIS Instan`;
         replyButtons = [
           { id: 'btn_tipe', text: '🛏️ Lihat Fasilitas' },
           { id: 'btn_booking', text: '🔒 Booking DP 50%' },
           { id: 'btn_survei', text: '🗓️ Jadwal Survei' },
         ];
       } else if (msgLower === '3' || msgLower.includes('survei') || msgLower.includes('kunjung') || msgLower.includes('lihat') || msgLower.includes('btn_survei')) {
-        replyText = `🗓️ *Jadwal Survei Kamar KosanKu Pro:*\n\nStaf standby setiap hari pukul *08.00 - 20.00 WIB*.\nSilakan balas chat ini dengan format:\n\n*Nama: [Nama Anda]*\n*Rencana Datang: [Hari, Jam]*\n*Tipe Kamar: [Standar/Deluxe/Eksekutif]*`;
+        replyText = `🗓️ *JADWAL SURVEI KAMAR:*\n\nStaf standby setiap hari pukul *08.00 - 20.00 WIB*.\nSilakan balas chat ini dengan format:\n\n*Nama:* [Nama Anda]\n*Rencana Datang:* [Hari, Jam]\n*Tipe Kamar:* [Standar / Deluxe / Eksekutif]`;
         replyButtons = [
           { id: 'btn_lokasi', text: '📍 Peta Lokasi Maps' },
           { id: 'btn_booking', text: '🔒 Kunci Kamar Dulu' },
         ];
       } else if (msgLower === '4' || msgLower.includes('booking') || msgLower.includes('pesan') || msgLower.includes('dp') || msgLower.includes('btn_booking')) {
-        replyText = `🔒 *Kunci Kamar Impian Anda Sekarang:*\n\nCukup bayar *DP 50%* via QRIS / Virtual Account untuk mengunci unit. Pelunasan saat serah terima PIN Smart Lock.\n\n👉 *Pilih Kamar & Bayar DP di Web:*\nhttps://kosankupro.cloud/#rooms-showcase`;
+        replyText = `🔒 *KUNCI KAMAR IMPIAN ANDA SEKARANG:*\n\nCukup bayar *DP 50%* via QRIS / Virtual Account untuk mengunci unit. Pelunasan saat serah terima PIN Smart Lock.\n\n👉 *Pilih Kamar & Bayar DP di Web:*\nhttps://kosankupro.cloud/#rooms-showcase`;
         replyButtons = [
           { id: 'btn_tipe', text: '🛏️ Pilihan Kamar' },
           { id: 'btn_menu', text: '🏨 Menu Utama' },
         ];
-      } else if (msgLower.includes('lokasi') || msgLower.includes('alamat') || msgLower.includes('maps') || msgLower.includes('btn_lokasi')) {
-        replyText = `📍 *Lokasi KosanKu Pro Residence:*\nJl. Pasirkaliki / Sukajadi (2 menit dari RSHS Bandung & Dekat ITB/Unpar).\n\n🗺️ *Google Maps:* https://maps.google.com/?q=KosanKu+Pro+Bandung`;
+      } else if (msgLower === '5' || msgLower.includes('lokasi') || msgLower.includes('alamat') || msgLower.includes('maps') || msgLower.includes('btn_lokasi')) {
+        replyText = `📍 *LOKASI KOSANKU PRO RESIDENCE:*\nJl. Pasirkaliki / Sukajadi (2 menit dari RSHS Bandung & Dekat ITB/Unpar).\n\n🗺️ *Google Maps:* https://maps.google.com/?q=KosanKu+Pro+Bandung`;
         replyButtons = [
           { id: 'btn_survei', text: '🗓️ Jadwal Survei' },
           { id: 'btn_booking', text: '🔒 Booking Sekarang' },
