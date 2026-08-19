@@ -44,6 +44,23 @@ const DEMO_PHONE_ROLES: Record<string, { role: string; name: string; property: s
 };
 
 /**
+ * GET /api/whatsapp/webhook
+ * Webhook Healthcheck & Fonnte URL Validation
+ */
+export async function GET() {
+  return NextResponse.json({
+    status: 'online',
+    service: 'KosanKu Pro WhatsApp Webhook Router',
+    gateway: 'Fonnte Multi-Actor Hub',
+    targetNumber: '082217415131',
+    endpoints: {
+      inbound: 'POST /api/whatsapp/webhook',
+    },
+    timestamp: new Date().toISOString(),
+  });
+}
+
+/**
  * POST /api/whatsapp/webhook
  * Multi-Actor Inbound WhatsApp Router for KosanKu Pro:
  * 1. Owner -> 1-Click Approval, Live Ledger & Cash Summary
