@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, safeDbQuery } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,22 +42,20 @@ export async function GET(req: NextRequest) {
 
     let audits = [...IN_MEMORY_SO_AUDITS];
 
-    try {
-      const where: any = {};
-      if (branchId && branchId !== 'all') {
-        where.branchId = branchId;
-      }
+    const where: any = {};
+    if (branchId && branchId !== 'all') {
+      where.branchId = branchId;
+    }
 
-      const dbAudits = await prisma.stockOpnameAudit.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-      });
+    const dbAudits = await safeDbQuery(
+      () => prisma.stockOpnameAudit.findMany({ where, orderBy: { createdAt: 'desc' } }),
+      []
+    );
 
-      if (dbAudits && dbAudits.length > 0) {
-        const existingIds = new Set(dbAudits.map((d) => d.id));
-        audits = [...dbAudits, ...IN_MEMORY_SO_AUDITS.filter((d) => !existingIds.has(d.id))];
-      }
-    } catch {}
+    if (dbAudits && dbAudits.length > 0) {
+      const existingIds = new Set(dbAudits.map((d) => d.id));
+      audits = [...dbAudits, ...IN_MEMORY_SO_AUDITS.filter((d) => !existingIds.has(d.id))];
+    }
 
     return NextResponse.json({ data: audits, count: audits.length });
   } catch (error) {

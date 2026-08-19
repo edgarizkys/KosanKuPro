@@ -53,13 +53,13 @@ export async function chatCompletion(
   tools?: OpenAI.Chat.ChatCompletionTool[]
 ) {
   const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey === 'YOUR_OPENROUTER_KEY') {
+  if (!apiKey || apiKey === 'YOUR_OPENROUTER_KEY' || apiKey.length < 10) {
     return {
       choices: [
         {
           message: {
             role: 'assistant',
-            content: `Halo Kak! 👋 Terima kasih telah menghubungi *KosanKu Pro Residence*. Kamar siap huni kami dilengkapi AC, Smart Lock pintu, Free WiFi 100Mbps, dan Free Laundry 5kg/bulan. Ada yang bisa kami bantu? Silakan cek kamar kami di https://kosankupro.cloud`,
+            content: `Halo Kak! 👋 Terima kasih telah menghubungi *KosanKu Pro Residence*. Kamar siap huni kami di Juragan Kost Pasteur RSHS dilengkapi AC, Smart Lock pintu, Free WiFi 100Mbps, dan Free Laundry 5kg/bulan. Ada yang bisa kami bantu? Cek ketersediaan di https://kosankupro.cloud`,
           },
         },
       ],

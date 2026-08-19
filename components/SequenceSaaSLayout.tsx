@@ -6,7 +6,6 @@ import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from 
 import UserProfileModal from './UserProfileModal';
 import UserManagementView from './UserManagementView';
 import ToastNotification from './ToastNotification';
-import WhatsAppLiveMonitor from './WhatsAppLiveMonitor';
 import { useProperty } from '@/lib/PropertyContext';
 
 interface SequenceSaaSLayoutProps {
@@ -29,6 +28,20 @@ export const BRANCHES = [
   { id: 'sby', name: 'KosanKu Pro - Gubeng Surabaya', totalRooms: 10, revenue: 25000000, occupancy: 90 },
 ];
 
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+  badge?: number;
+  highlight?: boolean;
+  badgeColor?: string;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
 export default function SequenceSaaSLayout({
   role,
   children,
@@ -50,7 +63,6 @@ export default function SequenceSaaSLayout({
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' | 'info'; targetTab?: string } | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
-  const [showWaLiveMonitor, setShowWaLiveMonitor] = useState(false);
 
   // Global Cross-Role Live Notification Listener + Server Polling for Toast Popups
   useEffect(() => {
@@ -58,6 +70,7 @@ export default function SequenceSaaSLayout({
 
     // 1. Polling new server API notifications to trigger interactive toast popup
     const pollServerNotifsForToast = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       try {
         const res = await fetch(`/api/activity?type=notifs&role=${currentRole}`);
         if (res.ok) {
@@ -83,7 +96,7 @@ export default function SequenceSaaSLayout({
     };
 
     pollServerNotifsForToast();
-    const serverInterval = setInterval(pollServerNotifsForToast, 1500);
+    const serverInterval = setInterval(pollServerNotifsForToast, 3500);
 
     // 2. BroadcastChannel for instant same-browser cross-window sync
     let bc: BroadcastChannel | null = null;
@@ -556,7 +569,7 @@ export default function SequenceSaaSLayout({
   };
 
   // Navigation sections generator based on user role (Organized by Daily Priority & Logical Groups)
-  const getNavSections = () => {
+  const getNavSections = (): NavSection[] => {
     if (role === 'owner') {
       return [
         {
@@ -586,6 +599,12 @@ export default function SequenceSaaSLayout({
             { id: 'autopilot', label: 'Auto-Pilot AI Rules', icon: 'fa-solid fa-wand-magic-sparkles' },
             { id: 'users', label: 'Kelola Pengguna', icon: 'fa-solid fa-users-gear' },
             { id: 'master_data', label: 'Pengaturan Properti', icon: 'fa-solid fa-sliders' },
+          ],
+        },
+        {
+          title: '📡 WhatsApp Gateway',
+          items: [
+            { id: 'wa_monitor', label: 'Live WhatsApp Stream', icon: 'fa-brands fa-whatsapp', highlight: true, badgeColor: 'bg-emerald-500 text-white' },
           ],
         },
       ];
@@ -618,6 +637,12 @@ export default function SequenceSaaSLayout({
             { id: 'users', label: 'Manajemen Akun User', icon: 'fa-solid fa-users-gear' },
             { id: 'master_data', label: 'Master Data Kosan', icon: 'fa-solid fa-sliders' },
             { id: 'autopilot', label: 'Auto-Pilot AI', icon: 'fa-solid fa-wand-magic-sparkles' },
+          ],
+        },
+        {
+          title: '📡 WhatsApp Gateway',
+          items: [
+            { id: 'wa_monitor', label: 'Live WA Stream Feed', icon: 'fa-brands fa-whatsapp', highlight: true, badgeColor: 'bg-emerald-500 text-white' },
           ],
         },
       ];
@@ -1157,13 +1182,13 @@ export default function SequenceSaaSLayout({
 
             {/* Live WhatsApp Stream Monitor Trigger Button */}
             <button
-              onClick={() => setShowWaLiveMonitor(true)}
+              onClick={() => onTabChange?.('wa_monitor')}
               className="flex items-center gap-1.5 px-3 py-2 rounded-2xl neu-btn text-emerald-700 dark:text-emerald-400 font-bold hover:scale-105 transition-all cursor-pointer text-xs"
-              title="Buka Live WhatsApp Stream Monitor"
+              title="Buka Live WhatsApp Stream Feed"
             >
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <i className="fa-brands fa-whatsapp text-sm" />
-              <span className="hidden xl:inline">Live WA Monitor</span>
+              <span className="hidden xl:inline">Live WA Feed</span>
             </button>
 
             {/* Executive Notification Bell Trigger */}
@@ -1586,12 +1611,6 @@ export default function SequenceSaaSLayout({
         allUsers={users}
         onSwitchUser={handleSwitchUserProfile}
         onUpdateUser={handleUpdateUser}
-      />
-
-      {/* Live WhatsApp Activity Stream Monitor Modal / Drawer */}
-      <WhatsAppLiveMonitor
-        isOpen={showWaLiveMonitor}
-        onClose={() => setShowWaLiveMonitor(false)}
       />
 
       {/* Toast Notification (All-Device Friendly & Clickable) */}

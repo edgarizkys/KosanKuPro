@@ -216,6 +216,7 @@ export default function OwnerDashboard({
     | 'rooms_ai'
     | 'invoices'
     | 'complaints'
+    | 'wa_monitor'
   >('financial');
   
   // Plotting Modal State
@@ -223,7 +224,6 @@ export default function OwnerDashboard({
   const [assignedStaff, setAssignedStaff] = useState(STAFF_LIST[0]);
   const [selectedVendor, setSelectedVendor] = useState(VENDOR_LIST[0]);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error'; targetTab?: string } | null>(null);
-  const [showWaLiveMonitor, setShowWaLiveMonitor] = useState(false);
 
   // Sync latest Stock Opname & Tenant Supply Requests (Server API + Realtime Cross-Tab Sync)
   useEffect(() => {
@@ -512,8 +512,9 @@ export default function OwnerDashboard({
       };
     }
 
-    // 0. Real-Time Server Activity & WhatsApp Notification Polling (< 1.5s)
+    // 0. Real-Time Server Activity & WhatsApp Notification Polling
     const pollServerNotifs = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       try {
         const res = await fetch('/api/activity?type=notifs&role=owner');
         if (res.ok) {
@@ -531,10 +532,11 @@ export default function OwnerDashboard({
     };
 
     pollServerNotifs();
-    const notifInterval = setInterval(pollServerNotifs, 1500);
+    const notifInterval = setInterval(pollServerNotifs, 3500);
 
-    // 3. Fallback Interval Polling to Server API & Storage (every 2.5s)
+    // 3. Fallback Periodic Sync to Server API & Storage (every 10s when active)
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
       loadSharedRequests();
       loadStaffApprovals();
       loadRoomInspections();
@@ -542,7 +544,7 @@ export default function OwnerDashboard({
       loadBookings();
       loadRooms();
       loadComplaints();
-    }, 2500);
+    }, 10000);
 
     // 4. Switch Dashboard Tab Event Listener (Triggered by Notification Drawer click)
     const handleSwitchTab = (e: any) => {
@@ -1644,6 +1646,9 @@ export default function OwnerDashboard({
           </div>
         )}
 
+        {/* LIVE WHATSAPP STREAM MONITOR TAB */}
+        {activeTab === 'wa_monitor' && <WhatsAppLiveMonitor />}
+
         {/* Plotting Modal Dialog */}
         {selectedReq && (
           <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/5 dark:bg-black/20 backdrop-blur-xs p-4 animate-fade-in" onClick={() => setSelectedReq(null)}>
@@ -1716,25 +1721,6 @@ export default function OwnerDashboard({
             </div>
           </div>
         )}
-
-        {/* Floating WhatsApp Live Monitor Trigger */}
-        <button
-          onClick={() => setShowWaLiveMonitor(true)}
-          className="fixed bottom-6 left-6 z-50 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#047857] to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs shadow-2xl shadow-emerald-500/30 flex items-center gap-2.5 border border-emerald-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-        >
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-          </span>
-          <i className="fa-brands fa-whatsapp text-sm" />
-          <span>📡 Live WA Activity Monitor</span>
-        </button>
-
-        {/* WhatsApp Live Activity Stream Monitor Drawer */}
-        <WhatsAppLiveMonitor
-          isOpen={showWaLiveMonitor}
-          onClose={() => setShowWaLiveMonitor(false)}
-        />
 
         {/* Toast Notification (All-Device Friendly: Top floating on mobile, bottom right on desktop) */}
         {toast && (

@@ -21,10 +21,31 @@ export async function GET(req: NextRequest) {
   const notifs = propertyNotifsMap.get(propertySlug) || [];
 
   if (type === 'wa_live_stream') {
+    let cloudLogs: any[] = [];
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const cloudRes = await fetch('https://kosankupro.cloud/api/activity?type=wa_live_stream', {
+          signal: AbortSignal.timeout(1200),
+        });
+        if (cloudRes.ok) {
+          const cloudJson = await cloudRes.json();
+          if (cloudJson?.data && Array.isArray(cloudJson.data)) {
+            cloudLogs = cloudJson.data;
+          }
+        }
+      } catch {}
+    }
+
+    // Merge cloud logs and local logs without duplicate IDs
+    const mergedMap = new Map<string, any>();
+    waLiveStreamLogs.forEach((l) => mergedMap.set(l.id || l.timestamp + l.inboundText, l));
+    cloudLogs.forEach((l) => mergedMap.set(l.id || l.timestamp + l.inboundText, l));
+    const allLogs = Array.from(mergedMap.values());
+
     return NextResponse.json({
-      data: waLiveStreamLogs,
-      count: waLiveStreamLogs.length,
-      latestTimestamp: waLiveStreamLogs[0]?.timestamp || null,
+      data: allLogs,
+      count: allLogs.length,
+      latestTimestamp: allLogs[0]?.timestamp || null,
     });
   }
 
@@ -98,96 +119,36 @@ export async function POST(req: NextRequest) {
       const complaint = payload;
       pushActivityNotification(propertySlug, {
         id: `notif_cmp_${complaint.id || Date.now()}`,
-        title: '🛠️ Keluhan Kerusakan Baru dari Tenant',
+        title: '⚠️ Keluhan Baru dari Penghuni',
         message: `${complaint.tenantName || 'Penghuni'} (Kamar ${complaint.roomNumber || 'A-101'}): "${complaint.title || complaint.description}"`,
-        targetRole: ['owner', 'admin', 'superadmin', 'employee'],
+        targetRole: ['owner', 'admin', 'employee'],
         targetTab: 'complaints',
         badgeColor: 'bg-rose-100 text-rose-800',
       });
+
       return NextResponse.json({ success: true });
     }
 
-    // 4. Room Inspection Report (Cek-In / Cek-Out)
+    // 4. Room Inspection Report
     if (actionType === 'ROOM_INSPECTION') {
-      const newInsp = {
-        id: payload.id || `INSP-${Date.now().toString().slice(-4)}`,
-        roomNumber: payload.roomNumber || 'A-101',
-        tenantName: payload.tenantName || 'Penghuni Kosan',
-        type: payload.type || 'CHECK_IN',
-        inspectedBy: payload.inspectedBy || 'Bambang Prasetyo (Staf Lapangan)',
-        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        items: payload.items || [],
-        notes: payload.notes || '',
-        createdAt: new Date().toISOString(),
-      };
+      const report = payload;
+      const existing = propertyInspectionsMap.get(propertySlug) || [];
+      propertyInspectionsMap.set(propertySlug, [report, ...existing.filter((r: any) => r.id !== report.id)]);
 
-      const existingInsps = propertyInspectionsMap.get(propertySlug) || [];
-      propertyInspectionsMap.set(propertySlug, [newInsp, ...existingInsps.filter((r: any) => r.id !== newInsp.id)]);
-
-      // Push notification for Owner & Admin
       pushActivityNotification(propertySlug, {
-        id: `notif_insp_${newInsp.id}`,
-        title: newInsp.type === 'CHECK_IN' ? '🚪 Laporan Cek-In Kamar Masuk' : '📦 Laporan Cek-Out Kamar Masuk',
-        message: `Kamar ${newInsp.roomNumber} (${newInsp.tenantName}) selesai diperiksa oleh ${newInsp.inspectedBy}.`,
+        id: `notif_insp_${report.id || Date.now()}`,
+        title: `📋 Laporan ${report.type === 'CHECK_IN' ? 'Cek-In' : 'Cek-Out'} Baru`,
+        message: `Kamar ${report.roomNumber} (${report.tenantName}) selesai diinspeksi oleh ${report.inspectedBy}.`,
         targetRole: ['owner', 'admin', 'superadmin'],
         targetTab: 'checkin_reports',
-        badgeColor: newInsp.type === 'CHECK_IN' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800',
+        badgeColor: 'bg-blue-100 text-blue-800',
       });
 
-      return NextResponse.json({ success: true, data: newInsp });
+      return NextResponse.json({ success: true, data: report });
     }
 
-    // 5. Stock Opname Audit Submitted
-    if (actionType === 'STOCK_OPNAME') {
-      const audit = payload;
-      pushActivityNotification(propertySlug, {
-        id: `notif_so_${audit.id || Date.now()}`,
-        title: '📦 Laporan Stock Opname (SO) Staf',
-        message: `${audit.auditedBy || 'Staf'}: Audit stok fisik selesai (${audit.itemName || 'Galon & Gas'}).`,
-        targetRole: ['owner', 'admin', 'superadmin'],
-        targetTab: 'inventory',
-        badgeColor: 'bg-indigo-100 text-indigo-800',
-      });
-      return NextResponse.json({ success: true });
-    }
-
-    // 6. Tenant Supply Order Dispatched
-    if (actionType === 'DISPATCH_ORDER' || actionType === 'NEW_TENANT_ORDER') {
-      const order = payload.order || payload;
-      pushActivityNotification(propertySlug, {
-        id: `notif_ord_${order.id || Date.now()}`,
-        title: '🛒 Pesanan Suplai Baru Masuk',
-        message: `${order.tenantName || 'Tenant'} (Kamar ${order.roomNumber || 'A-101'}) memesan ${order.item || 'Suplai'}.`,
-        targetRole: ['owner', 'admin', 'vendor'],
-        targetTab: 'tenant_requests',
-        badgeColor: 'bg-emerald-100 text-emerald-800',
-      });
-      return NextResponse.json({ success: true });
-    }
-
-    // 7. Decide Expense (Owner Approval)
-    if (actionType === 'DECIDE_EXPENSE') {
-      const { id, status } = payload;
-      const existingApps = propertyApprovalsMap.get(propertySlug) || [];
-      const updatedApps = existingApps.map((a: any) => (a.id === id ? { ...a, status } : a));
-      propertyApprovalsMap.set(propertySlug, updatedApps);
-      const targetApproval = updatedApps.find((a: any) => a.id === id);
-
-      // Notify employee
-      pushActivityNotification(propertySlug, {
-        id: `notif_exp_dec_${id}`,
-        title: status === 'APPROVED' ? '🎉 Pengajuan Dana Disetujui Owner' : '❌ Pengajuan Dana Ditolak',
-        message: `Pengajuan "${targetApproval?.title || 'Dana'}" (Rp ${Number(targetApproval?.amount || 0).toLocaleString('id-ID')}) telah ${status === 'APPROVED' ? 'DISETUJUI Owner. Dana siap dicairkan!' : 'DITOLAK.'}`,
-        targetRole: ['employee'],
-        targetTab: 'expense_history',
-        badgeColor: status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800',
-      });
-
-      return NextResponse.json({ success: true, data: targetApproval });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to process activity' }, { status: 500 });
+    return NextResponse.json({ error: 'Unknown actionType' }, { status: 400 });
+  } catch (error: any) {
+    return NextResponse.json({ error: 'Failed to process activity event' }, { status: 500 });
   }
 }

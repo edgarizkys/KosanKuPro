@@ -57,6 +57,7 @@ export async function sendWhatsApp(
       method: 'POST',
       headers: { Authorization: token },
       body: new URLSearchParams(payload),
+      signal: AbortSignal.timeout(4000),
     });
 
     const data = await response.json();

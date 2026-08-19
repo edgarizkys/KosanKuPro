@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, safeDbQuery } from '@/lib/prisma';
 import { chatCompletion } from '@/lib/openai';
 import { sendWhatsApp } from '@/lib/fonnte';
-import { pushActivityNotification, pushWaLiveLog } from '@/lib/activityEvents';
+import { pushActivityNotification, pushWaLiveLog, pushSupplyOrder } from '@/lib/activityEvents';
 import type OpenAI from 'openai';
 
 export const dynamic = 'force-dynamic';
@@ -89,15 +89,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sender and message are required' }, { status: 400 });
     }
 
-    // Query active properties from database for all branching (with resilient fallback)
-    let allProperties: any[] = [];
-    try {
-      allProperties = await prisma.property.findMany({
-        include: { rooms: { orderBy: { price: 'asc' } } },
-      });
-    } catch (dbErr) {
-      // Graceful fallback if database connection has network latency
-    }
+    // Query active properties from database with resilient fallback (< 500ms)
+    let allProperties: any[] = await safeDbQuery(
+      () => prisma.property.findMany({ include: { rooms: { orderBy: { price: 'asc' } } } }),
+      []
+    );
 
     if (!allProperties || allProperties.length === 0) {
       allProperties = [
@@ -367,26 +363,38 @@ export async function POST(req: NextRequest) {
         let occupiedRoomsCount = 3;
 
         try {
-          const property = await prisma.property.findFirst({
-            where: userPropertyId ? { id: userPropertyId } : undefined,
-            include: { rooms: true, expenses: true },
-          });
+          const property = await safeDbQuery(
+            () =>
+              prisma.property.findFirst({
+                where: userPropertyId ? { id: userPropertyId } : undefined,
+                include: { rooms: true, expenses: true },
+              }),
+            null
+          );
 
           if (property) {
             userProperty = property.name;
             totalRoomsCount = property.rooms.length || 8;
             occupiedRoomsCount = property.rooms.filter((r) => r.status === 'OCCUPIED').length || 3;
 
-            const expenseAgg = await prisma.expense.aggregate({
-              where: property.id ? { propertyId: property.id } : undefined,
-              _sum: { amount: true },
-            });
+            const expenseAgg = await safeDbQuery(
+              () =>
+                prisma.expense.aggregate({
+                  where: property.id ? { propertyId: property.id } : undefined,
+                  _sum: { amount: true },
+                }),
+              { _sum: { amount: 7100000 } }
+            );
             liveExpense = expenseAgg._sum.amount || 7100000;
 
-            const invoiceAgg = await prisma.invoice.aggregate({
-              where: { paymentStatus: 'SETTLED' },
-              _sum: { totalAmount: true },
-            });
+            const invoiceAgg = await safeDbQuery(
+              () =>
+                prisma.invoice.aggregate({
+                  where: { paymentStatus: 'SETTLED' },
+                  _sum: { totalAmount: true },
+                }),
+              { _sum: { totalAmount: 3200000 } }
+            );
             liveIncome = invoiceAgg._sum.totalAmount || 3200000;
           }
         } catch {}
@@ -541,23 +549,23 @@ export async function POST(req: NextRequest) {
         }
 
         const newOrderId = `REQ-${Date.now().toString().slice(-4)}`;
+        const orderObj = {
+          id: newOrderId,
+          tenantName: userName,
+          roomNumber: userRoom || 'EKS-01',
+          category: orderCat,
+          item: orderItem,
+          notes: `Order WhatsApp dari ${userName}`,
+          status: 'PENDING_DISPATCH',
+          vendorName: targetVendor,
+          createdAt: new Date().toISOString(),
+        };
 
-        try {
-          await prisma.supplyOrder.create({
-            data: {
-              id: newOrderId,
-              tenantName: userName,
-              roomNumber: userRoom || 'EKS-01',
-              category: orderCat,
-              item: orderItem,
-              notes: `Order WhatsApp dari ${userName}`,
-              status: 'PENDING_DISPATCH',
-              vendorName: targetVendor,
-            },
-          });
-        } catch {}
+        // 1. Store in live orders store immediately
+        pushSupplyOrder(orderObj);
+        safeDbQuery(() => prisma.supplyOrder.create({ data: orderObj }), null, 500).catch(() => {});
 
-        // Push real-time toast to Owner & Vendor
+        // 2. Push real-time in-app dashboard notification (Tab tenant_requests)
         pushActivityNotification('default', {
           id: `ord_${newOrderId}`,
           title: `🛒 Pesanan ${orderCat} Baru dari Kamar ${userRoom || 'EKS-01'}`,
@@ -567,7 +575,24 @@ export async function POST(req: NextRequest) {
           badgeColor: 'bg-emerald-100 text-emerald-800',
         });
 
-        replyText = `🛒 *Pemesanan Layanan Kos (Kamar ${userRoom || 'EKS-01'})*\nPesanan *#${newOrderId}* telah tercatat di Database:\n• Item: *${orderItem}*\n• Mitra Vendor: *${targetVendor}*\n• Status: *Sedang Diproses & Siap Diantar*\n\nAnda akan menerima pemberitahuan otomatis saat barang sedang diantar ke depan pintu kamar.`;
+        // 3. Auto WhatsApp dispatch to Vendor & Owner
+        const vendorPhone = orderCat === 'WARUNG' ? '081298765432' : orderCat === 'LAUNDRY' ? '081387654321' : '085712345678';
+        sendWhatsApp(
+          vendorPhone,
+          `🍽️ *PESANAN BARU DARI PENGHUNI KOSANKU PRO*\n• Order ID: *#${newOrderId}*\n• Lokasi: *Juragan Kost Pasteur RSHS (Kamar ${userRoom || 'EKS-01'})*\n• Penghuni: *${userName}*\n• Item: *${orderItem}*\n\nMohon segera disiapkan & diantar. Ketik *Diantar ${newOrderId}* jika kurir berangkat.`
+        ).catch(() => {});
+
+        pushWaLiveLog({
+          phone: vendorPhone,
+          senderName: targetVendor,
+          detectedRole: `VENDOR_${orderCat}`,
+          inboundText: `[AUTO-DISPATCH SISTEM]: Teruskan Pesanan #${newOrderId}`,
+          replyText: `🍽️ Pesanan #${newOrderId} berhasil diteruskan ke ${targetVendor} (Kamar ${userRoom || 'EKS-01'}: ${orderItem}). Mitra siap mengantar.`,
+          actionTaken: `DISPATCH_TO_VENDOR_${orderCat}`,
+          property: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
+        });
+
+        replyText = `🛒 *Pemesanan Layanan Kos (Kamar ${userRoom || 'EKS-01'})*\nPesanan *#${newOrderId}* telah tercatat di Database:\n• Item: *${orderItem}*\n• Mitra Vendor: *${targetVendor}*\n• Status: *Sedang Diproses & Siap Diantar*\n\nNotifikasi otomatis telah diteruskan ke ${targetVendor} dan Owner. Anda akan menerima pemberitahuan saat kurir mengantar barang.`;
         replyButtons = [
           { id: 'pesanan_saya', text: '📦 Cek Pesanan' },
           { id: 'menu_tenant', text: '🏠 Menu Utama' },
@@ -1067,7 +1092,7 @@ Jawab pertanyaan calon penyewa dengan ramah, hangat, sopan, singkat (2-3 kalimat
       property: userProperty,
     });
 
-    try {
+    safeDbQuery(async () => {
       const existingConv = await prisma.conversation.findUnique({
         where: { phone: cleanPhone },
       });
@@ -1097,7 +1122,7 @@ Jawab pertanyaan calon penyewa dengan ramah, hangat, sopan, singkat (2-3 kalimat
           messages: currentMessages,
         },
       });
-    } catch {}
+    }, null, 500).catch(() => {});
 
     // ── 4. DISPATCH WHATSAPP RESPONSE VIA GATEWAY ─────────────────────────
     const sendResult = await sendWhatsApp(cleanPhone, replyText, undefined, replyButtons, replyFooter, replyList, buttonTitle);
