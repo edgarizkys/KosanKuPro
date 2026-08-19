@@ -9,20 +9,22 @@ function formatIDR(amount: number) {
 }
 
 /**
- * Send text or interactive button message via Fonnte WhatsApp API (Supports per-property custom device token)
+ * Send text, interactive button, or interactive list menu (Garis Tiga / Dropdown) via Fonnte WhatsApp API
  */
 export async function sendWhatsApp(
   target: string,
   message: string,
   customToken?: string,
   buttons?: Array<{ id: string; text: string }> | string,
-  footer?: string
+  footer?: string,
+  list?: Array<{ title: string; rows: Array<{ id: string; title: string; description?: string }> }> | string,
+  buttonTitle?: string
 ) {
   const token = customToken || process.env.FONNTE_WHATSAPP_TOKEN;
   const cleanTarget = target.replace(/[^0-9]/g, '');
 
   if (!token || token === 'YOUR_FONNTE_TOKEN' || token.includes('TOKEN')) {
-    console.log(`[Fonnte WhatsApp Simulation] To: ${cleanTarget}\n${message}\nButtons: ${JSON.stringify(buttons)}\n---`);
+    console.log(`[Fonnte WhatsApp Simulation] To: ${cleanTarget}\n${message}\nButtons: ${JSON.stringify(buttons)}\nList: ${JSON.stringify(list)}\n---`);
     return {
       success: true,
       simulated: true,
@@ -36,7 +38,10 @@ export async function sendWhatsApp(
       message,
     };
 
-    if (buttons) {
+    if (list) {
+      payload.list = typeof list === 'string' ? list : JSON.stringify(list);
+      payload.button = buttonTitle || '📋 Pilihan Menu Layanan';
+    } else if (buttons) {
       if (typeof buttons === 'string') {
         payload.button = buttons;
       } else {

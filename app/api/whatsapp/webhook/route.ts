@@ -142,6 +142,8 @@ export async function POST(req: NextRequest) {
 
     let replyText = '';
     let replyButtons: Array<{ id: string; text: string }> | undefined = undefined;
+    let replyList: Array<{ title: string; rows: Array<{ id: string; title: string; description?: string }> }> | undefined = undefined;
+    let buttonTitle = '📋 Pilihan Menu Layanan';
     const replyFooter = 'KosanKu Pro • WhatsApp Smart OS';
 
     // ── 2. ROUTE BY ROLE ──────────────────────────────────────────────────
@@ -191,11 +193,17 @@ export async function POST(req: NextRequest) {
         replyText = `❌ *Pengajuan Biaya Ditolak / Ditunda.*\nStaf telah diberitahukan untuk mencari opsi alternatif atau menunda pesanan.`;
       } else {
         replyText = `👑 *Menu Pengelola KosanKu (Owner)*\nHalo *${userName}*,\nSilakan sentuh tombol di bawah untuk tindakan cepat:`;
-        replyButtons = [
-          { id: 'btn_kas', text: '📊 Laporan Kas & Laba' },
-          { id: 'btn_acc_galon', text: '✅ ACC 12 Galon Air' },
-          { id: 'btn_acc_servis', text: '✅ ACC Servis Teknisi' },
+        replyList = [
+          {
+            title: 'Menu Utama Owner',
+            rows: [
+              { id: 'btn_kas', title: '📊 Laporan Kas & Laba', description: 'Lihat mutasi pemasukan, pengeluaran & saldo kas' },
+              { id: 'btn_acc_galon', title: '✅ ACC 12 Galon Air', description: 'Setujui pengadaan air minum Rp 240.000' },
+              { id: 'btn_acc_servis', title: '✅ ACC Servis AC', description: 'Setujui tiket perbaikan teknisi Rp 250.000' },
+            ],
+          },
         ];
+        buttonTitle = '👑 Menu Pengelola (Owner)';
       }
     }
 
@@ -254,12 +262,18 @@ export async function POST(req: NextRequest) {
           { id: 'btn_tenant_menu', text: '🏠 Menu Utama' },
         ];
       } else {
-        replyText = `🏠 *Halo Kak ${userName} (Kamar ${userRoom || 'A-101'})*\nLayanan mandiri penghuni kosan siap 24 jam. Sentuh tombol di bawah:`;
-        replyButtons = [
-          { id: 'btn_tagihan', text: '💳 Bayar Sewa QRIS' },
-          { id: 'btn_laundry', text: '🧺 Kuota Laundry' },
-          { id: 'btn_pesan_galon', text: '💧 Pesan Galon' },
+        replyText = `🏠 *Halo Kak ${userName} (Kamar ${userRoom || 'A-101'})*\nLayanan mandiri penghuni kosan siap 24 jam. Sentuh menu di bawah:`;
+        replyList = [
+          {
+            title: 'Layanan Penghuni Kos',
+            rows: [
+              { id: 'btn_tagihan', title: '💳 Bayar Sewa QRIS', description: 'Lihat rincian invoice & bayar instan QRIS' },
+              { id: 'btn_laundry', title: '🧺 Kuota Laundry', description: 'Cek sisa kuota laundry kiloan bulanan' },
+              { id: 'btn_pesan_galon', title: '💧 Pesan Galon', description: 'Pesan refill air galon langsung ke kamar' },
+            ],
+          },
         ];
+        buttonTitle = '🏠 Menu Layanan Penghuni';
       }
     }
 
@@ -294,10 +308,16 @@ export async function POST(req: NextRequest) {
         ];
       } else {
         replyText = `👷 *Menu Operasional Staf KosanKu Pro*\nHalo *${userName}*,\nPilihan tugas hari ini:`;
-        replyButtons = [
-          { id: 'btn_so', text: '📦 Stock Opname (SO)' },
-          { id: 'btn_survei_staf', text: '🗓️ Jadwal Tamu' },
+        replyList = [
+          {
+            title: 'Tugas Operasional Lapangan',
+            rows: [
+              { id: 'btn_so', title: '📦 Stock Opname (SO)', description: 'Input hitungan fisik galon, gas & sprei' },
+              { id: 'btn_survei_staf', title: '🗓️ Jadwal Tamu', description: 'Lihat daftar tamu yang akan survei hari ini' },
+            ],
+          },
         ];
+        buttonTitle = '👷 Menu Staf KosanKu';
       }
     }
 
@@ -319,11 +339,17 @@ export async function POST(req: NextRequest) {
         replyText = `📑 *Rekap Penagihan Mitra Vendor*\nMitra: *${userName}*\nTotal Pesanan: 24 Transaksi\n💰 *Total Tagihan:* *Rp 480.000*\nStatus: *Siap Ditransfer pada Jadwal Pembayaran 2-Mingguan*.`;
       } else {
         replyText = `🛠️ *Portal WhatsApp Mitra Vendor KosanKu*\nHalo *${userName}*,\nPilihan cepat update pesanan:`;
-        replyButtons = [
-          { id: 'btn_ready', text: '🍳 Pesanan Ready' },
-          { id: 'btn_diantar', text: '🛵 Sudah Diantar' },
-          { id: 'btn_rekap', text: '📑 Rekap Tagihan' },
+        replyList = [
+          {
+            title: 'Portal Mitra Vendor',
+            rows: [
+              { id: 'btn_ready', title: '🍳 Pesanan Ready', description: 'Update status pesanan siap diantar' },
+              { id: 'btn_diantar', title: '🛵 Sudah Diantar', description: 'Konfirmasi barang telah diterima penghuni' },
+              { id: 'btn_rekap', title: '📑 Rekap Tagihan', description: 'Lihat total pesanan & pencairan dana' },
+            ],
+          },
         ];
+        buttonTitle = '🛠️ Menu Mitra Vendor';
       }
     }
 
@@ -334,12 +360,20 @@ export async function POST(req: NextRequest) {
       const isGreetingOrMenu = msgLower === 'menu' || msgLower === 'halo' || msgLower === 'hai' || msgLower === 'hi' || msgLower === 'info' || msgLower === 'pilihan' || msgLower === 'help' || msgLower === 'btn_menu';
 
       if (isGreetingOrMenu) {
-        replyText = `🏨 *Selamat Datang di KosanKu Pro Residence!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan sentuh tombol di bawah atau ketik nomor pilihan Anda:\n\n1️⃣ *Pilihan Kamar & Fasilitas* (Ketik: 1)\n2️⃣ *Daftar Harga Sewa & Promo* (Ketik: 2)\n3️⃣ *Jadwal Survei Lokasi* (Ketik: 3)\n4️⃣ *Kunci Kamar / Booking DP 50%* (Ketik: 4)\n5️⃣ *Lokasi Google Maps* (Ketik: 5)\n\n💬 Atau ketik langsung pertanyaan Kakak (misal: _"Boleh bawa mobil?", "Ada water heater?"_)`;
-        replyButtons = [
-          { id: 'btn_tipe', text: '🛏️ Pilihan Kamar' },
-          { id: 'btn_harga', text: '💰 Daftar Harga' },
-          { id: 'btn_booking', text: '🔒 Booking DP 50%' },
+        replyText = `🏨 *Selamat Datang di KosanKu Pro Residence!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan sentuh menu di bawah untuk pilihan layanan instan, atau ketik langsung pertanyaan Kakak:`;
+        replyList = [
+          {
+            title: 'Layanan Utama KosanKu Pro',
+            rows: [
+              { id: '1', title: '🛏️ Pilihan Kamar & Fasilitas', description: 'Tipe Standar, Deluxe & Eksekutif' },
+              { id: '2', title: '💰 Daftar Harga & Promo', description: 'Tarif Harian, Bulanan & Promo Spesial' },
+              { id: '3', title: '🗓️ Jadwal Survei Lokasi', description: 'Kunjungan Langsung atau Video Tour' },
+              { id: '4', title: '🔒 Booking Kamar (DP 50%)', description: 'Kunci Unit Impian via QRIS Instan' },
+              { id: '5', title: '📍 Lokasi Google Maps', description: 'Dekat RSHS Pasteur & Kampus ITB' },
+            ],
+          },
         ];
+        buttonTitle = '📋 Pilihan Menu Layanan';
       } else if (msgLower === '1' || msgLower.includes('info kamar') || msgLower.includes('tipe') || msgLower.includes('btn_tipe')) {
         replyText = `🛏️ *PILIHAN TIPE KAMAR KOSANKU PRO:*\n\n1. *Standar (Rp 1.300.000/bln | Rp 135rb/hari)*\n• AC, Free WiFi 100Mbps, Springbed, Meja Belajar, Smart Lock.\n\n2. *Deluxe (Rp 1.600.000/bln | Rp 165rb/hari)*\n• TV LED, KM Dalam Water Heater, Free Laundry 5kg/bln, Smart Lock.\n\n3. *Eksekutif (Rp 2.200.000/bln | Rp 200rb/hari)*\n• Balkon Pribadi, Kulkas Mini, Dapur Pribadi, Smart Lock.\n\nKetik *2* untuk Promo | Ketik *3* untuk Jadwal Survei | Ketik *4* untuk Booking Unit`;
         replyButtons = [
@@ -431,6 +465,7 @@ Jawab pertanyaan calon penyewa dengan singkat (maksimal 2-3 kalimat), berikan in
         role: 'assistant',
         text: replyText,
         buttons: replyButtons,
+        list: replyList,
         timestamp: new Date().toISOString(),
       });
 
@@ -447,7 +482,7 @@ Jawab pertanyaan calon penyewa dengan singkat (maksimal 2-3 kalimat), berikan in
     } catch {}
 
     // ── 4. SEND WHATSAPP REPLY (Fonnte API or Simulation Logger) ─────────
-    const sendResult = await sendWhatsApp(cleanPhone, replyText, undefined, replyButtons, replyFooter);
+    const sendResult = await sendWhatsApp(cleanPhone, replyText, undefined, replyButtons, replyFooter, replyList, buttonTitle);
 
     // Format button string for Fonnte auto-reply compatibility
     const buttonStr = replyButtons ? replyButtons.map((b) => `${b.id}|${b.text}`).join(',') : undefined;
@@ -456,7 +491,8 @@ Jawab pertanyaan calon penyewa dengan singkat (maksimal 2-3 kalimat), berikan in
       reply: replyText,
       response: replyText,
       message: replyText,
-      button: buttonStr,
+      button: replyList ? buttonTitle : buttonStr,
+      list: replyList ? JSON.stringify(replyList) : undefined,
       footer: replyFooter,
       success: true,
       sender: cleanPhone,
@@ -465,6 +501,7 @@ Jawab pertanyaan calon penyewa dengan singkat (maksimal 2-3 kalimat), berikan in
       inboundMessage: msg,
       replyMessage: replyText,
       replyButtons,
+      replyList,
       deliveryStatus: sendResult,
     });
   } catch (error) {
