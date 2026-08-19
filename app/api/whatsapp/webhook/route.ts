@@ -360,18 +360,11 @@ export async function POST(req: NextRequest) {
       const isGreetingOrMenu = msgLower === 'menu' || msgLower === 'halo' || msgLower === 'hai' || msgLower === 'hi' || msgLower === 'info' || msgLower === 'pilihan' || msgLower === 'help' || msgLower === 'btn_menu';
 
       if (isGreetingOrMenu) {
-        replyText = `🏨 *Selamat Datang di KosanKu Pro Residence!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan sentuh menu di bawah untuk pilihan layanan instan, atau ketik langsung pertanyaan Kakak:`;
-        replyList = [
-          {
-            title: 'Layanan Utama KosanKu Pro',
-            rows: [
-              { id: '1', title: '🛏️ Pilihan Kamar & Fasilitas', description: 'Tipe Standar, Deluxe & Eksekutif' },
-              { id: '2', title: '💰 Daftar Harga & Promo', description: 'Tarif Harian, Bulanan & Promo Spesial' },
-              { id: '3', title: '🗓️ Jadwal Survei Lokasi', description: 'Kunjungan Langsung atau Video Tour' },
-              { id: '4', title: '🔒 Booking Kamar (DP 50%)', description: 'Kunci Unit Impian via QRIS Instan' },
-              { id: '5', title: '📍 Lokasi Google Maps', description: 'Dekat RSHS Pasteur & Kampus ITB' },
-            ],
-          },
+        replyText = `🏨 *Selamat Datang di KosanKu Pro Residence!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan pilih info cepat dengan membalas angka:\n\n1️⃣ *Pilihan Tipe Kamar & Fasilitas* (Ketik: 1)\n2️⃣ *Daftar Harga Sewa & Promo* (Ketik: 2)\n3️⃣ *Jadwal Janji Temu Survei* (Ketik: 3)\n4️⃣ *Booking Kunci Kamar (DP 50%)* (Ketik: 4)\n5️⃣ *Peta Lokasi Google Maps* (Ketik: 5)\n\n👉 *Atau Kunci Kamar Langsung di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa ketik pertanyaan bebas langsung di sini!_`;
+        replyButtons = [
+          { id: '1', text: '🛏️ Pilihan Kamar' },
+          { id: '2', text: '💰 Daftar Harga' },
+          { id: '4', text: '🔒 Booking DP 50%' },
         ];
         buttonTitle = '📋 Pilihan Menu Layanan';
       } else if (msgLower === '1' || msgLower.includes('info kamar') || msgLower.includes('tipe') || msgLower.includes('btn_tipe')) {
