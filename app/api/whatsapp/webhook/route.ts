@@ -117,32 +117,42 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 0. DYNAMIC INSTANT ROLE SWITCHER FOR EASY 1-PHONE TESTING ──────────
-    if (msgLower.startsWith('#role') || msgLower.startsWith('!role') || msgLower.startsWith('/role')) {
+    if (msgLower.startsWith('#role') || msgLower.startsWith('!role') || msgLower.startsWith('/role') || msgLower === '#help') {
       const targetRole = msgLower.split(' ')[1] || '';
 
-      if (targetRole.includes('owner') || targetRole.includes('bos')) {
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'OWNER', name: 'Pak Bos / Owner', property: 'KosanKu Premium Residence' };
-        const switchText = `👑 *MODE TESTING OWNER DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *PEMILIK KOS (Owner)*.\n\nSilakan coba ketik:\n• *Kas* ➔ Cek laporan keuangan & saldo kas real-time.\n• *ACC 12 Galon* ➔ Setujui pengadaan air minum.\n• *ACC Servis AC* ➔ Setujui perbaikan teknisi.`;
+      if (targetRole.includes('owner') || targetRole.includes('bos') || targetRole.includes('pemilik')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'OWNER', name: 'Pak Bos / Owner', property: 'Juragan Kost Pasteur (Depan RSHS Bandung)' };
+        const switchText = `👑 *MODE TESTING OWNER DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *PEMILIK KOS (Owner)*.\n\nSilakan coba fitur Owner:\n• *Kas* ➔ Cek laporan keuangan, omset & saldo kas real-time.\n• *ACC 12 Galon* ➔ Setujui pengadaan logistik air minum.\n• *ACC Servis AC* ➔ Setujui tiket perbaikan teknisi.\n• *Tolak* ➔ Tunda/tolak pengajuan biaya staf.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'OWNER', reply: switchText });
       } else if (targetRole.includes('tenant') || targetRole.includes('penghuni') || targetRole.includes('kamar')) {
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'TENANT', name: 'Rian Pratama', property: 'KosanKu Premium Residence', room: 'A-101' };
-        const switchText = `🏠 *MODE TESTING PENGHUNI (TENANT) DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Penghuni Kamar A-101 (Rian Pratama)*.\n\nSilakan coba ketik:\n• *Tagihan* ➔ Cek invoice & bayar sewa QRIS.\n• *Pesan Galon 1* ➔ Order air minum langsung ke kamar.\n• *Laundry* ➔ Cek sisa kuota cuci gratis 5kg.\n• *Komplain: Kran bocor* ➔ Buat tiket laporan kerusakan.`;
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'TENANT', name: 'dr. Rizky Pratama, Sp.A', property: 'Juragan Kost Pasteur (Depan RSHS Bandung)', room: 'EKS-01' };
+        const switchText = `🏠 *MODE TESTING PENGHUNI (TENANT) DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *dr. Rizky Pratama (Kamar EKS-01)*.\n\nSilakan coba fitur Penghuni:\n• *Tagihan* ➔ Cek invoice & bayar sewa QRIS instan.\n• *Pesan Nasi Goreng 1* ➔ Order makanan katering langsung ke kamar.\n• *Pesan Galon 1* ➔ Order refill air galon.\n• *Laundry* ➔ Cek sisa kuota gratis laundry 5kg.\n• *Komplain: Kran bocor* ➔ Buat tiket laporan kerusakan ke staf/teknisi.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'TENANT', reply: switchText });
       } else if (targetRole.includes('staff') || targetRole.includes('staf') || targetRole.includes('karyawan')) {
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'STAFF', name: 'Bambang (Staf Lapangan)', property: 'KosanKu Pro' };
-        const switchText = `👷 *MODE TESTING STAF OPERASIONAL DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Staf Lapangan (Bambang)*.\n\nSilakan coba ketik:\n• *SO: GALON 12 GAS 2 SPREI 6* ➔ Input audit fisik stok barang.\n• *Jadwal* ➔ Cek jadwal tamu yang akan datang survei hari ini.`;
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'STAFF', name: 'Bambang (Staf Operasional)', property: 'Juragan Kost Pasteur (Depan RSHS)' };
+        const switchText = `👷 *MODE TESTING STAF OPERASIONAL DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Staf Lapangan (Bambang)*.\n\nSilakan coba fitur Staf:\n• *SO: GALON 12 GAS 2 SPREI 6* ➔ Input audit fisik stok barang.\n• *Jadwal* ➔ Cek jadwal tamu yang akan datang survei kamar hari ini.\n• *Kamar siap* ➔ Konfirmasi kamar bersih siap huni.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'STAFF', reply: switchText });
-      } else if (targetRole.includes('vendor') || targetRole.includes('warung') || targetRole.includes('galon')) {
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'VENDOR_GALON', name: 'Depot Air & Gas Suci', property: 'KosanKu Pro' };
-        const switchText = `🍳 *MODE TESTING MITRA VENDOR DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Mitra Vendor (Depot Air & Warung)*.\n\nSilakan coba ketik:\n• *Ready* ➔ Konfirmasi pesanan siap.\n• *Sudah diantar* ➔ Konfirmasi barang tiba di kamar.\n• *Rekap* ➔ Cek total omset pencairan dana 2-mingguan.`;
+      } else if (targetRole.includes('warung') || targetRole.includes('food') || targetRole.includes('makan') || targetRole.includes('katering')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'VENDOR_WARUNG', name: 'Warung Nasi & Katering Bu Imas', property: 'Juragan Kost Pasteur' };
+        const switchText = `🍳 *MODE TESTING MITRA WARUNG MAKAN / F&B DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Mitra Katering (Warung Bu Imas)*.\n\nSilakan coba fitur Mitra F&B:\n• *Ready* ➔ Konfirmasi pesanan makanan sedang disiapkan.\n• *Sudah diantar* ➔ Konfirmasi makanan sudah tiba di kamar penghuni.\n• *Rekap* ➔ Cek rekap omset tagihan katering siap cair 2-mingguan.`;
         await sendWhatsApp(cleanPhone, switchText);
-        return NextResponse.json({ success: true, switchedTo: 'VENDOR', reply: switchText });
+        return NextResponse.json({ success: true, switchedTo: 'VENDOR_WARUNG', reply: switchText });
+      } else if (targetRole.includes('depot') || targetRole.includes('galon') || targetRole.includes('gas')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'VENDOR_GALON', name: 'Depot Air Mineral & Gas Suci', property: 'Juragan Kost Pasteur' };
+        const switchText = `💧 *MODE TESTING MITRA DEPOT AIR & GAS DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Mitra Depot Air & Gas*.\n\nSilakan coba fitur Depot:\n• *Ready* ➔ Konfirmasi galon/gas siap kirim.\n• *Sudah diantar* ➔ Konfirmasi galon terpasang di kamar.\n• *Rekap* ➔ Cek total pengantaran galon & pencairan dana.`;
+        await sendWhatsApp(cleanPhone, switchText);
+        return NextResponse.json({ success: true, switchedTo: 'VENDOR_GALON', reply: switchText });
+      } else if (targetRole.includes('teknisi') || targetRole.includes('ac') || targetRole.includes('tukang')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'VENDOR_TEKNISI', name: 'Teknisi AC & Plumbing Bandung', property: 'Juragan Kost Pasteur' };
+        const switchText = `🛠️ *MODE TESTING MITRA TEKNISI & SERVIS DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Mitra Teknisi AC & Perbaikan*.\n\nSilakan coba fitur Teknisi:\n• *Kerjakan* ➔ Konfirmasi teknisi meluncur ke lokasi kamar.\n• *Selesai* ➔ Konfirmasi perbaikan tuntas & ajukan biaya servis ke Owner.\n• *Rekap* ➔ Cek rekap ongkos kerja siap cair.`;
+        await sendWhatsApp(cleanPhone, switchText);
+        return NextResponse.json({ success: true, switchedTo: 'VENDOR_TEKNISI', reply: switchText });
       } else {
         delete DYNAMIC_ACTIVE_ROLES[cleanPhone];
-        const switchText = `🏨 *MODE TESTING CALON PENYEWA (LEADS) DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Calon Penyewa Baru*.\n\nSilakan coba ketik:\n• *Menu* ➔ Buka menu pilihan 1-5.\n• Tanya bebas ke AI (misal: _"Boleh bawa mobil?", "Ada water heater?"_)`;
+        const switchText = `🏨 *MODE TESTING CALON PENYEWA (LEADS) DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Calon Penyewa Baru*.\n\nSilakan coba fitur Publik:\n• *Menu* ➔ Buka menu pilihan utama 1-5.\n• *1* ➔ Cek kamar & fasilitas\n• *2* ➔ Cek harga & promo RSHS\n• *5* ➔ Cek lokasi Google Maps RSHS\n• *Tanya Bebas AI* (misal: _"Bisa sewa harian untuk dokter koas di RSHS?"_)`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'LEAD', reply: switchText });
       }
