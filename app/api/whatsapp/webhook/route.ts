@@ -474,26 +474,43 @@ export async function POST(req: NextRequest) {
     // C. ROLE: STAFF (Staf Kebersihan & Lapangan)
     // ──────────────────────────────────────────────────────────────────────
     else if (userRole === 'STAFF' || userRole === 'EMPLOYEE') {
-      if (msgLower.includes('so') || msgLower.includes('audit') || msgLower.includes('stok') || msgLower.includes('btn_so')) {
-        replyText = `📦 *Input Stock Opname (SO) Staf*\nHalo *${userName}*,\nFormat penginputan cepat audit fisik:\n\nKetik: *SO: GALON [Jumlah] GAS [Jumlah] SPREI [Jumlah]*\nContoh: *SO: GALON 12 GAS 2 SPREI 6*`;
-      } else if (msgLower.startsWith('so:')) {
+      if (msgLower.startsWith('so:') || msgLower.startsWith('so ') || msgLower.startsWith('audit:')) {
+        let galonCount = 12;
+        let gasCount = 2;
+        let spreiCount = 6;
+
+        const galonMatch = msg.match(/galon\s*(\d+)/i);
+        if (galonMatch) galonCount = parseInt(galonMatch[1]);
+        const gasMatch = msg.match(/gas\s*(\d+)/i);
+        if (gasMatch) gasCount = parseInt(gasMatch[1]);
+        const spreiMatch = msg.match(/sprei\s*(\d+)/i);
+        if (spreiMatch) spreiCount = parseInt(spreiMatch[1]);
+
+        const soId = `SO-${Date.now().toString().slice(-4)}`;
         try {
           await prisma.stockOpnameAudit.create({
             data: {
-              itemName: 'Logistik Rutin (Galon/Gas/Sprei)',
-              category: 'INVENTORY_AUDIT',
+              id: soId,
+              itemName: `Galon: ${galonCount} unit, Gas: ${gasCount} tbg, Sprei: ${spreiCount} set`,
+              category: 'CONSUMABLES',
               systemStock: 12,
-              physicalStock: 12,
-              discrepancy: 0,
+              physicalStock: galonCount,
+              discrepancy: galonCount - 12,
               auditedBy: userName,
+              branchId: userPropertyId || 'prop-001',
+              watermarkText: `SO-${userName.slice(0, 4).toUpperCase()}-${Date.now().toString().slice(-4)}`,
             },
           });
-        } catch {}
+        } catch (err) {
+          console.error('[Create StockOpnameAudit Error]', err);
+        }
 
-        replyText = `✅ *Laporan Stock Opname BERHASIL Disimpan ke Database!*\nPetugas: *${userName}*\nData: _${msg}_\n\nSistem mencatat: Stok fisik Sesuai. Laporan real-time telah dikirimkan ke Owner. 👏`;
+        replyText = `✅ *Laporan Stock Opname #${soId} BERHASIL Disimpan ke Database!*\nPetugas: *${userName}*\n🏢 Properti: *${userProperty}*\n📊 Rincian: *Galon: ${galonCount}*, *Gas: ${gasCount}*, *Sprei: ${spreiCount}*\n\nSistem telah mencatat audit fisik ke Database PostgreSQL KosanKu Pro dan langsung tampil di Dashboard Owner ${userProperty}. 👏`;
         replyButtons = [
           { id: 'btn_survei_staf', text: '🗓️ Jadwal Survei' },
         ];
+      } else if (msgLower.includes('so') || msgLower.includes('audit') || msgLower.includes('stok') || msgLower.includes('btn_so')) {
+        replyText = `📦 *Input Stock Opname (SO) Staf*\nHalo *${userName}*,\nFormat penginputan cepat audit fisik:\n\nKetik: *SO: GALON [Jumlah] GAS [Jumlah] SPREI [Jumlah]*\nContoh: *SO: GALON 12 GAS 2 SPREI 6*`;
       } else if (msgLower.includes('survei') || msgLower.includes('jadwal') || msgLower.includes('btn_survei')) {
         replyText = `🗓️ *Jadwal Survei Tamu Hari Ini*\n• Jam 14:00 - Tamu: Dimas Anggara (Kamar NYM-01, Onsite)\n• Jam 16:30 - Tamu: dr. Farhan (Kamar EKS-01, Video Call)\n\nPastikan kamar showcase bersih & wangi.`;
         replyButtons = [

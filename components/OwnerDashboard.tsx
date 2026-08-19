@@ -338,8 +338,29 @@ export default function OwnerDashboard({
       }
     };
 
-    const loadSOAudit = () => {
+    const loadSOAudit = async () => {
       try {
+        const res = await fetch(`/api/inventory/audit?property=${property.slug}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
+            const latest = json.data[0];
+            setSoAudit({
+              auditDate: new Date(latest.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+              auditedBy: latest.auditedBy || 'Bambang Prasetyo (Staf RSHS)',
+              items: json.data.slice(0, 8).map((d: any, idx: number) => ({
+                id: d.id || `SO-00${idx + 1}`,
+                name: d.itemName,
+                category: d.category || 'CONSUMABLES',
+                systemStock: d.systemStock || 12,
+                physicalStock: d.physicalStock || 12,
+                unit: d.itemName?.toLowerCase().includes('gas') ? 'Tabung' : d.itemName?.toLowerCase().includes('sprei') ? 'Set' : 'Unit',
+                note: d.discrepancy === 0 ? 'Fisik Sesuai' : `Selisih: ${d.discrepancy}`,
+              })),
+            });
+            return;
+          }
+        }
         const saved = localStorage.getItem('kosanku_latest_stock_opname');
         if (saved) {
           const parsed = JSON.parse(saved);
