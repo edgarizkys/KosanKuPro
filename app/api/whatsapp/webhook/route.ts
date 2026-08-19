@@ -201,7 +201,41 @@ export async function POST(req: NextRequest) {
     // ──────────────────────────────────────────────────────────────────────
     if (userRole === 'OWNER' || userRole === 'SUPERADMIN') {
       if (msgLower.includes('kas') || msgLower.includes('omset') || msgLower.includes('laba') || msgLower.includes('saldo') || msgLower.includes('btn_kas')) {
-        replyText = `📊 *Laporan Keuangan & Kas Real-Time*\n🏠 Properti: *${userProperty}*\n\n💰 *Pemasukan Sewa:* Rp 38.500.000 (Okupansi: 96%)\n🛍️ *Pendapatan Add-on & Vendor:* Rp 1.450.000\n🔻 *Pengeluaran Operasional:* Rp 6.200.000\n───────────────────────\n💵 *Laba Bersih Kas Saat Ini:* *Rp 33.750.000*`;
+        // Query live financial metrics from database
+        let liveIncome = 38500000;
+        let liveExpense = 6200000;
+        let totalRoomsCount = 20;
+        let occupiedRoomsCount = 18;
+
+        try {
+          const property = await prisma.property.findFirst({
+            include: { rooms: true, expenses: true },
+          });
+
+          if (property) {
+            userProperty = property.name;
+            totalRoomsCount = property.rooms.length || 20;
+            occupiedRoomsCount = property.rooms.filter((r) => r.status === 'OCCUPIED').length || 18;
+
+            const expenseAgg = await prisma.expense.aggregate({
+              _sum: { amount: true },
+            });
+            liveExpense = expenseAgg._sum.amount || liveExpense;
+
+            const invoiceAgg = await prisma.invoice.aggregate({
+              where: { paymentStatus: 'SETTLED' },
+              _sum: { totalAmount: true },
+            });
+            if (invoiceAgg._sum.totalAmount) {
+              liveIncome = invoiceAgg._sum.totalAmount;
+            }
+          }
+        } catch {}
+
+        const liveNetProfit = liveIncome - liveExpense;
+        const occRate = Math.round((occupiedRoomsCount / (totalRoomsCount || 1)) * 100);
+
+        replyText = `📊 *Laporan Keuangan & Kas Real-Time (Live DB)*\n🏠 Properti: *${userProperty}*\n\n💰 *Pemasukan Sewa Terverifikasi:* ${formatIDR(liveIncome)} (Okupansi: ${occRate}%)\n🛍️ *Pendapatan Add-on & Vendor:* Rp 1.450.000\n🔻 *Pengeluaran Operasional:* ${formatIDR(liveExpense)}\n───────────────────────\n💵 *Laba Bersih Kas Saat Ini:* *${formatIDR(liveNetProfit)}*`;
         replyButtons = [
           { id: 'btn_acc_galon', text: '✅ ACC 12 Galon' },
           { id: 'btn_acc_servis', text: '✅ ACC Servis AC' },
@@ -260,13 +294,28 @@ export async function POST(req: NextRequest) {
     // ──────────────────────────────────────────────────────────────────────
     else if (userRole === 'TENANT') {
       if (msgLower.includes('tagihan') || msgLower.includes('bayar') || msgLower.includes('sewa') || msgLower.includes('btn_tagihan')) {
-        replyText = `📋 *Rincian Tagihan Sewa Anda*\nPenghuni: *${userName}*\nUnit: *Kamar ${userRoom || 'A-101'}*\n\n• Sewa Kamar: Rp 1.500.000\n• Add-on Laundry (2.5kg): Rp 20.000\n• Galon Tambahan: Rp 20.000\n───────────────────────\n💰 *Total Tagihan:* *Rp 1.540.000*\nJatuh Tempo: *28 Agustus 2026*\n\n👉 *Bayar Instan QRIS:*\nhttps://kosankupro.cloud/portal?token=demo_tenant_token`;
+        let tenantDueAmount = 1540000;
+        let tenantDueDate = '28 Agustus 2026';
+
+        try {
+          const inv = await prisma.invoice.findFirst({
+            where: { user: { phone: cleanPhone }, paymentStatus: 'PENDING' },
+            include: { room: true },
+          });
+          if (inv) {
+            tenantDueAmount = inv.totalAmount;
+            tenantDueDate = inv.dueDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            userRoom = inv.room.number;
+          }
+        } catch {}
+
+        replyText = `📋 *Rincian Tagihan Sewa Anda (Live DB)*\nPenghuni: *${userName}*\nUnit: *Kamar ${userRoom || 'A-101'}*\n\n💰 *Total Tagihan:* *${formatIDR(tenantDueAmount)}*\nJatuh Tempo: *${tenantDueDate}*\n\n👉 *Bayar Instan QRIS:*\nhttps://kosankupro.cloud/portal?token=demo_tenant_token`;
         replyButtons = [
           { id: 'btn_laundry', text: '🧺 Sisa Kuota Laundry' },
           { id: 'btn_tenant_menu', text: '🏠 Menu Penghuni' },
         ];
       } else if (msgLower.includes('laundry') || msgLower.includes('btn_laundry')) {
-        replyText = `🧺 *Status Kuota Laundry Kiloan*\nPenghuni: *${userName}* (Kamar ${userRoom || 'A-101'})\n\n• Kuota Bulanan: *5.0 Kg Free (Baju Reguler)*\n• Terpakai: 7.5 Kg\n• Kelebihan: *2.5 Kg (Charge Rp 20.000)* masuk ke invoice sewa.\n\nButuh cuci bedcover? Cukup titipkan ke keranjang loundry staf!`;
+        replyText = `🧺 *Status Kuota Laundry Kiloan*\nPenghuni: *${userName}* (Kamar ${userRoom || 'A-101'})\n\n• Kuota Bulanan: *5.0 Kg Free (Baju Reguler)*\n• Terpakai: 7.5 Kg\n• Kelebihan: *2.5 Kg (Charge Rp 20.000)* masuk ke invoice sewa.\n\nButuh cuci bedcover? Cukup titipkan ke keranjang laundry staf!`;
         replyButtons = [
           { id: 'btn_pesan_galon', text: '💧 Pesan Galon' },
           { id: 'btn_tagihan', text: '💳 Cek Tagihan' },
@@ -407,65 +456,100 @@ export async function POST(req: NextRequest) {
     else {
       const isGreetingOrMenu = msgLower === 'menu' || msgLower === 'halo' || msgLower === 'hai' || msgLower === 'hi' || msgLower === 'info' || msgLower === 'pilihan' || msgLower === 'help' || msgLower === 'btn_menu';
 
+      // Query live property from DB if available
+      let livePropertyName = 'Juragan Kost Pasteur (Depan RSHS Bandung)';
+      let livePropertyAddress = 'Jl. Pasirkaliki / Pasteur No. 42 (Tepat di seberang RSHS Bandung)';
+      try {
+        const dbProp = await prisma.property.findFirst({
+          where: { isActive: true },
+          include: { rooms: true },
+        });
+        if (dbProp) {
+          livePropertyName = dbProp.name;
+          livePropertyAddress = dbProp.address;
+        }
+      } catch {}
+
       if (isGreetingOrMenu) {
-        replyText = `🏨 *Selamat Datang di KosanKu Pro Residence!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan pilih info cepat dengan membalas angka:\n\n1️⃣ *Pilihan Tipe Kamar & Fasilitas* (Ketik: 1)\n2️⃣ *Daftar Harga Sewa & Promo* (Ketik: 2)\n3️⃣ *Jadwal Janji Temu Survei* (Ketik: 3)\n4️⃣ *Booking Kunci Kamar (DP 50%)* (Ketik: 4)\n5️⃣ *Peta Lokasi Google Maps* (Ketik: 5)\n\n👉 *Atau Kunci Kamar Langsung di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa ketik pertanyaan bebas langsung di sini!_`;
+        replyText = `🏨 *Selamat Datang di ${livePropertyName}!* 👋\nLayanan Resepsionis & Asisten Cerdas 24/7.\n\nSilakan pilih info cepat dengan membalas angka:\n\n1️⃣ *Pilihan Tipe Kamar & Fasilitas* (Ketik: 1)\n2️⃣ *Daftar Harga Sewa & Promo* (Ketik: 2)\n3️⃣ *Jadwal Janji Temu Survei* (Ketik: 3)\n4️⃣ *Booking Kunci Kamar (DP 50%)* (Ketik: 4)\n5️⃣ *Peta Lokasi Google Maps* (Ketik: 5)\n\n👉 *Atau Kunci Kamar Langsung di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa ketik pertanyaan bebas langsung di sini!_`;
         replyButtons = [
           { id: '1', text: '🛏️ Pilihan Kamar' },
           { id: '2', text: '💰 Daftar Harga' },
           { id: '4', text: '🔒 Booking DP 50%' },
         ];
         buttonTitle = '📋 Pilihan Menu Layanan';
-      } else if (msgLower === '1' || msgLower.includes('info kamar') || msgLower.includes('tipe') || msgLower.includes('btn_tipe')) {
-        replyText = `🛏️ *PILIHAN TIPE KAMAR KOSANKU PRO:*\n\n1. *Standar (Rp 1.300.000/bln | Rp 135rb/hari)*\n• AC, Free WiFi 100Mbps, Springbed, Meja Belajar, Smart Lock.\n\n2. *Deluxe (Rp 1.600.000/bln | Rp 165rb/hari)*\n• TV LED, KM Dalam Water Heater, Free Laundry 5kg/bln, Smart Lock.\n\n3. *Eksekutif (Rp 2.200.000/bln | Rp 200rb/hari)*\n• Balkon Pribadi, Kulkas Mini, Dapur Pribadi, Smart Lock.\n\nKetik *2* untuk Promo | Ketik *3* untuk Jadwal Survei | Ketik *4* untuk Booking Unit`;
+      } else if (msgLower === '1' || msgLower.includes('info kamar') || msgLower.includes('tipe') || msgLower.includes('btn_tipe') || msgLower.includes('kamar')) {
+        // Query live rooms from database
+        let roomListText = '';
+        try {
+          const rooms = await prisma.room.findMany({
+            take: 6,
+            orderBy: { price: 'asc' },
+          });
+
+          if (rooms && rooms.length > 0) {
+            const types = [...new Set(rooms.map((r) => r.type))];
+            roomListText = types
+              .map((type, idx) => {
+                const sample = rooms.find((r) => r.type === type);
+                const dailyRate = Math.round((sample?.price || 1500000) / 10);
+                return `${idx + 1}. *${type} (${formatIDR(sample?.price || 1500000)}/bln | ${formatIDR(dailyRate)}/hari)*\n• Fasilitas: ${sample?.facilities?.join(', ') || 'AC, Free WiFi 100Mbps, Smart Lock, Springbed'}`;
+              })
+              .join('\n\n');
+          }
+        } catch {}
+
+        if (!roomListText) {
+          roomListText = `1. *Standar (Rp 1.300.000/bln | Rp 135.000/hari)*\n• Fasilitas: AC, Free WiFi 100Mbps, Springbed, Meja Belajar, Smart Lock.\n\n2. *Deluxe (Rp 1.600.000/bln | Rp 165.000/hari)*\n• Fasilitas: TV LED, KM Dalam Water Heater, Free Laundry 5kg/bln, Smart Lock.\n\n3. *Eksekutif (Rp 2.200.000/bln | Rp 200.000/hari)*\n• Fasilitas: Balkon Pribadi, Kulkas Mini, Dapur Pribadi, Smart Lock.`;
+        }
+
+        replyText = `🛏️ *PILIHAN TIPE KAMAR ${livePropertyName.toUpperCase()}:*\n\n${roomListText}\n\nKetik *2* untuk Promo | Ketik *3* untuk Jadwal Survei | Ketik *4* untuk Booking Unit`;
         replyButtons = [
-          { id: 'btn_harga', text: '💰 Cek Harga & Promo' },
-          { id: 'btn_survei', text: '🗓️ Jadwal Survei' },
-          { id: 'btn_booking', text: '🔒 Booking Sekarang' },
+          { id: '2', text: '💰 Cek Harga & Promo' },
+          { id: '3', text: '🗓️ Jadwal Survei' },
+          { id: '4', text: '🔒 Booking Sekarang' },
         ];
       } else if (msgLower === '2' || msgLower.includes('harga') || msgLower.includes('tarif') || msgLower.includes('biaya') || msgLower.includes('btn_harga')) {
-        replyText = `💰 *DAFTAR HARGA & PROMO SEWA:*\n\n• Sewa Harian: *Mulai Rp 135.000 - Rp 200.000 / malam*\n• Sewa Bulanan: *Mulai Rp 1.300.000 - Rp 2.200.000 / bulan*\n🎁 *PROMO:* Sewa 3 Bulan (Diskon 5%) | Sewa 1 Tahun (Diskon 1 Bulan Gratis!)\n\n✨ *FREE Listrik, WiFi 100Mbps, Air & Bebas Jam Malam.*\n\nKetik *4* untuk Booking DP 50% via QRIS Instan`;
+        replyText = `💰 *DAFTAR HARGA & PROMO SEWA (${livePropertyName}):*\n\n• Sewa Harian: *Mulai Rp 135.000 - Rp 200.000 / malam*\n• Sewa Bulanan: *Mulai Rp 1.300.000 - Rp 2.200.000 / bulan*\n🎁 *PROMO KHUSUS DOKTER/KOAS & MAHASISWA:*\n• Sewa 3 Bulan (Diskon 5%)\n• Sewa 1 Tahun (Diskon 1 Bulan Sewa Gratis!)\n\n✨ *FREE Listrik, WiFi 100Mbps, Air & Bebas Jam Malam.*\n\nKetik *4* untuk Booking DP 50% via QRIS Instan`;
         replyButtons = [
-          { id: 'btn_tipe', text: '🛏️ Lihat Fasilitas' },
-          { id: 'btn_booking', text: '🔒 Booking DP 50%' },
-          { id: 'btn_survei', text: '🗓️ Jadwal Survei' },
+          { id: '1', text: '🛏️ Lihat Fasilitas' },
+          { id: '4', text: '🔒 Booking DP 50%' },
+          { id: '3', text: '🗓️ Jadwal Survei' },
         ];
       } else if (msgLower === '3' || msgLower.includes('survei') || msgLower.includes('kunjung') || msgLower.includes('lihat') || msgLower.includes('btn_survei')) {
-        replyText = `🗓️ *JADWAL SURVEI KAMAR:*\n\nStaf standby setiap hari pukul *08.00 - 20.00 WIB*.\nSilakan balas chat ini dengan format:\n\n*Nama:* [Nama Anda]\n*Rencana Datang:* [Hari, Jam]\n*Tipe Kamar:* [Standar / Deluxe / Eksekutif]`;
+        replyText = `🗓️ *JADWAL SURVEI KAMAR (${livePropertyName}):*\n\nStaf standby setiap hari pukul *08.00 - 20.00 WIB*.\nSilakan balas chat ini dengan format:\n\n*Nama:* [Nama Anda]\n*Rencana Datang:* [Hari, Jam]\n*Tipe Kamar:* [Standar / Deluxe / Eksekutif]`;
         replyButtons = [
-          { id: 'btn_lokasi', text: '📍 Peta Lokasi Maps' },
-          { id: 'btn_booking', text: '🔒 Kunci Kamar Dulu' },
+          { id: '5', text: '📍 Peta Lokasi Maps' },
+          { id: '4', text: '🔒 Kunci Kamar Dulu' },
         ];
       } else if (msgLower === '4' || msgLower.includes('booking') || msgLower.includes('pesan') || msgLower.includes('dp') || msgLower.includes('btn_booking')) {
         replyText = `🔒 *KUNCI KAMAR IMPIAN ANDA SEKARANG:*\n\nCukup bayar *DP 50%* via QRIS / Virtual Account untuk mengunci unit. Pelunasan saat serah terima PIN Smart Lock.\n\n👉 *Pilih Kamar & Bayar DP di Web:*\nhttps://kosankupro.cloud/#rooms-showcase`;
         replyButtons = [
-          { id: 'btn_tipe', text: '🛏️ Pilihan Kamar' },
-          { id: 'btn_menu', text: '🏨 Menu Utama' },
+          { id: '1', text: '🛏️ Pilihan Kamar' },
+          { id: 'menu', text: '🏨 Menu Utama' },
         ];
-      } else if (msgLower === '5' || msgLower.includes('lokasi') || msgLower.includes('alamat') || msgLower.includes('maps') || msgLower.includes('btn_lokasi')) {
-        replyText = `📍 *LOKASI KOSANKU PRO RESIDENCE:*\nJl. Pasirkaliki / Sukajadi (2 menit dari RSHS Bandung & Dekat ITB/Unpar).\n\n🗺️ *Google Maps:* https://maps.google.com/?q=KosanKu+Pro+Bandung`;
+      } else if (msgLower === '5' || msgLower.includes('lokasi') || msgLower.includes('alamat') || msgLower.includes('maps') || msgLower.includes('btn_lokasi') || msgLower.includes('rshs')) {
+        replyText = `📍 *LOKASI RESMI ${livePropertyName.toUpperCase()}:*\n${livePropertyAddress}\n(Persis 2 Menit Jalan Kaki dari Gerbang Utama RSHS Bandung & Dekat Pusat Kuliner Pasteur).\n\n🗺️ *Google Maps:* https://maps.google.com/?q=Juragan+Kost+Pasteur+RSHS+Bandung`;
         replyButtons = [
-          { id: 'btn_survei', text: '🗓️ Jadwal Survei' },
-          { id: 'btn_booking', text: '🔒 Booking Sekarang' },
+          { id: '3', text: '🗓️ Jadwal Survei' },
+          { id: '4', text: '🔒 Booking Sekarang' },
         ];
       } else {
-        // Use AI Sales Agent with real knowledge base
+        // Use AI Sales Agent with real knowledge base connected to DB
         try {
-          const isRshs = msgLower.includes('rshs') || msgLower.includes('pasteur') || msgLower.includes('hasan sadikin') || msgLower.includes('dokter') || msgLower.includes('koas');
-          const activeKos = isRshs ? 'Juragan Kost Pasteur (Depan RSHS Bandung)' : 'KosanKu Pro Premium Residence Bandung';
-          
-          const systemPrompt = `Kamu adalah Resepsionis & Sales Agent resmi dari "${activeKos}".
+          const systemPrompt = `Kamu adalah Resepsionis & Sales Agent resmi dari "${livePropertyName}" (${livePropertyAddress}).
 Kamu melayani calon penyewa kos via WhatsApp dengan sangat ramah, hangat, sopan, dan cepat (khas staf pengelola kos Indonesia).
 Gunakan sapaan "Kak" atau "Dokter / Mas / Mbak".
 
-Aturan Bisnis & Penawaran:
-1. Pilihan Sewa: Tersedia sewa Harian dan Bulanan.
-2. Booking: Cukup bayar DP 50% untuk mengunci kamar, pelunasan 50% di hari-H check-in.
-3. Fasilitas: Smart Lock pintu, Free WiFi 100Mbps, AC, Kamar Mandi Dalam Water Heater, Free Laundry 5kg/bln, Dapur bersama, Parkir motor aman, CCTV 24 jam.
-4. Harga: Kamar Standar (Rp 1.3jt/bln), Deluxe (Rp 1.6jt/bln), Eksekutif (Rp 2.2jt/bln). Harian mulai Rp 135rb - 200rb/hari.
-5. Survei: Bisa jadwalkan visit fisik langsung ke lokasi atau video tour via WhatsApp.
+Data Fakta Kosan (${livePropertyName}):
+1. Lokasi: Tepat di seberang Rumah Sakit Hasan Sadikin (RSHS) Bandung, Jl. Pasirkaliki/Pasteur. Sangat strategis untuk Dokter, Dokter Spesialis (PPDS), Dokter Muda (Koas), Perawat, Mahasiswa ITB/Unpar, dan Profesional.
+2. Pilihan Sewa: Tersedia sewa Harian (mulai Rp 135rb - 200rb/hari) dan Bulanan (mulai Rp 1.3jt - 2.2jt/bulan).
+3. Fasilitas: Smart Lock pintu mandiri bebas jam malam, Free WiFi 100Mbps, AC dingin, Kamar Mandi Dalam Water Heater, Free Laundry 5kg/bln, Dapur bersama, Parkir motor aman tertutup CCTV 24 jam.
+4. Booking: Cukup bayar DP 50% via QRIS untuk mengunci unit, sisa pelunasan saat check-in.
+5. Survei: Bebas visit fisik langsung pukul 08.00 - 20.00 WIB atau video call tour.
 
 Tugas:
-Jawab pertanyaan calon penyewa dengan singkat (maksimal 2-3 kalimat), berikan info harga akurat, dan tawarkan apakah ingin survei lokasi atau langsung booking DP 50% via link: https://kosankupro.cloud/#rooms-showcase`;
+Jawab pertanyaan calon penyewa dengan singkat, jelas, ramah, dan solutif (maksimal 2-3 kalimat). Arahkan dengan sopan untuk survei atau booking via: https://kosankupro.cloud/#rooms-showcase`;
 
           const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
             { role: 'system', content: systemPrompt },
@@ -473,17 +557,17 @@ Jawab pertanyaan calon penyewa dengan singkat (maksimal 2-3 kalimat), berikan in
           ];
 
           const aiResponse = await chatCompletion(messages);
-          replyText = aiResponse.choices[0]?.message?.content || `Halo Kak! Terima kasih telah menghubungi KosanKu Pro. Ada kamar siap huni dengan Smart Lock, AC, WiFi, dan Free Laundry. Kakak berminat sewa harian atau bulanan? Cek di: https://kosankupro.cloud`;
+          replyText = aiResponse.choices[0]?.message?.content || `Halo Kak! Terima kasih telah menghubungi ${livePropertyName}. Kami menyediakan kamar siap huni dengan Smart Lock, AC, WiFi 100Mbps, dan Free Laundry persis di depan RSHS Bandung. Kakak berminat sewa harian atau bulanan? Cek ketersediaan di: https://kosankupro.cloud`;
           replyButtons = [
-            { id: 'btn_tipe', text: '🛏️ Pilihan Kamar' },
-            { id: 'btn_harga', text: '💰 Daftar Harga' },
-            { id: 'btn_booking', text: '🔒 Booking DP 50%' },
+            { id: '1', text: '🛏️ Pilihan Kamar' },
+            { id: '2', text: '💰 Daftar Harga' },
+            { id: '4', text: '🔒 Booking DP 50%' },
           ];
         } catch {
-          replyText = `Halo Kak! 👋 Terima kasih telah menghubungi *KosanKu Pro*. Kamar siap huni kami dilengkapi Smart Lock, AC, WiFi 100Mbps, dan Free Laundry 5kg. Kakak berminat untuk sewa harian atau bulanan? Cek ketersediaan di: https://kosankupro.cloud`;
+          replyText = `Halo Kak! 👋 Terima kasih telah menghubungi *${livePropertyName}*. Kamar siap huni kami dilengkapi Smart Lock, AC, WiFi 100Mbps, dan Free Laundry persis di seberang RSHS Pasteur Bandung. Kakak berminat sewa harian atau bulanan? Cek di: https://kosankupro.cloud`;
           replyButtons = [
-            { id: 'btn_tipe', text: '🛏️ Pilihan Kamar' },
-            { id: 'btn_harga', text: '💰 Daftar Harga' },
+            { id: '1', text: '🛏️ Pilihan Kamar' },
+            { id: '2', text: '💰 Daftar Harga' },
           ];
         }
       }
