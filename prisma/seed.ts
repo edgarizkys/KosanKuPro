@@ -80,13 +80,17 @@ async function main() {
   // Create property
   const property = await prisma.property.upsert({
     where: { id: 'prop-001' },
-    update: {},
+    update: {
+      name: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
+      address: 'Jl. Pasirkaliki / Pasteur No. 42 (Tepat di seberang RSHS Bandung)',
+      city: 'Bandung',
+    },
     create: {
       id: 'prop-001',
-      name: 'KosanKu Premium Residence',
-      address: 'Jl. Merdeka No. 123, Kel. Sukajadi',
+      name: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
+      address: 'Jl. Pasirkaliki / Pasteur No. 42 (Tepat di seberang RSHS Bandung)',
       city: 'Bandung',
-      mapsUrl: 'https://maps.google.com/?q=-6.917464,107.619123',
+      mapsUrl: 'https://maps.google.com/?q=-6.8988,107.5976',
       photos: [],
       totalRooms: 12,
     },

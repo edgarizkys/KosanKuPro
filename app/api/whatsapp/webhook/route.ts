@@ -346,18 +346,20 @@ export async function POST(req: NextRequest) {
           { id: 'btn_tenant_menu', text: '🏠 Menu Utama' },
         ];
       } else if (msgLower.includes('komplain') || msgLower.includes('rusak') || msgLower.includes('bocor') || msgLower.includes('mati') || msgLower.includes('btn_komplain')) {
+        const ticketId = `CMP-${Date.now().toString().slice(-4)}`;
         try {
           await prisma.complaint.create({
             data: {
+              id: ticketId,
               title: msg.length > 50 ? msg.slice(0, 50) + '...' : msg,
-              description: msg,
+              description: `Laporan WhatsApp dari ${userName} (${userRoom || 'EKS-01'}): ${msg}`,
               category: msgLower.includes('bocor') || msgLower.includes('air') ? 'Plumbing' : msgLower.includes('mati') || msgLower.includes('listrik') ? 'Electrical' : 'Lain-lain',
               status: 'OPEN',
             },
           });
         } catch {}
 
-        replyText = `🛠️ *Tiket Laporan Kendala Diterima*\nPenghuni: *${userName}* (Kamar ${userRoom || 'A-101'})\nLaporan: _"${msg}"_\n\nTiket telah tersimpan di Database Staf & Teknisi untuk penanganan segera.`;
+        replyText = `🛠️ *Tiket Laporan Kendala #${ticketId} Diterima!*\nPenghuni: *${userName}* (Kamar ${userRoom || 'EKS-01'})\nLaporan: _"${msg}"_\n\nTiket telah tersimpan di Database PostgreSQL KosanKu Pro dan langsung tampil di Web Dashboard Staf & Teknisi untuk penanganan segera.`;
         replyButtons = [
           { id: 'btn_tenant_menu', text: '🏠 Menu Utama' },
         ];
