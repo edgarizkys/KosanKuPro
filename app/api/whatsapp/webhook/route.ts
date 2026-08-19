@@ -490,124 +490,148 @@ export async function POST(req: NextRequest) {
         rooms: [],
       };
 
-      // 1. WELCOME MENU: OFFICIAL KOSANKU PRO HUB
+      // ────────────────────────────────────────────────────────────────────
+      // 1. WELCOME MENU: OFFICIAL KOSANKU PRO HUB (DYNAMIC FROM DB PROPERTIES)
+      // ────────────────────────────────────────────────────────────────────
       if (isGreetingOrMenu) {
-        replyText = `🏨 *Selamat Datang di KosanKu Pro Platform Resmi!* 👋\nLayanan Konsultan Kos & Resepsionis Digital 24/7.\n\nSilakan pilih cabang kosan yang ingin Kakak tuju:\n\n1️⃣ *Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS)*\n👉 Ketik: *1* atau *RSHS*\n\n2️⃣ *KosanKu Smart Living (Dekat Kampus ITB & Unpar Dago)*\n👉 Ketik: *2* atau *ITB*\n\n3️⃣ *KosanKu Pro Residence (Area Suci / Dipatiukur)*\n👉 Ketik: *3* atau *Suci*\n\n👉 *Lihat Seluruh Showcase Kamar di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa langsung tanya bebas apa saja di sini!_`;
+        let branchList = dbProperties
+          .map((p, idx) => {
+            const shortKeyword = p.name.includes('RSHS')
+              ? 'RSHS'
+              : p.name.includes('ITB')
+              ? 'ITB'
+              : p.name.includes('Suci')
+              ? 'Suci'
+              : p.name.split(' ')[0];
+            return `${idx + 1}️⃣ *${p.name}*\n👉 Ketik: *${idx + 1}* atau *${shortKeyword}*`;
+          })
+          .join('\n\n');
+
+        if (!branchList) {
+          branchList = `1️⃣ *Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS)*\n👉 Ketik: *1* atau *RSHS*`;
+        }
+
+        replyText = `🏨 *Selamat Datang di KosanKu Pro Platform Resmi!* 👋\nLayanan Konsultan Kos & Resepsionis Digital 24/7.\n\nSilakan pilih cabang properti yang ingin Kakak tuju:\n\n${branchList}\n\n👉 *Lihat Seluruh Showcase Kamar di Web:*\n🌐 https://kosankupro.cloud/#rooms-showcase\n\n💬 _Kakak juga bisa langsung tanya bebas apa saja di sini!_`;
         replyButtons = [
-          { id: '1', text: '🏥 1. Cabang RSHS' },
-          { id: '2', text: '🎓 2. Cabang ITB' },
-          { id: '3', text: '🏙️ 3. Cabang Suci' },
+          { id: '1', text: '🏥 Cabang RSHS' },
+          { id: '2', text: '🎓 Cabang ITB' },
+          { id: '3', text: '🏙️ Cabang Suci' },
         ];
         buttonTitle = '🏢 Pilih Cabang KosanKu';
       }
 
-      // 2. BRANCH: JURAGAN KOST PASTEUR (DEPAN RSHS BANDUNG)
-      else if (msgLower === '1' || msgLower.includes('rshs') || msgLower.includes('pasteur') || msgLower.includes('hasan sadikin') || msgLower.includes('dokter') || msgLower.includes('koas') || msgLower.includes('nyaman')) {
-        let rshsRooms = '';
-        try {
-          const rooms = await prisma.room.findMany({
-            orderBy: { price: 'asc' },
-          });
-          if (rooms && rooms.length > 0) {
-            const types = Array.from(new Set(rooms.map((r) => r.type)));
-            rshsRooms = types
-              .map((type, idx) => {
-                const sample = rooms.find((r) => r.type === type);
-                const facs = sample?.facilities && sample.facilities.length > 0 ? sample.facilities.join(', ') : 'Kamar Mandi Dalam, Kasur Comfort, Free Laundry 5kg, WiFi';
-                return `${idx + 1}. *${type} (${formatIDR(sample?.price || 1000000)}/bln)*\n• Fasilitas: ${facs}`;
-              })
-              .join('\n\n');
-          }
-        } catch {}
+      // ────────────────────────────────────────────────────────────────────
+      // 2. DYNAMIC PROPERTY SELECTOR & ROOM LISTING (MATCHES NUM OR KEYWORDS)
+      // ────────────────────────────────────────────────────────────────────
+      else {
+        let selectedProp: any = null;
+        const numChoice = parseInt(msgLower);
 
-        if (!rshsRooms) {
-          rshsRooms = `1. *Nyaman 1 (Rp 1.000.000/bln)*\n• Fasilitas: Kipas Angin, Kasur Single Comfort, Free Laundry 5kg/bln, Dapur Bersama, WiFi\n\n2. *Nyaman 2 (Rp 1.400.000/bln)*\n• Fasilitas: Kasur Comfort, Lemari & Meja Kerja, KM Dalam, Shower & Closet Duduk, Free Laundry 5kg\n\n3. *Nyaman 3 (Rp 1.300.000/bln)*\n• Fasilitas: Kasur Single Comfort, Meja Belajar, KM Dalam, Water Heater (Air Hangat), Free Laundry 5kg\n\n4. *Nyaman 4 (Rp 1.400.000/bln)*\n• Fasilitas: Kasur Nyaman Max 2 Org, KM Dalam, Dapur Bersama, Ruang Terbuka, Free Laundry 5kg\n\n5. *Super Nyaman (Rp 1.700.000/bln)*\n• Fasilitas: Queen Comfort Bed, KM Dalam, Water Heater (Air Hangat), Meja Kerja, Free Laundry 5kg\n\n6. *Eksekutif (Rp 1.500.000/bln)*\n• Fasilitas: Kasur Comfort Max 2 Org, Kipas Angin, KM Dalam, Mini Gym & CCTV, Free Laundry 5kg/bln\n\n7. *Paviliun Tipe B (Rp 2.600.000/bln)*\n• Fasilitas: 1 Kasur 160x200 + 2 Kasur Single, KM Dalam, Kompor Gas + Tabung Gas, Free Laundry 10kg\n\n8. *Paviliun Eksekutif (Rp 2.800.000/bln)*\n• Fasilitas: King Bed Comfort + Ruang Tamu, KM Dalam Luas, Dapur Privat, Free Laundry 10kg/bln, Akses Privat`;
+        if (!isNaN(numChoice) && numChoice >= 1 && numChoice <= dbProperties.length) {
+          selectedProp = dbProperties[numChoice - 1];
+        } else {
+          selectedProp = dbProperties.find((p) => {
+            const pName = p.name.toLowerCase();
+            return (
+              msgLower.includes(pName) ||
+              (pName.includes('rshs') && (msgLower.includes('rshs') || msgLower.includes('pasteur') || msgLower.includes('hasan sadikin') || msgLower.includes('dokter') || msgLower.includes('koas') || msgLower.includes('nyaman'))) ||
+              (pName.includes('itb') && (msgLower.includes('itb') || msgLower.includes('dago') || msgLower.includes('unpar'))) ||
+              (pName.includes('suci') && (msgLower.includes('suci') || msgLower.includes('dipatiukur') || msgLower.includes('widyatama')))
+            );
+          });
         }
 
-        replyText = `🏥 *${activeProp.name.toUpperCase()}*\n📍 ${activeProp.address}\n\n🛏️ *Pilihan Tipe Kamar Tersedia (Live Database):*\n\n${rshsRooms}\n\n✨ *Promo Spesial Dokter, Koas, PPDS & Nakes:* Diskon Sewa 3 Bulan (5%) & Bebas Jam Malam.\n\nKetik:\n• *Harga RSHS* ➔ Rincian harga sewa harian & bulanan\n• *Maps RSHS* ➔ Peta lokasi Google Maps\n• *Survei RSHS* ➔ Janji temu survei kamar\n• *Booking RSHS* ➔ Kunci kamar DP 50%`;
-        replyButtons = [
-          { id: 'maps_rshs', text: '📍 Peta Maps RSHS' },
-          { id: 'harga_rshs', text: '💰 Promo Dokter/Koas' },
-          { id: 'booking_rshs', text: '🔒 Kunci Kamar DP' },
-        ];
-      }
+        if (selectedProp) {
+          let roomListText = '';
+          try {
+            const rooms = await prisma.room.findMany({
+              where: { propertyId: selectedProp.id },
+              orderBy: { price: 'asc' },
+            });
 
-      // 3. BRANCH: KOSANKU SMART LIVING (ITB & UNPAR DAGO)
-      else if (msgLower === '2' || msgLower.includes('itb') || msgLower.includes('dago') || msgLower.includes('unpar')) {
-        replyText = `🎓 *KOSANKU SMART LIVING (DEKAT ITB & UNPAR DAGO)*\n📍 Jl. Dago Asri No. 18 (5 Menit dari Kampus ITB Ganesha & Unpar)\n\n🛏️ *Pilihan Tipe Kamar:*\n1. *Cozy Study Room (Rp 1.400.000/bln)* — AC, High-Speed WiFi 100Mbps, Meja Belajar Luas, KM Dalam.\n2. *Executive Balcony Dago (Rp 2.000.000/bln)* — Smart TV, Balkon Sejuk, Smart Lock.\n\n✨ *Promo Mahasiswa:* Free Laundry 5kg/bulan & Free Air Minum Galon.`;
-        replyButtons = [
-          { id: '1', text: '🏥 Cek Cabang RSHS' },
-          { id: 'menu', text: '🏨 Menu Utama' },
-        ];
-      }
+            if (rooms && rooms.length > 0) {
+              const types = Array.from(new Set(rooms.map((r) => r.type)));
+              roomListText = types
+                .map((type, idx) => {
+                  const sample = rooms.find((r) => r.type === type);
+                  const facs = sample?.facilities && sample.facilities.length > 0 ? sample.facilities.join(', ') : 'AC, Free WiFi 100Mbps, Smart Lock, KM Dalam';
+                  return `${idx + 1}. *${type} (${formatIDR(sample?.price || 1000000)}/bln)*\n• Fasilitas: ${facs}`;
+                })
+                .join('\n\n');
+            }
+          } catch {}
 
-      // 4. BRANCH: KOSANKU PRO RESIDENCE (SUCI / DIPATIUKUR)
-      else if (msgLower === '3' || msgLower.includes('suci') || msgLower.includes('dipatiukur') || msgLower.includes('widyatama')) {
-        replyText = `🏙️ *KOSANKU PRO RESIDENCE (SUCI / DIPATIUKUR)*\n📍 Jl. Surapati / Suci No. 88 (Dekat ITENAS, Widyatama & Unpad DU)\n\n🛏️ *Pilihan Tipe Kamar:*\n1. *Standard Modern (Rp 1.250.000/bln)* — AC, WiFi, Springbed, Lemari.\n2. *Deluxe Suite (Rp 1.650.000/bln)* — KM Dalam Water Heater, TV LED, Smart Lock.`;
-        replyButtons = [
-          { id: '1', text: '🏥 Cek Cabang RSHS' },
-          { id: 'menu', text: '🏨 Menu Utama' },
-        ];
-      }
+          if (!roomListText) {
+            roomListText = `1. *Nyaman 1 (Rp 1.000.000/bln)* — Kasur Comfort, Free Laundry 5kg, WiFi\n2. *Nyaman 2 (Rp 1.400.000/bln)* — KM Dalam, Closet Duduk, Meja Kerja\n3. *Eksekutif Dokter/Koas (Rp 1.500.000/bln)* — KM Dalam, Mini Gym, Free Laundry 5kg\n4. *Paviliun Tipe B (Rp 2.600.000/bln)* — Kompor Gas, Free Laundry 10kg`;
+          }
 
-      // 5. SUB-MENU: HARGA & PROMO
-      else if (msgLower.includes('harga') || msgLower.includes('promo') || msgLower.includes('tarif')) {
-        replyText = `💰 *DAFTAR HARGA & PROMO SEWA KOSANKU PRO:*\n\n• Sewa Harian: *Mulai Rp 135.000 - Rp 220.000 / malam*\n• Sewa Bulanan: *Mulai Rp 1.250.000 - Rp 2.200.000 / bulan*\n\n🎁 *PROMO BULAN INI:*\n• Diskon 5% untuk sewa 3 bulan di muka\n• Diskon 1 Bulan Sewa Gratis untuk sewa tahunan\n• Promo Spesial Dokter/PPDS/Koas di Cabang RSHS\n\n✨ *Semua kamar include AC, Free WiFi 100Mbps, Listrik & Smart Lock.*`;
-        replyButtons = [
-          { id: '1', text: '🏥 Listing RSHS' },
-          { id: 'menu', text: '🏨 Menu Utama' },
-        ];
-      }
-
-      // 6. SUB-MENU: MAPS & LOKASI
-      else if (msgLower.includes('maps') || msgLower.includes('lokasi') || msgLower.includes('alamat')) {
-        replyText = `📍 *PETA LOKASI JARINGAN KOSANKU PRO:*\n\n🏥 *Cabang Pasteur (Depan RSHS):*\nJl. Pasirkaliki / Pasteur No. 42 (2 Menit Jalan Kaki dari RSHS Bandung)\n🗺️ Google Maps: https://maps.google.com/?q=Juragan+Kost+Pasteur+RSHS+Bandung\n\n🎓 *Cabang Dago (Dekat ITB):*\nJl. Dago Asri No. 18 Bandung\n🗺️ Google Maps: https://maps.google.com/?q=KosanKu+Smart+Living+Dago`;
-        replyButtons = [
-          { id: '1', text: '🏥 Listing RSHS' },
-          { id: 'menu', text: '🏨 Menu Utama' },
-        ];
-      }
-
-      // 7. SUB-MENU: SURVEI & BOOKING
-      else if (msgLower.includes('survei') || msgLower.includes('kunjung') || msgLower.includes('booking') || msgLower.includes('dp')) {
-        replyText = `🔒 *BOOKING & JANJI TEMU SURVEI:*\n\n1. *Kunci Kamar Langsung (DP 50% via QRIS):*\n👉 https://kosankupro.cloud/#rooms-showcase\n\n2. *Jadwal Survei Onsite (08.00 - 20.00 WIB):*\nSilakan kirim balasan chat dengan format:\n*Nama:* [Nama Anda]\n*Cabang:* [RSHS / ITB / Suci]\n*Hari & Jam Rencana Datang:*`;
-        replyButtons = [
-          { id: '1', text: '🏥 Listing RSHS' },
-          { id: 'menu', text: '🏨 Menu Utama' },
-        ];
-      }
-
-      // 8. AI CONCIERGE ASSISTANT 24/7 (Natural Language Q&A)
-      else {
-        try {
-          const systemPrompt = `Kamu adalah Resepsionis & Asisten Cerdas Resmi dari Platform "KosanKu Pro Residence".
-KosanKu Pro memiliki 3 jaringan cabang properti unggulan di Bandung:
-1. "Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS)" — Sangat strategis 2 menit jalan kaki dari RSHS Bandung, favorit Dokter Spesialis (PPDS), Dokter Muda (Koas), Perawat, dan Profesional Medis.
-2. "KosanKu Smart Living ITB Dago" — Dekat kampus ITB dan Unpar.
-3. "KosanKu Pro Residence Suci" — Dekat ITENAS, Widyatama, dan Dipatiukur.
-
-Fasilitas Utama: Smart Lock bebas jam malam, Free WiFi 100Mbps, AC dingin, KM Dalam Water Heater, Free Laundry, dan booking DP 50% via QRIS di: https://kosankupro.cloud/#rooms-showcase.
-
-Tugas: Jawab pertanyaan calon penyewa dengan ramah, hangat, sopan, singkat (2-3 kalimat), dan bantu berikan info cabang yang mereka cari.`;
-
-          const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: msg },
-          ];
-
-          const aiResponse = await chatCompletion(messages);
-          replyText = aiResponse.choices[0]?.message?.content || `Halo Kak! Terima kasih telah menghubungi Platform Resmi KosanKu Pro. Kami memiliki cabang unggulan di Depan RSHS Pasteur, Dago ITB, dan Suci. Kakak tertarik mencari kosan di area mana? Cek ketersediaan di: https://kosankupro.cloud`;
+          replyText = `🏨 *${selectedProp.name.toUpperCase()}*\n📍 ${selectedProp.address}\n\n🛏️ *Pilihan Tipe Kamar Tersedia (Live Database):*\n\n${roomListText}\n\n✨ *Fasilitas Bersama:* Free WiFi 100Mbps, Free Laundry, Dapur & Kulkas Bersama, CCTV 24 Jam.\n\nKetik:\n• *Harga* ➔ Daftar harga sewa harian & bulanan\n• *Maps* ➔ Peta Google Maps lokasi\n• *Survei* ➔ Buat jadwal janji temu survei\n• *Booking* ➔ Kunci kamar DP 50% via QRIS\n• *Menu* ➔ Kembali ke daftar cabang`;
           replyButtons = [
-            { id: '1', text: '🏥 Cabang RSHS' },
-            { id: '2', text: '🎓 Cabang ITB' },
-            { id: '3', text: '🏙️ Cabang Suci' },
+            { id: 'maps', text: '📍 Peta Lokasi' },
+            { id: 'booking', text: '🔒 Booking DP' },
+            { id: 'menu', text: '🏨 Menu Utama' },
           ];
-        } catch {
-          replyText = `Halo Kak! 👋 Selamat datang di *KosanKu Pro Platform*. Kami memiliki unit kosan siap huni dengan Smart Lock, AC, WiFi 100Mbps di: (1) Depan RSHS Pasteur, (2) Dago dekat ITB, dan (3) Suci. Ketik *1* untuk info cabang RSHS atau ketik *Menu* untuk pilihan lengkap!`;
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        // 3. SUB-MENUS: HARGA, MAPS, SURVEI, BOOKING
+        // ────────────────────────────────────────────────────────────────────
+        else if (msgLower.includes('harga') || msgLower.includes('promo') || msgLower.includes('tarif')) {
+          replyText = `💰 *DAFTAR HARGA & PROMO SEWA KOSANKU PRO:*\n\n• Sewa Harian: *Mulai Rp 100.000 - Rp 250.000 / malam*\n• Sewa Bulanan: *Mulai Rp 1.000.000 - Rp 2.800.000 / bulan*\n\n🎁 *PROMO BULAN INI:*\n• Diskon 5% untuk sewa 3 bulan di muka\n• Diskon 1 Bulan Sewa Gratis untuk sewa tahunan\n• Promo Spesial Dokter/PPDS/Koas di Cabang RSHS\n\n✨ *Include Listrik/Token Awal, WiFi 100Mbps & Free Laundry.*`;
           replyButtons = [
-            { id: '1', text: '🏥 Cabang RSHS' },
-            { id: '2', text: '🎓 Cabang ITB' },
+            { id: '1', text: '🏥 Listing RSHS' },
+            { id: 'menu', text: '🏨 Menu Utama' },
           ];
+        } else if (msgLower.includes('maps') || msgLower.includes('lokasi') || msgLower.includes('alamat')) {
+          replyText = `📍 *PETA LOKASI JARINGAN KOSANKU PRO:*\n\n🏥 *Cabang Pasteur (Depan RSHS):*\nJl. Pasirkaliki / Pasteur No. 42 (2 Menit Jalan Kaki dari RSHS Bandung)\n🗺️ Maps: https://maps.google.com/?q=Juragan+Kost+Pasteur+RSHS+Bandung\n\n🎓 *Cabang Dago (Dekat ITB):*\nJl. Dago Asri No. 18 Bandung\n🗺️ Maps: https://maps.google.com/?q=KosanKu+Smart+Living+Dago`;
+          replyButtons = [
+            { id: '1', text: '🏥 Listing RSHS' },
+            { id: 'menu', text: '🏨 Menu Utama' },
+          ];
+        } else if (msgLower.includes('survei') || msgLower.includes('kunjung') || msgLower.includes('booking') || msgLower.includes('dp')) {
+          replyText = `🔒 *BOOKING & JANJI TEMU SURVEI:*\n\n1. *Kunci Kamar Langsung (DP 50% via QRIS):*\n👉 https://kosankupro.cloud/#rooms-showcase\n\n2. *Jadwal Survei Onsite (08.00 - 20.00 WIB):*\nSilakan kirim balasan chat dengan format:\n*Nama:* [Nama Anda]\n*Cabang:* [RSHS / ITB / Suci]\n*Hari & Jam Rencana Datang:*`;
+          replyButtons = [
+            { id: '1', text: '🏥 Listing RSHS' },
+            { id: 'menu', text: '🏨 Menu Utama' },
+          ];
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        // 4. AI CONCIERGE ASSISTANT 24/7
+        // ────────────────────────────────────────────────────────────────────
+        else {
+          try {
+            const systemPrompt = `Kamu adalah Resepsionis & Asisten Cerdas Resmi dari Platform "KosanKu Pro Residence".
+KosanKu Pro mengelola jaringan kosan di Bandung:
+1. Juragan Kost Pasteur (Depan RS Hasan Sadikin / RSHS) — 2 menit jalan kaki dari RSHS Bandung, favorit Dokter Spesialis (PPDS), Dokter Muda (Koas), Perawat, dan Profesional Medis.
+2. KosanKu Smart Living ITB Dago — Dekat ITB dan Unpar.
+3. KosanKu Pro Residence Suci — Dekat ITENAS dan Widyatama.
+
+Fasilitas: Smart Lock, Free WiFi 100Mbps, Free Laundry 5kg, Dapur Bersama, booking DP 50% via QRIS di: https://kosankupro.cloud/#rooms-showcase.
+
+Tugas: Jawab pertanyaan calon penyewa dengan ramah, hangat, sopan, singkat (2-3 kalimat).`;
+
+            const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: msg },
+            ];
+
+            const aiResponse = await chatCompletion(messages);
+            replyText =
+              aiResponse.choices[0]?.message?.content ||
+              `Halo Kak! Terima kasih telah menghubungi Platform Resmi KosanKu Pro. Kami memiliki cabang di Depan RSHS Pasteur, Dago ITB, dan Suci. Ketik *1* untuk info cabang RSHS atau ketik *Menu* untuk pilihan lengkap!`;
+            replyButtons = [
+              { id: '1', text: '🏥 Cabang RSHS' },
+              { id: '2', text: '🎓 Cabang ITB' },
+              { id: '3', text: '🏙️ Cabang Suci' },
+            ];
+          } catch {
+            replyText = `Halo Kak! 👋 Selamat datang di *KosanKu Pro Platform*. Kami memiliki unit kosan siap huni di: (1) Depan RSHS Pasteur, (2) Dago ITB, dan (3) Suci. Ketik *1* untuk info cabang RSHS atau ketik *Menu* untuk pilihan lengkap!`;
+            replyButtons = [
+              { id: '1', text: '🏥 Cabang RSHS' },
+              { id: '2', text: '🎓 Cabang ITB' },
+            ];
+          }
         }
       }
     }

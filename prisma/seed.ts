@@ -174,17 +174,17 @@ async function main() {
   ];
 
   for (const faq of faqs) {
-    await prisma.faqEntry.create({ data: { ...faq, propertyId: property.id } });
+    await prisma.faqEntry.create({ data: { ...faq, propertyId: propRshs.id } });
   }
   console.log(`✅ FAQ: ${faqs.length} entries`);
 
   // Create sample expenses
   const expenses = [
-    { category: 'listrik', amount: 4200000, description: 'Token PLN Juli 2026' },
-    { category: 'air', amount: 850000, description: 'PDAM Juli 2026' },
-    { category: 'internet', amount: 1200000, description: 'IndiHome 100Mbps Juli' },
-    { category: 'perbaikan', amount: 350000, description: 'Ganti kran kamar B-202' },
-    { category: 'lain_lain', amount: 500000, description: 'Kebersihan & sampah Juli' },
+    { category: 'listrik', amount: 4200000, description: 'Token PLN Juli 2026', propertyId: propRshs.id },
+    { category: 'air', amount: 850000, description: 'PDAM Juli 2026', propertyId: propRshs.id },
+    { category: 'internet', amount: 1200000, description: 'IndiHome 100Mbps Juli', propertyId: propRshs.id },
+    { category: 'perbaikan', amount: 350000, description: 'Ganti kran kamar NYM-02', propertyId: propRshs.id },
+    { category: 'lain_lain', amount: 500000, description: 'Kebersihan & sampah Juli', propertyId: propRshs.id },
   ];
 
   for (const exp of expenses) {
@@ -193,9 +193,9 @@ async function main() {
   console.log(`✅ Expenses: ${expenses.length} entries`);
 
   // Create sample invoices
-  const roomA101 = rooms.find((r) => r.number === 'A-101')!;
-  const roomB201 = rooms.find((r) => r.number === 'B-201')!;
-  const roomC302 = rooms.find((r) => r.number === 'C-302')!;
+  const roomEks01 = rooms.find((r) => r.number === 'EKS-01') || rooms[0];
+  const roomNym01 = rooms.find((r) => r.number === 'NYM-01') || rooms[1];
+  const roomNym03 = rooms.find((r) => r.number === 'NYM-03') || rooms[2];
 
   await prisma.invoice.upsert({
     where: { invoiceNumber: 'INV-20260701-0001' },
@@ -203,10 +203,10 @@ async function main() {
     create: {
       invoiceNumber: 'INV-20260701-0001',
       userId: tenants[0].id,
-      roomId: roomA101.id,
+      roomId: roomEks01.id,
       amount: 1500000,
       penaltyAmount: 0,
-      totalAmount: 1604500,
+      totalAmount: 1500000,
       dueDate: new Date('2026-07-28'),
       paymentStatus: 'PENDING',
     },
@@ -217,10 +217,10 @@ async function main() {
     create: {
       invoiceNumber: 'INV-20260601-0001',
       userId: tenants[0].id,
-      roomId: roomB201.id,
-      amount: 2000000,
+      roomId: roomNym01.id,
+      amount: 1000000,
       penaltyAmount: 0,
-      totalAmount: 2000000,
+      totalAmount: 1000000,
       dueDate: new Date('2026-06-28'),
       paymentStatus: 'SETTLED',
       settledAt: new Date('2026-06-25'),
@@ -232,10 +232,10 @@ async function main() {
     create: {
       invoiceNumber: 'INV-20260602-0001',
       userId: tenants[0].id,
-      roomId: roomC302.id,
-      amount: 1200000,
+      roomId: roomNym03.id,
+      amount: 1300000,
       penaltyAmount: 0,
-      totalAmount: 1200000,
+      totalAmount: 1300000,
       dueDate: new Date('2026-06-28'),
       paymentStatus: 'SETTLED',
       settledAt: new Date('2026-06-27'),
