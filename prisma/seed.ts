@@ -97,24 +97,23 @@ async function main() {
   });
   console.log(`✅ Property: ${property.name}`);
 
-  // Create rooms
+  // Create rooms from Real RSHS Data
   const roomData = [
-    { number: 'A-101', type: 'Deluxe Studio Smart (Depan RSHS)', price: 1500000, floor: 1, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80' },
-    { number: 'A-102', type: 'Deluxe Studio Smart (Depan RSHS)', price: 1500000, floor: 1, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80' },
-    { number: 'A-103', type: 'Deluxe Garden View (Depan RSHS)', price: 1600000, floor: 1, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80' },
-    { number: 'B-201', type: 'VIP Balcony Resort (Depan RSHS)', price: 2000000, floor: 2, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Balkon', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80' },
-    { number: 'B-202', type: 'VIP Balcony Resort (Depan RSHS)', price: 2000000, floor: 2, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Balkon', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80' },
-    { number: 'B-203', type: 'VIP Executive Suite (Khusus Dokter & PPDS)', price: 2200000, floor: 2, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Balkon', 'Kulkas Mini', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80' },
-    { number: 'C-301', type: 'Standard Smart Suite (Depan RSHS)', price: 1300000, floor: 3, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80' },
-    { number: 'C-302', type: 'Standard Smart Suite (Depan RSHS)', price: 1300000, floor: 3, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?auto=format&fit=crop&w=800&q=80' },
-    { number: 'C-303', type: 'Standard Smart Suite (Depan RSHS)', price: 1300000, floor: 3, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1556909212-d5b604d0c90d?auto=format&fit=crop&w=800&q=80' },
+    { number: 'NYM-01', type: 'Nyaman 1', price: 1000000, floor: 1, facilities: ['Kipas Angin', 'Kasur Single Comfort', 'Free Laundry 5kg/bln', 'Dapur Bersama', 'WiFi', 'CCTV 24 Jam'], imageUrl: '/images/rshs/Nyaman/1.png' },
+    { number: 'NYM-02', type: 'Nyaman 2', price: 1400000, floor: 2, facilities: ['Kasur Comfort', 'Lemari & Meja Kerja', 'Kamar Mandi Dalam', 'Shower & Closet Duduk', 'Free Laundry 5kg', 'WiFi'], imageUrl: '/images/rshs/Nyaman%202/1.png' },
+    { number: 'NYM-03', type: 'Nyaman 3', price: 1300000, floor: 2, facilities: ['Kasur Single Comfort', 'Meja Belajar', 'Kamar Mandi Dalam', 'Water Heater (Air Hangat)', 'Free Laundry 5kg', 'WiFi'], imageUrl: '/images/rshs/Nyaman%203/1.png' },
+    { number: 'NYM-04', type: 'Nyaman 4', price: 1400000, floor: 3, facilities: ['Kasur Nyaman Max 2 Org', 'Kamar Mandi Dalam', 'Dapur Bersama', 'Ruang Terbuka Bersama', 'Free Laundry 5kg', 'Free Trial Oxy Gym'], imageUrl: '/images/rshs/Nyaman%204/1.png' },
+    { number: 'SN-01', type: 'Super Nyaman', price: 1700000, floor: 2, facilities: ['Queen Comfort Bed', 'Kamar Mandi Dalam', 'Water Heater (Air Hangat)', 'Meja Kerja', 'Free Laundry 5kg', 'WiFi Kencang'], imageUrl: '/images/rshs/Super%20Nyaman/1.png' },
+    { number: 'EKS-01', type: 'Eksekutif (Dokter/Koas RSHS)', price: 1500000, floor: 1, facilities: ['Kasur Comfort Max 2 Org', 'Kipas Angin', 'Kamar Mandi Dalam', 'Mini Gym & CCTV', 'Free Laundry 5kg/bln', 'Dapur Bersama'], imageUrl: '/images/rshs/Eksekutif/1.png' },
+    { number: 'PV-01', type: 'Paviliun Eksekutif', price: 2800000, floor: 1, facilities: ['King Bed Comfort + Ruang Tamu', 'Kamar Mandi Dalam Luas', 'Dapur Privat', 'Free Laundry 10kg/bln', 'Akses Privat', 'WiFi & CCTV'], imageUrl: '/images/rshs/Paviliun%20Eksekutif/1.png' },
+    { number: 'PV-02', type: 'Paviliun Tipe B', price: 2600000, floor: 1, facilities: ['1 Kasur 160x200 + 2 Kasur Single', 'Kamar Mandi Dalam', 'Kompor Gas & Tabung Gas', 'Free Laundry 10kg', 'Listrik Termasuk'], imageUrl: '/images/rshs/Paviliun%20Tipe%20B/1.jpg' },
   ];
 
   const rooms = [];
   for (const rd of roomData) {
     const room = await prisma.room.upsert({
       where: { number: rd.number },
-      update: { imageUrl: rd.imageUrl, facilities: rd.facilities },
+      update: { type: rd.type, price: rd.price, imageUrl: rd.imageUrl, facilities: rd.facilities },
       create: { ...rd, propertyId: property.id },
     });
     rooms.push(room);
@@ -122,10 +121,9 @@ async function main() {
   console.log(`✅ Rooms: ${rooms.length} created`);
 
   // Assign tenants to rooms
-  await prisma.room.update({ where: { number: 'A-101' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
-  await prisma.room.update({ where: { number: 'B-201' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
-  await prisma.room.update({ where: { number: 'C-302' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
-  await prisma.room.update({ where: { number: 'B-202' }, data: { status: 'MAINTENANCE' } });
+  await prisma.room.update({ where: { number: 'EKS-01' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
+  await prisma.room.update({ where: { number: 'NYM-01' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
+  await prisma.room.update({ where: { number: 'NYM-03' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
   console.log('✅ Room assignments done');
 
   // Create FAQ entries
