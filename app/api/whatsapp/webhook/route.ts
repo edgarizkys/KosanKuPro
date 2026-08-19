@@ -67,6 +67,16 @@ export async function GET() {
  * 2. Tenant -> Bill QRIS, Report Maintenance, Order Laundry/Galon, Magic Link
  * 3. Staff -> Stock Opname (SO), Task Checklist, Survey Schedule
  * 4. Vendor -> Receive Orders, Update Status (READY/DELIVERED), 2-Week Payout
+// In-memory dynamic test role switcher state per phone
+const DYNAMIC_ACTIVE_ROLES: Record<string, { role: string; name: string; property: string; room?: string }> = {};
+
+/**
+ * POST /api/whatsapp/webhook
+ * Multi-Actor Inbound WhatsApp Router for KosanKu Pro:
+ * 1. Owner -> 1-Click Approval, Live Ledger & Cash Summary
+ * 2. Tenant -> Bill QRIS, Report Maintenance, Order Laundry/Galon, Magic Link
+ * 3. Staff -> Stock Opname (SO), Task Checklist, Survey Schedule
+ * 4. Vendor -> Receive Orders, Update Status (READY/DELIVERED), 2-Week Payout
  * 5. Lead -> 24/7 AI Sales Agent (Rooms, Survey, Booking DP 50%)
  */
 export async function POST(req: NextRequest) {
@@ -106,13 +116,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sender and message are required' }, { status: 400 });
     }
 
-    // ── 1. DETECT USER ROLE FROM DB OR DEMO MAP ────────────────────────────
+    // ── 0. DYNAMIC INSTANT ROLE SWITCHER FOR EASY 1-PHONE TESTING ──────────
+    if (msgLower.startsWith('#role') || msgLower.startsWith('!role') || msgLower.startsWith('/role')) {
+      const targetRole = msgLower.split(' ')[1] || '';
+
+      if (targetRole.includes('owner') || targetRole.includes('bos')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'OWNER', name: 'Pak Bos / Owner', property: 'KosanKu Premium Residence' };
+        const switchText = `👑 *MODE TESTING OWNER DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *PEMILIK KOS (Owner)*.\n\nSilakan coba ketik:\n• *Kas* ➔ Cek laporan keuangan & saldo kas real-time.\n• *ACC 12 Galon* ➔ Setujui pengadaan air minum.\n• *ACC Servis AC* ➔ Setujui perbaikan teknisi.`;
+        await sendWhatsApp(cleanPhone, switchText);
+        return NextResponse.json({ success: true, switchedTo: 'OWNER', reply: switchText });
+      } else if (targetRole.includes('tenant') || targetRole.includes('penghuni') || targetRole.includes('kamar')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'TENANT', name: 'Rian Pratama', property: 'KosanKu Premium Residence', room: 'A-101' };
+        const switchText = `🏠 *MODE TESTING PENGHUNI (TENANT) DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Penghuni Kamar A-101 (Rian Pratama)*.\n\nSilakan coba ketik:\n• *Tagihan* ➔ Cek invoice & bayar sewa QRIS.\n• *Pesan Galon 1* ➔ Order air minum langsung ke kamar.\n• *Laundry* ➔ Cek sisa kuota cuci gratis 5kg.\n• *Komplain: Kran bocor* ➔ Buat tiket laporan kerusakan.`;
+        await sendWhatsApp(cleanPhone, switchText);
+        return NextResponse.json({ success: true, switchedTo: 'TENANT', reply: switchText });
+      } else if (targetRole.includes('staff') || targetRole.includes('staf') || targetRole.includes('karyawan')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'STAFF', name: 'Bambang (Staf Lapangan)', property: 'KosanKu Pro' };
+        const switchText = `👷 *MODE TESTING STAF OPERASIONAL DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Staf Lapangan (Bambang)*.\n\nSilakan coba ketik:\n• *SO: GALON 12 GAS 2 SPREI 6* ➔ Input audit fisik stok barang.\n• *Jadwal* ➔ Cek jadwal tamu yang akan datang survei hari ini.`;
+        await sendWhatsApp(cleanPhone, switchText);
+        return NextResponse.json({ success: true, switchedTo: 'STAFF', reply: switchText });
+      } else if (targetRole.includes('vendor') || targetRole.includes('warung') || targetRole.includes('galon')) {
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'VENDOR_GALON', name: 'Depot Air & Gas Suci', property: 'KosanKu Pro' };
+        const switchText = `🍳 *MODE TESTING MITRA VENDOR DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Mitra Vendor (Depot Air & Warung)*.\n\nSilakan coba ketik:\n• *Ready* ➔ Konfirmasi pesanan siap.\n• *Sudah diantar* ➔ Konfirmasi barang tiba di kamar.\n• *Rekap* ➔ Cek total omset pencairan dana 2-mingguan.`;
+        await sendWhatsApp(cleanPhone, switchText);
+        return NextResponse.json({ success: true, switchedTo: 'VENDOR', reply: switchText });
+      } else {
+        delete DYNAMIC_ACTIVE_ROLES[cleanPhone];
+        const switchText = `🏨 *MODE TESTING CALON PENYEWA (LEADS) DIAKTIFKAN!*\n\nNomor Anda sekarang berperan sebagai *Calon Penyewa Baru*.\n\nSilakan coba ketik:\n• *Menu* ➔ Buka menu pilihan 1-5.\n• Tanya bebas ke AI (misal: _"Boleh bawa mobil?", "Ada water heater?"_)`;
+        await sendWhatsApp(cleanPhone, switchText);
+        return NextResponse.json({ success: true, switchedTo: 'LEAD', reply: switchText });
+      }
+    }
+
+    // ── 1. DETECT USER ROLE FROM DYNAMIC MAP, DB, OR DEMO MAP ──────────────
     let userRole = 'LEAD';
     let userName = 'Kak';
     let userRoom = '';
     let userProperty = 'KosanKu Pro Residence';
 
-    if (DEMO_PHONE_ROLES[cleanPhone]) {
+    if (DYNAMIC_ACTIVE_ROLES[cleanPhone]) {
+      const active = DYNAMIC_ACTIVE_ROLES[cleanPhone];
+      userRole = active.role;
+      userName = active.name;
+      userRoom = active.room || '';
+      userProperty = active.property;
+    } else if (DEMO_PHONE_ROLES[cleanPhone]) {
       const match = DEMO_PHONE_ROLES[cleanPhone];
       userRole = match.role;
       userName = match.name;
