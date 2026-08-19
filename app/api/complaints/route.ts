@@ -11,17 +11,34 @@ export async function GET(req: NextRequest) {
       include: { room: true, user: true },
     });
 
-    const formatted = complaints.map((c) => ({
-      id: c.id,
-      tenantName: c.user?.name || 'dr. Rizky Pratama, Sp.A',
-      roomNumber: c.room?.number || 'EKS-01',
-      title: c.title,
-      description: c.description,
-      status: c.status,
-      assignedStaff: null,
-      property: 'rshs',
-      createdAt: c.createdAt.toISOString(),
-    }));
+    const formatted = complaints.map((c) => {
+      let tName = c.user?.name;
+      let rNum = c.room?.number;
+
+      if (!tName && c.description?.includes('Laporan WhatsApp dari')) {
+        try {
+          tName = c.description.split('(')[0].replace('Laporan WhatsApp dari', '').trim();
+        } catch {}
+      }
+      if (!rNum && c.description?.includes('(Kamar')) {
+        try {
+          rNum = c.description.split('(Kamar')[1].split(')')[0].trim();
+        } catch {}
+      }
+
+      return {
+        id: c.id,
+        tenantName: tName || 'dr. Rizky Pratama, Sp.A (Penghuni RSHS)',
+        roomNumber: rNum || 'EKS-01',
+        title: c.title,
+        description: c.description,
+        status: c.status,
+        category: c.category || 'lain_lain',
+        assignedStaff: 'Bambang (Staf Lapangan)',
+        property: 'Juragan Kost Pasteur (Depan RSHS)',
+        createdAt: c.createdAt.toISOString(),
+      };
+    });
 
     return NextResponse.json({ success: true, data: formatted, count: formatted.length });
   } catch (error: any) {

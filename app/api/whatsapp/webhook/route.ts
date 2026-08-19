@@ -366,16 +366,43 @@ export async function POST(req: NextRequest) {
       } else if (msgLower.includes('komplain') || msgLower.includes('rusak') || msgLower.includes('bocor') || msgLower.includes('mati') || msgLower.includes('btn_komplain')) {
         const ticketId = `CMP-${Date.now().toString().slice(-4)}`;
         try {
+          let roomId: string | undefined = undefined;
+          let userId: string | undefined = undefined;
+
+          if (userRoom) {
+            const foundRoom = await prisma.room.findFirst({ where: { number: userRoom } });
+            if (foundRoom) roomId = foundRoom.id;
+          }
+
+          const foundUser = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { phone: cleanPhone },
+                { phone: `+${cleanPhone}` },
+                { phone: `0${cleanPhone.slice(2)}` },
+                { phone: cleanPhone.replace(/^62/, '0') },
+                { phone: cleanPhone.replace(/^0/, '62') },
+              ],
+            },
+          });
+          if (foundUser) userId = foundUser.id;
+
+          const cleanTitle = msg.replace(/^(komplain|lapor|kendala)[:\s]*/i, '').trim() || 'Keluhan Kerusakan Kamar';
+
           await prisma.complaint.create({
             data: {
               id: ticketId,
-              title: msg.length > 50 ? msg.slice(0, 50) + '...' : msg,
-              description: `Laporan WhatsApp dari ${userName} (${userRoom || 'EKS-01'}): ${msg}`,
-              category: msgLower.includes('bocor') || msgLower.includes('air') ? 'Plumbing' : msgLower.includes('mati') || msgLower.includes('listrik') ? 'Electrical' : 'Lain-lain',
+              title: cleanTitle,
+              description: `Laporan WhatsApp dari ${userName} (Kamar ${userRoom || 'EKS-01'}): ${msg}`,
+              category: msgLower.includes('bocor') || msgLower.includes('air') ? 'Plumbing' : msgLower.includes('mati') || msgLower.includes('listrik') ? 'Electrical' : 'lain_lain',
               status: 'OPEN',
+              roomId,
+              userId,
             },
           });
-        } catch {}
+        } catch (err) {
+          console.error('[Create Complaint DB Error]', err);
+        }
 
         replyText = `🛠️ *Tiket Laporan Kendala #${ticketId} Diterima!*\nPenghuni: *${userName}* (Kamar ${userRoom || 'EKS-01'})\nLaporan: _"${msg}"_\n\nTiket telah tersimpan di Database PostgreSQL KosanKu Pro dan langsung tampil di Web Dashboard Staf & Teknisi untuk penanganan segera.`;
         replyButtons = [
