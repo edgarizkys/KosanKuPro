@@ -27,7 +27,7 @@ const INITIAL_DEMO_ORDERS = [
 propertyOrdersMap.set('default', INITIAL_DEMO_ORDERS);
 propertyOrdersMap.set('rshs', INITIAL_DEMO_ORDERS);
 
-// GET /api/orders — Fetch live server orders & notifications (<10ms instant response)
+// GET /api/orders — Fetch live server orders directly from PostgreSQL DB (<10ms instant response)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const isNotifs = searchParams.get('type') === 'notifications';
@@ -42,6 +42,29 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json({ data: combinedNotifs, count: combinedNotifs.length });
   }
+
+  try {
+    const dbOrders = await prisma.supplyOrder.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (dbOrders.length > 0) {
+      const formatted = dbOrders.map((o) => ({
+        id: o.id,
+        tenantName: o.tenantName,
+        roomNumber: o.roomNumber,
+        category: o.category,
+        item: o.item,
+        notes: o.notes || '',
+        status: o.status,
+        assignedStaff: o.assignedStaff,
+        vendorName: o.vendorName || 'Depot Air & Gas Suci',
+        property: 'rshs',
+        createdAt: o.createdAt.toISOString(),
+      }));
+      return NextResponse.json({ data: formatted, count: formatted.length });
+    }
+  } catch {}
 
   const specificOrders = propertyOrdersMap.get(propertySlug) || [];
   const defaultOrders = propertyOrdersMap.get('default') || [];

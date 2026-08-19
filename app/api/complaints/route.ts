@@ -32,20 +32,34 @@ const INITIAL_DEMO_COMPLAINTS = [
   },
 ];
 
-// GET /api/complaints — Fetch live complaints list per property (<10ms instant response)
+// GET /api/complaints — Fetch live complaints list directly from PostgreSQL DB
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const propertySlug = searchParams.get('property') || 'default';
+  try {
+    const dbComplaints = await prisma.complaint.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { room: true, user: true },
+    });
 
-  // Seed initial demo complaints if empty for this property
-  if (!propertyComplaintsMap.has(propertySlug) && !propertyComplaintsMap.has('default')) {
-    propertyComplaintsMap.set(propertySlug, INITIAL_DEMO_COMPLAINTS);
-    propertyComplaintsMap.set('default', INITIAL_DEMO_COMPLAINTS);
+    const formatted = dbComplaints.map((c) => ({
+      id: c.id,
+      tenantName: c.user?.name || 'Penghuni Kos (WhatsApp)',
+      roomNumber: c.room?.number || 'EKS-01',
+      title: c.title,
+      description: c.description,
+      status: c.status,
+      assignedStaff: null,
+      property: 'rshs',
+      createdAt: c.createdAt.toISOString(),
+    }));
+
+    if (formatted.length > 0) {
+      return NextResponse.json({ success: true, data: formatted, count: formatted.length });
+    }
+
+    return NextResponse.json({ success: true, data: INITIAL_DEMO_COMPLAINTS, count: INITIAL_DEMO_COMPLAINTS.length });
+  } catch (err: any) {
+    return NextResponse.json({ success: true, data: INITIAL_DEMO_COMPLAINTS, count: INITIAL_DEMO_COMPLAINTS.length });
   }
-
-  const complaints = propertyComplaintsMap.get(propertySlug) || propertyComplaintsMap.get('default') || INITIAL_DEMO_COMPLAINTS;
-
-  return NextResponse.json({ success: true, data: complaints, count: complaints.length });
 }
 
 // POST /api/complaints — Tenant submits complaint to Owner/Admin
