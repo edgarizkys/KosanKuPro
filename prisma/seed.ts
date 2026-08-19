@@ -99,18 +99,15 @@ async function main() {
 
   // Create rooms
   const roomData = [
-    { number: 'A-101', type: 'Deluxe Studio Smart', price: 1500000, floor: 1, facilities: ['AC', 'WiFi', 'KM Dalam', 'Smart TV'], imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80' },
-    { number: 'A-102', type: 'Deluxe Studio Smart', price: 1500000, floor: 1, facilities: ['AC', 'WiFi', 'KM Dalam', 'Smart TV'], imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80' },
-    { number: 'A-103', type: 'Deluxe Garden View', price: 1600000, floor: 1, facilities: ['AC', 'WiFi', 'KM Dalam'], imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80' },
-    { number: 'B-201', type: 'VIP Balcony Resort', price: 2000000, floor: 2, facilities: ['AC', 'WiFi', 'KM Dalam', 'Balkon', 'Smart TV'], imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80' },
-    { number: 'B-202', type: 'VIP Balcony Resort', price: 2000000, floor: 2, facilities: ['AC', 'WiFi', 'KM Dalam', 'Balkon', 'Smart TV'], imageUrl: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80' },
-    { number: 'B-203', type: 'VIP Executive Suite', price: 2200000, floor: 2, facilities: ['AC', 'WiFi', 'KM Dalam', 'Balkon', 'Smart TV', 'Mini Bar'], imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80' },
-    { number: 'C-301', type: 'Standard Smart Suite', price: 1200000, floor: 3, facilities: ['AC', 'WiFi', 'KM Dalam'], imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80' },
-    { number: 'C-302', type: 'Standard Smart Suite', price: 1200000, floor: 3, facilities: ['AC', 'WiFi', 'KM Dalam'], imageUrl: 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?auto=format&fit=crop&w=800&q=80' },
-    { number: 'C-303', type: 'Standard Smart Suite', price: 1250000, floor: 3, facilities: ['AC', 'WiFi', 'KM Dalam'], imageUrl: 'https://images.unsplash.com/photo-1556909212-d5b604d0c90d?auto=format&fit=crop&w=800&q=80' },
-    { number: 'D-401', type: 'Penthouse Loft Suite', price: 2800000, floor: 4, facilities: ['AC', 'WiFi', 'KM Dalam', 'Balkon', 'Smart TV', 'Loft'], imageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80' },
-    { number: 'D-402', type: 'Penthouse Loft Suite', price: 2800000, floor: 4, facilities: ['AC', 'WiFi', 'KM Dalam', 'Balkon', 'Smart TV', 'Loft'], imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80' },
-    { number: 'D-403', type: 'Presidential Suite', price: 3200000, floor: 4, facilities: ['AC', 'WiFi', 'KM Dalam', 'Balkon', 'Smart TV', 'Loft', 'Mini Bar'], imageUrl: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80' },
+    { number: 'A-101', type: 'Deluxe Studio Smart (Depan RSHS)', price: 1500000, floor: 1, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80' },
+    { number: 'A-102', type: 'Deluxe Studio Smart (Depan RSHS)', price: 1500000, floor: 1, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80' },
+    { number: 'A-103', type: 'Deluxe Garden View (Depan RSHS)', price: 1600000, floor: 1, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80' },
+    { number: 'B-201', type: 'VIP Balcony Resort (Depan RSHS)', price: 2000000, floor: 2, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Balkon', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80' },
+    { number: 'B-202', type: 'VIP Balcony Resort (Depan RSHS)', price: 2000000, floor: 2, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Balkon', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=800&q=80' },
+    { number: 'B-203', type: 'VIP Executive Suite (Khusus Dokter & PPDS)', price: 2200000, floor: 2, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam Water Heater', 'Balkon', 'Kulkas Mini', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80' },
+    { number: 'C-301', type: 'Standard Smart Suite (Depan RSHS)', price: 1300000, floor: 3, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80' },
+    { number: 'C-302', type: 'Standard Smart Suite (Depan RSHS)', price: 1300000, floor: 3, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?auto=format&fit=crop&w=800&q=80' },
+    { number: 'C-303', type: 'Standard Smart Suite (Depan RSHS)', price: 1300000, floor: 3, facilities: ['AC', 'WiFi 100Mbps', 'KM Dalam', 'Smart Lock'], imageUrl: 'https://images.unsplash.com/photo-1556909212-d5b604d0c90d?auto=format&fit=crop&w=800&q=80' },
   ];
 
   const rooms = [];
