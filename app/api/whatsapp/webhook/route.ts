@@ -102,9 +102,11 @@ export async function POST(req: NextRequest) {
         }
 
         const propName = matchedProperty?.name || 'Juragan Kost Pasteur (Depan RSHS Bandung)';
+        const ownerName = propName.includes('RSHS') ? 'Owner Juragan Kost RSHS' : 'Ibu Dewi Tri Oktariani (Owner)';
+
         DYNAMIC_ACTIVE_ROLES[cleanPhone] = {
           role: 'OWNER',
-          name: `Owner (${propName})`,
+          name: ownerName,
           property: propName,
           propertyId: matchedProperty?.id,
         };
@@ -123,39 +125,69 @@ export async function POST(req: NextRequest) {
         }
 
         const propName = matchedProperty?.name || 'Juragan Kost Pasteur (Depan RSHS Bandung)';
-        const sampleRoom = matchedProperty?.rooms?.[0]?.number || 'EKS-01';
+        const isRshs = propName.includes('RSHS') || queryParam.includes('rshs');
+        const tenantName = isRshs ? 'dr. Rizky Pratama, Sp.A' : 'Rian Pratama (Mahasiswa ITB)';
+        const sampleRoom = isRshs ? 'EKS-01' : (matchedProperty?.rooms?.[0]?.number || 'A-101');
 
         DYNAMIC_ACTIVE_ROLES[cleanPhone] = {
           role: 'TENANT',
-          name: 'dr. Rizky Pratama, Sp.A',
+          name: tenantName,
           property: propName,
           room: sampleRoom,
           propertyId: matchedProperty?.id,
         };
 
-        const switchText = `🏠 *MODE PENGHUNI AKTIF: dr. Rizky Pratama (Kamar ${sampleRoom})*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Penghuni:\n• *Tagihan* ➔ Cek invoice & bayar sewa QRIS.\n• *Pesan Nasi Goreng 1* ➔ Order makanan katering.\n• *Pesan Galon 1* ➔ Order refill air galon.\n• *Laundry* ➔ Cek sisa kuota gratis 5kg.\n• *Komplain: Kran bocor* ➔ Buat tiket kendala ke staf.`;
+        const switchText = `🏠 *MODE PENGHUNI AKTIF: ${tenantName} (Kamar ${sampleRoom})*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Penghuni:\n• *Tagihan* ➔ Cek invoice & bayar sewa QRIS.\n• *Pesan Nasi Goreng 1* ➔ Order makanan katering.\n• *Pesan Galon 1* ➔ Order refill air galon.\n• *Laundry* ➔ Cek sisa kuota gratis 5kg.\n• *Komplain: Kran bocor* ➔ Buat tiket kendala ke staf.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'TENANT', property: propName, reply: switchText });
       }
 
       // C. STAFF SWITCHER
       else if (mainCmd.includes('staff') || mainCmd.includes('staf') || (mainCmd.includes('role') && queryParam.includes('staff'))) {
-        const propName = allProperties[0]?.name || 'Juragan Kost Pasteur (Depan RSHS)';
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: 'STAFF', name: 'Bambang (Staf Operasional)', property: propName };
-        const switchText = `👷 *MODE STAF OPERASIONAL AKTIF (Bambang)*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Staf:\n• *SO: GALON 12 GAS 2 SPREI 6* ➔ Input audit fisik stok barang.\n• *Jadwal* ➔ Cek tamu yang akan survei hari ini.\n• *Kamar siap* ➔ Konfirmasi kamar bersih siap huni.`;
+        let matchedProperty = allProperties[0];
+        if (queryParam) {
+          const match = allProperties.find((p) => p.name.toLowerCase().includes(queryParam.toLowerCase()) || p.address.toLowerCase().includes(queryParam.toLowerCase()));
+          if (match) matchedProperty = match;
+        }
+        const propName = matchedProperty?.name || 'Juragan Kost Pasteur (Depan RSHS Bandung)';
+        const isRshs = propName.includes('RSHS') || queryParam.includes('rshs');
+        const staffName = isRshs ? 'Bambang Prasetyo (Staf RSHS)' : 'Rudi Hartono (Staf Dago ITB)';
+
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = {
+          role: 'STAFF',
+          name: staffName,
+          property: propName,
+          propertyId: matchedProperty?.id,
+        };
+
+        const switchText = `👷 *MODE STAF OPERASIONAL AKTIF (${staffName})*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Staf:\n• *SO: GALON 12 GAS 2 SPREI 6* ➔ Input audit fisik stok barang.\n• *Jadwal* ➔ Cek tamu yang akan survei hari ini.\n• *Kamar siap* ➔ Konfirmasi kamar bersih siap huni.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: 'STAFF', reply: switchText });
       }
 
       // D. VENDOR SWITCHER
-      else if (mainCmd.includes('warung') || mainCmd.includes('food') || mainCmd.includes('depot') || mainCmd.includes('teknisi')) {
+      else if (mainCmd.includes('warung') || mainCmd.includes('food') || mainCmd.includes('depot') || mainCmd.includes('teknisi') || (mainCmd.includes('role') && queryParam.includes('vendor'))) {
+        let matchedProperty = allProperties[0];
+        if (queryParam) {
+          const match = allProperties.find((p) => p.name.toLowerCase().includes(queryParam.toLowerCase()) || p.address.toLowerCase().includes(queryParam.toLowerCase()));
+          if (match) matchedProperty = match;
+        }
+        const propName = matchedProperty?.name || 'Juragan Kost Pasteur (Depan RSHS Bandung)';
         const isWarung = mainCmd.includes('warung') || mainCmd.includes('food');
         const isDepot = mainCmd.includes('depot') || mainCmd.includes('galon');
         const roleType = isWarung ? 'VENDOR_WARUNG' : isDepot ? 'VENDOR_GALON' : 'VENDOR_TEKNISI';
-        const vendorName = isWarung ? 'Warung Nasi & Katering Bu Imas' : isDepot ? 'Depot Air & Gas Suci' : 'Teknisi Servis AC Subur';
+        const vendorName = propName.includes('RSHS')
+          ? (isWarung ? 'Katering Medis Bu Imas (RSHS)' : isDepot ? 'Depot Air & Gas Pasteur RSHS' : 'Teknisi Servis AC Pasteur RSHS')
+          : (isWarung ? 'Warung Nasi Dago ITB' : isDepot ? 'Depot Air & Gas Suci' : 'Teknisi Servis AC Subur');
 
-        DYNAMIC_ACTIVE_ROLES[cleanPhone] = { role: roleType, name: vendorName, property: allProperties[0]?.name || 'KosanKu' };
-        const switchText = `🛠️ *MODE MITRA VENDOR AKTIF: ${vendorName.toUpperCase()}*\n\nSilakan coba fitur Vendor:\n• *Ready* ➔ Konfirmasi pesanan siap.\n• *Sudah diantar* ➔ Konfirmasi barang tiba di kamar.\n• *Rekap* ➔ Cek total rekap tagihan siap cair.`;
+        DYNAMIC_ACTIVE_ROLES[cleanPhone] = {
+          role: roleType,
+          name: vendorName,
+          property: propName,
+          propertyId: matchedProperty?.id,
+        };
+
+        const switchText = `🛠️ *MODE MITRA VENDOR AKTIF: ${vendorName.toUpperCase()}*\n🏢 Properti: *${propName}*\n\nSilakan coba fitur Vendor:\n• *Ready* ➔ Konfirmasi pesanan siap.\n• *Sudah diantar* ➔ Konfirmasi barang tiba di kamar.\n• *Rekap* ➔ Cek total rekap tagihan siap cair.`;
         await sendWhatsApp(cleanPhone, switchText);
         return NextResponse.json({ success: true, switchedTo: roleType, reply: switchText });
       }

@@ -3,81 +3,7 @@ import { PrismaClient, Role } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding database...');
-
-  // Create Multi-Role Demo Accounts
-  const multiRoleUsers = await Promise.all([
-    prisma.user.upsert({
-      where: { email: 'superadmin@kosanku.pro' },
-      update: { name: 'Super Admin KosanKu', passwordHash: 'demo123', role: Role.SUPERADMIN },
-      create: { name: 'Super Admin KosanKu', email: 'superadmin@kosanku.pro', phone: '081200000001', passwordHash: 'demo123', role: Role.SUPERADMIN },
-    }),
-    prisma.user.upsert({
-      where: { email: 'owner@kosanku.pro' },
-      update: { name: 'Ibu Dewi Tri Oktariani', passwordHash: 'demo123', role: Role.OWNER },
-      create: { name: 'Ibu Dewi Tri Oktariani', email: 'owner@kosanku.pro', phone: '081199887766', passwordHash: 'demo123', role: Role.OWNER },
-    }),
-    prisma.user.upsert({
-      where: { email: 'owner@kosanku.com' },
-      update: { name: 'Ibu Dewi Tri Oktariani', passwordHash: 'demo123', role: Role.OWNER },
-      create: { name: 'Ibu Dewi Tri Oktariani', email: 'owner@kosanku.com', phone: '081199887766', passwordHash: 'demo123', role: Role.OWNER },
-    }),
-    prisma.user.upsert({
-      where: { email: 'admin@kosanku.pro' },
-      update: { name: 'Pak Admin Operasional (Siti)', passwordHash: 'demo123', role: Role.ADMIN },
-      create: { name: 'Pak Admin Operasional (Siti)', email: 'admin@kosanku.pro', phone: '081234567890', passwordHash: 'demo123', role: Role.ADMIN },
-    }),
-    prisma.user.upsert({
-      where: { email: 'admin2@kosanku.pro' },
-      update: { name: 'Rina (Admin Keuangan)', passwordHash: 'demo123', role: Role.ADMIN },
-      create: { name: 'Rina (Admin Keuangan)', email: 'admin2@kosanku.pro', phone: '081299883344', passwordHash: 'demo123', role: Role.ADMIN },
-    }),
-    prisma.user.upsert({
-      where: { email: 'staf@kosanku.pro' },
-      update: { name: 'Bambang Prasetyo (Teknisi)', passwordHash: 'demo123', role: Role.EMPLOYEE },
-      create: { name: 'Bambang Prasetyo (Teknisi)', email: 'staf@kosanku.pro', phone: '081355443322', passwordHash: 'demo123', role: Role.EMPLOYEE },
-    }),
-    prisma.user.upsert({
-      where: { email: 'staf.kebersihan@kosanku.pro' },
-      update: { name: 'Rudi Hartono (Kebersihan)', passwordHash: 'demo123', role: Role.EMPLOYEE },
-      create: { name: 'Rudi Hartono (Kebersihan)', email: 'staf.kebersihan@kosanku.pro', phone: '081399881122', passwordHash: 'demo123', role: Role.EMPLOYEE },
-    }),
-    prisma.user.upsert({
-      where: { email: 'vendor.galon@kosanku.pro' },
-      update: { name: 'Depot Air & Gas Suci', passwordHash: 'demo123', role: Role.VENDOR },
-      create: { name: 'Depot Air & Gas Suci', email: 'vendor.galon@kosanku.pro', phone: '081299887711', passwordHash: 'demo123', role: Role.VENDOR },
-    }),
-    prisma.user.upsert({
-      where: { email: 'vendor.laundry@kosanku.pro' },
-      update: { name: 'Laundry Express Clean', passwordHash: 'demo123', role: Role.VENDOR },
-      create: { name: 'Laundry Express Clean', email: 'vendor.laundry@kosanku.pro', phone: '081388776655', passwordHash: 'demo123', role: Role.VENDOR },
-    }),
-    prisma.user.upsert({
-      where: { email: 'vendor.teknik@kosanku.pro' },
-      update: { name: 'Toko Bangunan & Teknik Subur', passwordHash: 'demo123', role: Role.VENDOR },
-      create: { name: 'Toko Bangunan & Teknik Subur', email: 'vendor.teknik@kosanku.pro', phone: '081511223344', passwordHash: 'demo123', role: Role.VENDOR },
-    }),
-    prisma.user.upsert({
-      where: { email: 'tenant@kosanku.pro' },
-      update: { name: 'Rian Pratama (Penghuni A-101)', passwordHash: 'demo123', role: Role.TENANT },
-      create: { name: 'Rian Pratama (Penghuni A-101)', email: 'tenant@kosanku.pro', phone: '081566778899', passwordHash: 'demo123', role: Role.TENANT },
-    }),
-    prisma.user.upsert({
-      where: { email: 'tenant2@kosanku.pro' },
-      update: { name: 'Siti Rahma (Penghuni B-201)', passwordHash: 'demo123', role: Role.TENANT },
-      create: { name: 'Siti Rahma (Penghuni B-201)', email: 'tenant2@kosanku.pro', phone: '081233445566', passwordHash: 'demo123', role: Role.TENANT },
-    }),
-    prisma.user.upsert({
-      where: { email: 'tenant3@kosanku.pro' },
-      update: { name: 'Budi Santoso (Penghuni C-302)', passwordHash: 'demo123', role: Role.TENANT },
-      create: { name: 'Budi Santoso (Penghuni C-302)', email: 'tenant3@kosanku.pro', phone: '081377889900', passwordHash: 'demo123', role: Role.TENANT },
-    }),
-  ]);
-  console.log(`✅ Multi-Role Accounts: ${multiRoleUsers.map((u) => u.email).join(', ')} (password: demo123)`);
-
-  const tenants = [multiRoleUsers[6]];
-
-  // Create properties
+  console.log('🌱 Seeding database...');  // Create properties first so users and rooms can be linked cleanly
   const propRshs = await prisma.property.upsert({
     where: { id: 'prop-001' },
     update: {
@@ -134,6 +60,58 @@ async function main() {
 
   console.log(`✅ Properties: ${propRshs.name}, ${propItb.name}, ${propSuci.name}`);
 
+  // Create Multi-Role Accounts with strict Property Linkage
+  const multiRoleUsers = await Promise.all([
+    // Superadmin
+    prisma.user.upsert({
+      where: { email: 'superadmin@kosanku.pro' },
+      update: { name: 'Super Admin KosanKu', passwordHash: 'demo123', role: Role.SUPERADMIN },
+      create: { name: 'Super Admin KosanKu', email: 'superadmin@kosanku.pro', phone: '081200000001', passwordHash: 'demo123', role: Role.SUPERADMIN },
+    }),
+
+    // RSHS ACCOUNTS
+    prisma.user.upsert({
+      where: { email: 'owner.rshs@kosanku.pro' },
+      update: { name: 'Owner Juragan Kost RSHS', passwordHash: 'demo123', role: Role.OWNER, propertyId: propRshs.id },
+      create: { name: 'Owner Juragan Kost RSHS', email: 'owner.rshs@kosanku.pro', phone: '081223798307', passwordHash: 'demo123', role: Role.OWNER, propertyId: propRshs.id },
+    }),
+    prisma.user.upsert({
+      where: { email: 'dr.rizky@kosanku.pro' },
+      update: { name: 'dr. Rizky Pratama, Sp.A', passwordHash: 'demo123', role: Role.TENANT, propertyId: propRshs.id },
+      create: { name: 'dr. Rizky Pratama, Sp.A', email: 'dr.rizky@kosanku.pro', phone: '081388776655', passwordHash: 'demo123', role: Role.TENANT, propertyId: propRshs.id },
+    }),
+    prisma.user.upsert({
+      where: { email: 'staf.rshs@kosanku.pro' },
+      update: { name: 'Bambang Prasetyo (Staf RSHS)', passwordHash: 'demo123', role: Role.EMPLOYEE, propertyId: propRshs.id },
+      create: { name: 'Bambang Prasetyo (Staf RSHS)', email: 'staf.rshs@kosanku.pro', phone: '081355443322', passwordHash: 'demo123', role: Role.EMPLOYEE, propertyId: propRshs.id },
+    }),
+    prisma.user.upsert({
+      where: { email: 'vendor.rshs@kosanku.pro' },
+      update: { name: 'Depot Air & Gas Pasteur RSHS', passwordHash: 'demo123', role: Role.VENDOR, propertyId: propRshs.id },
+      create: { name: 'Depot Air & Gas Pasteur RSHS', email: 'vendor.rshs@kosanku.pro', phone: '081299887711', passwordHash: 'demo123', role: Role.VENDOR, propertyId: propRshs.id },
+    }),
+
+    // ITB ACCOUNTS
+    prisma.user.upsert({
+      where: { email: 'owner@kosanku.pro' },
+      update: { name: 'Ibu Dewi Tri Oktariani (Owner ITB)', passwordHash: 'demo123', role: Role.OWNER, propertyId: propItb.id },
+      create: { name: 'Ibu Dewi Tri Oktariani (Owner ITB)', email: 'owner@kosanku.pro', phone: '081199887766', passwordHash: 'demo123', role: Role.OWNER, propertyId: propItb.id },
+    }),
+    prisma.user.upsert({
+      where: { email: 'tenant@kosanku.pro' },
+      update: { name: 'Rian Pratama (Mahasiswa ITB)', passwordHash: 'demo123', role: Role.TENANT, propertyId: propItb.id },
+      create: { name: 'Rian Pratama (Mahasiswa ITB)', email: 'tenant@kosanku.pro', phone: '081566778899', passwordHash: 'demo123', role: Role.TENANT, propertyId: propItb.id },
+    }),
+    prisma.user.upsert({
+      where: { email: 'staf.itb@kosanku.pro' },
+      update: { name: 'Rudi Hartono (Staf Dago ITB)', passwordHash: 'demo123', role: Role.EMPLOYEE, propertyId: propItb.id },
+      create: { name: 'Rudi Hartono (Staf Dago ITB)', email: 'staf.itb@kosanku.pro', phone: '081399881122', passwordHash: 'demo123', role: Role.EMPLOYEE, propertyId: propItb.id },
+    }),
+  ]);
+  console.log(`✅ Multi-Role Accounts: ${multiRoleUsers.map((u) => u.email).join(', ')}`);
+
+  const tenantRshs = multiRoleUsers[2];
+
   // Create rooms from Real RSHS Data
   const roomData = [
     { number: 'NYM-01', type: 'Nyaman 1', price: 1000000, floor: 1, facilities: ['Kipas Angin', 'Kasur Single Comfort', 'Free Laundry 5kg/bln', 'Dapur Bersama', 'WiFi', 'CCTV 24 Jam'], imageUrl: '/images/rshs/Nyaman/1.png' },
@@ -158,9 +136,9 @@ async function main() {
   console.log(`✅ Rooms: ${rooms.length} created for RSHS`);
 
   // Assign tenants to rooms
-  await prisma.room.update({ where: { number: 'EKS-01' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
-  await prisma.room.update({ where: { number: 'NYM-01' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
-  await prisma.room.update({ where: { number: 'NYM-03' }, data: { status: 'OCCUPIED', tenantId: tenants[0].id } });
+  await prisma.room.update({ where: { number: 'EKS-01' }, data: { status: 'OCCUPIED', tenantId: tenantRshs.id } });
+  await prisma.room.update({ where: { number: 'NYM-01' }, data: { status: 'OCCUPIED', tenantId: tenantRshs.id } });
+  await prisma.room.update({ where: { number: 'NYM-03' }, data: { status: 'OCCUPIED', tenantId: tenantRshs.id } });
   console.log('✅ Room assignments done');
 
   // Create FAQ entries
@@ -202,7 +180,7 @@ async function main() {
     update: {},
     create: {
       invoiceNumber: 'INV-20260701-0001',
-      userId: tenants[0].id,
+      userId: tenantRshs.id,
       roomId: roomEks01.id,
       amount: 1500000,
       penaltyAmount: 0,
@@ -216,7 +194,7 @@ async function main() {
     update: {},
     create: {
       invoiceNumber: 'INV-20260601-0001',
-      userId: tenants[0].id,
+      userId: tenantRshs.id,
       roomId: roomNym01.id,
       amount: 1000000,
       penaltyAmount: 0,
@@ -231,7 +209,7 @@ async function main() {
     update: {},
     create: {
       invoiceNumber: 'INV-20260602-0001',
-      userId: tenants[0].id,
+      userId: tenantRshs.id,
       roomId: roomNym03.id,
       amount: 1300000,
       penaltyAmount: 0,
