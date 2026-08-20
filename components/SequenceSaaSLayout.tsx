@@ -601,12 +601,16 @@ export default function SequenceSaaSLayout({
             { id: 'master_data', label: 'Pengaturan Properti', icon: 'fa-solid fa-sliders' },
           ],
         },
-        {
-          title: '📡 WhatsApp Gateway',
-          items: [
-            { id: 'wa_monitor', label: 'Live WhatsApp Stream', icon: 'fa-brands fa-whatsapp', highlight: true, badgeColor: 'bg-emerald-500 text-white' },
-          ],
-        },
+        ...(!isCustomOrNewKos
+          ? [
+              {
+                title: '📡 WhatsApp Gateway',
+                items: [
+                  { id: 'wa_monitor', label: 'Live WhatsApp Stream', icon: 'fa-brands fa-whatsapp', highlight: true, badgeColor: 'bg-emerald-500 text-white' },
+                ],
+              },
+            ]
+          : []),
       ];
     }
 
@@ -1180,16 +1184,18 @@ export default function SequenceSaaSLayout({
               <i className={`fa-solid ${theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'}`} />
             </button>
 
-            {/* Live WhatsApp Stream Monitor Trigger Button */}
-            <button
-              onClick={() => onTabChange?.('wa_monitor')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl neu-btn text-emerald-700 dark:text-emerald-400 font-bold hover:scale-105 transition-all cursor-pointer text-xs"
-              title="Buka Live WhatsApp Stream Feed"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <i className="fa-brands fa-whatsapp text-sm" />
-              <span className="hidden xl:inline">Live WA Feed</span>
-            </button>
+            {/* Live WhatsApp Stream Monitor Trigger Button (Only for KosanKu Pro Master Owner / Superadmin) */}
+            {!isCustomOrNewKos && (
+              <button
+                onClick={() => onTabChange?.('wa_monitor')}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-2xl neu-btn text-emerald-700 dark:text-emerald-400 font-bold hover:scale-105 transition-all cursor-pointer text-xs"
+                title="Buka Live WhatsApp Stream Feed"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <i className="fa-brands fa-whatsapp text-sm" />
+                <span className="hidden xl:inline">Live WA Feed</span>
+              </button>
+            )}
 
             {/* Executive Notification Bell Trigger */}
             <button

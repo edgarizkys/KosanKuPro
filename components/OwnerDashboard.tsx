@@ -1669,8 +1669,8 @@ export default function OwnerDashboard({
           </div>
         )}
 
-        {/* LIVE WHATSAPP STREAM MONITOR TAB */}
-        {activeTab === 'wa_monitor' && <WhatsAppLiveMonitor />}
+        {/* LIVE WHATSAPP STREAM MONITOR TAB (Only for Master KosanKu Pro Owner / Superadmin) */}
+        {!isCustomOrNewKos && activeTab === 'wa_monitor' && <WhatsAppLiveMonitor />}
 
         {/* Plotting Modal Dialog */}
         {selectedReq && (
