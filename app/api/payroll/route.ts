@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     if (propertyId) where.propertyId = propertyId;
 
     const payroll = await safeDbQuery(
-      () => prisma.payroll.findFirst({ where, orderBy: { createdAt: 'desc' } }),
+      () => (prisma as any).payroll.findFirst({ where, orderBy: { createdAt: 'desc' } }),
       null
     );
 
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const totalBruto = baseGaji + tunjangan + uangMakan + bonus;
     const totalNeto = totalBruto - potongan;
 
-    const payroll = await prisma.payroll.upsert({
+    const payroll = await (prisma as any).payroll.upsert({
       where: { staffPhone_month_year: { staffPhone: staffPhone || '', month, year } },
       create: {
         staffName, staffPhone, propertyId, month, year,

@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     if (propertyId) where.propertyId = propertyId;
 
     const schedules = await safeDbQuery(
-      () => prisma.staffSchedule.findMany({ where, orderBy: { dayOfWeek: 'asc' } }),
+      () => (prisma as any).staffSchedule.findMany({ where, orderBy: { dayOfWeek: 'asc' } }),
       []
     );
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     const weekStart = new Date(weekDate);
     weekStart.setHours(0, 0, 0, 0);
 
-    const schedule = await prisma.staffSchedule.create({
+    const schedule = await (prisma as any).staffSchedule.create({
       data: {
         staffName,
         staffPhone: staffPhone || null,
@@ -99,7 +99,7 @@ export async function PUT(req: NextRequest) {
     const { id, status, notes } = body;
     if (!id) return NextResponse.json({ error: 'id wajib' }, { status: 400 });
 
-    const updated = await prisma.staffSchedule.update({
+    const updated = await (prisma as any).staffSchedule.update({
       where: { id },
       data: { status, notes },
     });
