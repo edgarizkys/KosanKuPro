@@ -1,68 +1,67 @@
 'use client';
 
+import { useState } from 'react';
+import { useProperty } from '@/lib/PropertyContext';
+
 interface PartnerAndAppSectionProps {
   onOpenConsultation?: () => void;
 }
 
 export default function PartnerAndAppSection({ onOpenConsultation }: PartnerAndAppSectionProps) {
-  const stats = [
-    { value: '95%+', label: 'Rata-rata Okupansi' },
-    { value: '100%', label: 'Smart Lock Otomatis' },
-    { value: '0 Biaya', label: 'Setup Awal' },
-    { value: '24/7', label: 'Resepsionis' },
-  ];
+  const { property } = useProperty();
+  const [activeDurationTab, setActiveDurationTab] = useState('17');
+  const [passengerCount, setPassengerCount] = useState(1);
 
-  const features = [
-    'Smart Lock 1-Tap Unlock Pintu',
-    'Auto Notifikasi Tagihan & Resi',
-    'Tiket Komplain & Perbaikan Teknisi',
-    'Layanan Laundry & Air Galon Antar',
+  const stats = [
+    { value: '98.4%', label: 'Rata-rata Okupansi' },
+    { value: '3x', label: 'ROI Lebih Cepat' },
+    { value: '0%', label: 'Biaya Admin Setup' },
+    { value: '24/7', label: 'Monitoring IoT' },
   ];
 
   const handleWhatsApp = () => {
-    window.open(
-      'https://wa.me/6282114242634?text=Halo%20Admin%20KosanKu%20Pro,%20saya%20tertarik%20untuk%20mendaftarkan%20properti%20kos%20saya%20sebagai%20mitra.',
-      '_blank'
-    );
+    const wa = (property.whatsapp || '6282114242634').replace(/[^0-9]/g, '');
+    const msg = encodeURIComponent('Halo Admin KosanKu Pro, saya tertarik dengan program Kemitraan & Manajemen Properti Kosan.');
+    window.open(`https://wa.me/${wa}?text=${msg}`, '_blank');
   };
 
   return (
-    <section className="relative w-full select-none space-y-5 sm:space-y-6">
-
-      {/* ── ROW 1: Kemitraan Owner + Phone Mockup side-by-side ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
-
-        {/* LEFT — Kemitraan Pemilik */}
-        <div className="lg:col-span-7 neu-card-lg rounded-3xl p-6 sm:p-8 reveal-left flex flex-col justify-between gap-6">
-          <div className="space-y-4">
-            <div className="inline-flex items-center px-3 py-1 rounded-full neu-inset text-amber-600 dark:text-amber-400 font-black text-[11px] uppercase tracking-wider">
-              Program Kemitraan Pemilik Properti
+    <section className="relative w-full py-10 sm:py-16 text-slate-900 dark:text-white select-none">
+      
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 lg:gap-12 items-center max-w-7xl mx-auto">
+        
+        {/* LEFT (5 cols) — Kemitraan Owner Pitch */}
+        <div className="xl:col-span-5 space-y-6 reveal-left">
+          <div className="space-y-2">
+            <div className="inline-flex items-center px-3.5 py-1 rounded-full neu-inset text-[#047857] dark:text-emerald-400 font-extrabold text-[11px] uppercase tracking-wider border border-emerald-500/20 shadow-xs">
+              Kemitraan Manajemen Properti
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-              Punya Properti Kos? <br />
-              <span className="text-amber-500">Lipatgandakan Okupansi &amp; Pendapatan.</span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+              Punya Kosan Kosong? <br />
+              <span className="text-[#047857] dark:text-emerald-400 font-serif italic font-normal">Tingkatkan Profit Hingga 300%.</span>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-              Serahkan operasional harian kos Anda pada ekosistem KosanKu Pro. IoT Smart Lock otomatis, pembukuan digital transparan, pemasaran terpadu tanpa biaya tersembunyi.
-            </p>
           </div>
+
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+            Serahkan operasional harian, pemasaran, IoT Smart Lock, penagihan sewa otomatis, hingga perawatan fasilitas kos Anda kepada ekosistem profesional KosanKu Pro.
+          </p>
 
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {stats.map((s, idx) => (
-              <div key={idx} className="p-3 rounded-2xl neu-inset stagger-item text-center">
-                <div className="text-lg sm:text-xl font-black text-amber-500">{s.value}</div>
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</div>
+              <div key={idx} className="p-3.5 rounded-2xl neu-inset text-center">
+                <div className="text-lg sm:text-xl font-black text-[#047857] dark:text-emerald-400">{s.value}</div>
+                <div className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>
 
           {/* CTAs */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               type="button"
               onClick={handleWhatsApp}
-              className="px-5 py-3 rounded-2xl neu-btn-amber font-black text-xs flex items-center gap-2 ripple-effect magnetic-btn"
+              className="px-5 py-3 rounded-2xl bg-[#047857] hover:bg-[#065f46] text-white font-black text-xs flex items-center gap-2 shadow-md hover:scale-[1.02] active:scale-95 transition-all cursor-pointer border border-emerald-400/30"
             >
               <i className="fa-brands fa-whatsapp text-sm" />
               <span>Konsultasi Kemitraan Gratis</span>
@@ -73,98 +72,247 @@ export default function PartnerAndAppSection({ onOpenConsultation }: PartnerAndA
                 if ((window as any).__openOwnerRegister) (window as any).__openOwnerRegister();
                 else if (onOpenConsultation) onOpenConsultation();
               }}
-              className="px-5 py-3 rounded-2xl neu-btn text-slate-700 dark:text-slate-200 font-bold text-xs hover:text-amber-500 active:neu-inset transition-all ripple-effect"
+              className="px-5 py-3 rounded-2xl neu-btn text-slate-700 dark:text-slate-200 font-bold text-xs hover:text-[#047857] dark:hover:text-emerald-400 transition-all cursor-pointer"
             >
               Pelajari Simulasi ROI
             </button>
           </div>
         </div>
 
-        {/* RIGHT — Phone Mockup App */}
-        <div className="lg:col-span-5 neu-card-lg rounded-3xl p-6 sm:p-8 reveal-right flex flex-col justify-between gap-5">
-          <div className="space-y-2">
-            <div className="inline-flex items-center px-3 py-1 rounded-full neu-inset text-amber-600 dark:text-amber-400 font-black text-[11px] uppercase tracking-wider">
-              Mobile App (Coming Soon 2026)
+        {/* RIGHT (7 cols) — 100% NEUMORPHIC DUAL FLOATING APP SHOWCASE */}
+        <div className="xl:col-span-7 relative p-6 sm:p-10 rounded-[3rem] neu-card-lg border border-white/80 dark:border-white/10 shadow-2xl overflow-hidden">
+          
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-10 left-10 w-72 h-72 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-10 right-10 w-72 h-72 bg-sky-400/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Section Subtitle */}
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#047857] dark:text-emerald-400">KosanKu Mobile App</span>
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Pengalaman Sewa Semudah Memesan Tiket</h3>
             </div>
-            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-              Kontrol Hunian dari <span className="text-amber-500">Genggaman.</span>
-            </h3>
+            <div className="flex gap-2">
+              <span className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-xs text-slate-700 dark:text-white shadow-sm"><i className="fa-brands fa-apple" /></span>
+              <span className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-xs text-emerald-600 dark:text-emerald-400 shadow-sm"><i className="fa-brands fa-google-play" /></span>
+            </div>
           </div>
 
-          {/* Phone + Features side by side on md+ */}
-          <div className="flex flex-col sm:flex-row items-center gap-5">
-
-            {/* Phone */}
-            <div className="shrink-0 w-44 rounded-[2.4rem] p-2.5 neu-card-lg ring-1 ring-slate-200 dark:ring-white/10 spotlight-card">
-              <div className="relative">
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-3 rounded-full neu-inset z-10" />
-                <div className="w-full h-[280px] rounded-[1.9rem] overflow-hidden neu-inset p-3 flex flex-col justify-between">
-                  <div className="pt-5">
-                    <div className="text-[9px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-wider">KosanKu Mobile</div>
-                    <div className="text-xs font-black text-slate-900 dark:text-white mt-0.5">Selamat Datang!</div>
-                  </div>
-                  <div className="p-2.5 rounded-xl neu-btn-amber space-y-1.5">
-                    <div className="flex justify-between text-[9px] font-black text-slate-950">
-                      <span>Smart Key</span>
-                      <i className="fa-solid fa-wifi" />
-                    </div>
-                    <div className="text-xs font-black text-slate-950">Kamar NYM-03</div>
-                    <div className="flex items-center gap-1 text-[9px] font-bold text-slate-800">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-pulse" />
-                      <span>Terhubung</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5 text-center text-[8px] font-bold">
-                    {[
-                      { icon: 'fa-lock-open', label: 'Buka' },
-                      { icon: 'fa-receipt', label: 'Tagihan' },
-                      { icon: 'fa-screwdriver-wrench', label: 'Bantu' },
-                    ].map((a, i) => (
-                      <div key={i} className="p-1.5 rounded-lg neu-card flex flex-col items-center gap-0.5 text-slate-700 dark:text-slate-200">
-                        <i className={`fa-solid ${a.icon} text-amber-500 text-[11px]`} />
-                        <span>{a.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-2 rounded-lg neu-inset text-[8px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
-                    <i className="fa-solid fa-circle-check text-[9px]" />
-                    <span>Tagihan Lunas!</span>
-                  </div>
+          {/* Dual Phone Showcase Grid (Overlapping Neumorphic Surfaces) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-start relative">
+            
+            {/* ══════════════════════════════════════════════════
+                SCREEN 1 (LEFT): HOME & QUICK BOOKING FORM (NEUMORPHIC)
+                ══════════════════════════════════════════════════ */}
+            <div className="w-full neu-card rounded-[2.5rem] p-4 sm:p-5 border border-white/90 dark:border-white/10 shadow-xl flex flex-col justify-between space-y-4 hover:translate-y-[-4px] transition-all duration-300">
+              
+              {/* iOS Status Bar */}
+              <div className="flex items-center justify-between text-[10px] font-black text-slate-600 dark:text-slate-400 px-1">
+                <span>9:41</span>
+                <div className="flex items-center gap-1.5 text-[9px]">
+                  <i className="fa-solid fa-signal text-[8px]" />
+                  <i className="fa-solid fa-wifi text-[8px]" />
+                  <i className="fa-solid fa-battery-full text-[9px]" />
                 </div>
               </div>
+
+              {/* Header & Title with Visual 3D Badge */}
+              <div className="flex items-start justify-between gap-2 pt-1">
+                <div>
+                  <button type="button" className="w-8 h-8 rounded-xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 text-xs mb-2">
+                    <i className="fa-solid fa-bars-staggered text-[11px]" />
+                  </button>
+                  <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
+                    Mau sewa kamar <br />di mana kali ini?
+                  </h4>
+                </div>
+                <div className="w-12 h-12 rounded-2xl neu-inset text-sky-500 flex items-center justify-center text-xl shadow-inner shrink-0">
+                  <i className="fa-solid fa-house-chimney-user" />
+                </div>
+              </div>
+
+              {/* Form Booking Card (Tactile Neumorphic Inset) */}
+              <div className="p-3.5 rounded-2xl neu-inset space-y-3">
+                {/* Location Switcher */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 block uppercase">Area Kampus/RS</span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white">Pasteur (RSHS)</span>
+                    <span className="text-[8px] text-slate-400 block">Bandung Barat</span>
+                  </div>
+                  <div className="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-sky-500 text-[10px] shadow-sm">
+                    <i className="fa-solid fa-arrow-right-arrow-left" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] font-bold text-slate-400 block uppercase">Tipe Kamar</span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white">Eksekutif</span>
+                    <span className="text-[8px] text-slate-400 block">KM Dalam + AC</span>
+                  </div>
+                </div>
+
+                {/* Date / Month */}
+                <div className="pt-2 border-t border-slate-300/40 dark:border-white/5 flex items-center justify-between">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-400 block uppercase">Mulai Sewa</span>
+                    <span className="text-[11px] font-black text-slate-800 dark:text-slate-200">1 September 2026</span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full neu-card-sm text-[9px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/5">
+                    1 Bulan
+                  </span>
+                </div>
+
+                {/* Passenger / Guest Count + CTA */}
+                <div className="pt-2 border-t border-slate-300/40 dark:border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPassengerCount(Math.max(1, passengerCount - 1))}
+                      className="w-6 h-6 rounded-full neu-btn flex items-center justify-center text-[10px] font-black"
+                    >-</button>
+                    <span className="text-xs font-black text-slate-900 dark:text-white">{passengerCount}</span>
+                    <button
+                      onClick={() => setPassengerCount(passengerCount + 1)}
+                      className="w-6 h-6 rounded-full neu-btn flex items-center justify-center text-[10px] font-black"
+                    >+</button>
+                  </div>
+
+                  {/* Vibrant Tactile Button */}
+                  <button
+                    type="button"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-[11px] font-black shadow-lg shadow-orange-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    CARI KAMAR
+                  </button>
+                </div>
+              </div>
+
+              {/* Subcard: Tiket / Kamar Aktif Saya */}
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Kamar Aktif Saya</span>
+                <div className="p-3 rounded-2xl neu-card flex items-center justify-between border border-white/80 dark:border-white/10 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[9px] font-black uppercase">Aktif</span>
+                    <div>
+                      <span className="text-[11px] font-black text-slate-900 dark:text-white block leading-none">Eksekutif EKS-01</span>
+                      <span className="text-[9px] text-slate-400">Smart Lock Terhubung</span>
+                    </div>
+                  </div>
+                  <span className="w-7 h-7 rounded-full bg-sky-500 text-white flex items-center justify-center text-[10px] shadow-sm"><i className="fa-solid fa-arrow-right" /></span>
+                </div>
+              </div>
+
             </div>
 
-            {/* Features list */}
-            <div className="flex-1 space-y-2 w-full">
-              {features.map((feat, idx) => (
-                <div key={idx} className="flex items-center gap-2.5 p-2.5 rounded-xl neu-inset stagger-item text-xs font-bold text-slate-700 dark:text-slate-200">
-                  <div className="w-5 h-5 rounded-full neu-btn-amber flex items-center justify-center text-[8px] shrink-0">
-                    <i className="fa-solid fa-check" />
-                  </div>
-                  <span className="text-[11px]">{feat}</span>
-                </div>
-              ))}
 
-              {/* Store badges */}
-              <div className="flex gap-2 pt-1.5">
-                <div className="px-3 py-2 rounded-xl neu-btn flex items-center gap-2 cursor-pointer group hover:text-amber-500 transition-all magnetic-btn ripple-effect flex-1 justify-center">
-                  <i className="fa-brands fa-google-play text-lg text-amber-500" />
-                  <div>
-                    <div className="text-[8px] uppercase text-slate-400 font-bold leading-none">Segera di</div>
-                    <div className="text-xs font-black text-slate-900 dark:text-white">Google Play</div>
-                  </div>
-                </div>
-                <div className="px-3 py-2 rounded-xl neu-btn flex items-center gap-2 cursor-pointer group hover:text-amber-500 transition-all magnetic-btn ripple-effect flex-1 justify-center">
-                  <i className="fa-brands fa-apple text-lg text-slate-700 dark:text-white" />
-                  <div>
-                    <div className="text-[8px] uppercase text-slate-400 font-bold leading-none">Segera di</div>
-                    <div className="text-xs font-black text-slate-900 dark:text-white">App Store</div>
-                  </div>
+            {/* ══════════════════════════════════════════════════
+                SCREEN 2 (RIGHT): ROOM LISTING & DATE SELECTOR (NEUMORPHIC)
+                ══════════════════════════════════════════════════ */}
+            <div className="w-full neu-card rounded-[2.5rem] p-4 sm:p-5 border border-white/90 dark:border-white/10 shadow-xl flex flex-col justify-between space-y-3.5 hover:translate-y-[-4px] transition-all duration-300">
+              
+              {/* iOS Status Bar */}
+              <div className="flex items-center justify-between text-[10px] font-black text-slate-600 dark:text-slate-400 px-1">
+                <span>9:41</span>
+                <div className="flex items-center gap-1.5 text-[9px]">
+                  <i className="fa-solid fa-signal text-[8px]" />
+                  <i className="fa-solid fa-wifi text-[8px]" />
+                  <i className="fa-solid fa-battery-full text-[9px]" />
                 </div>
               </div>
+
+              {/* Title with Back Arrow */}
+              <div className="flex items-center gap-2 pt-1">
+                <button type="button" className="w-7 h-7 rounded-xl neu-btn flex items-center justify-center text-slate-700 dark:text-slate-200 text-xs">
+                  <i className="fa-solid fa-arrow-left text-[10px]" />
+                </button>
+                <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                  Kosan Pasteur — RSHS Bandung
+                </h4>
+              </div>
+
+              {/* Date / Month Horizontal Selector Pills (Neumorphic Inset Track) */}
+              <div className="flex items-center justify-between gap-1 p-1 neu-inset rounded-2xl">
+                {[
+                  { day: '15', label: 'SAB' },
+                  { day: '16', label: 'MIN' },
+                  { day: '17', label: 'SEN' },
+                  { day: '18', label: 'SEL' },
+                  { day: '19', label: 'RAB' },
+                ].map((d) => {
+                  const isSelected = activeDurationTab === d.day;
+                  return (
+                    <button
+                      key={d.day}
+                      type="button"
+                      onClick={() => setActiveDurationTab(d.day)}
+                      className={`flex-1 py-1.5 rounded-xl text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-sky-500 text-white font-black shadow-md shadow-sky-500/30'
+                          : 'neu-btn text-slate-600 dark:text-slate-400 font-bold hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <span className="text-xs font-black block leading-none">{d.day}</span>
+                      <span className="text-[8px] font-bold block mt-0.5 opacity-80">{d.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Room Listing Cards Stack (Neumorphic Elevated Cards) */}
+              <div className="space-y-2">
+                {[
+                  { name: 'Kamar Eksekutif', time: 'KM Dalam • 16 m²', tag: 'Eksekutif - A', price: 'Rp 2.200.000', left: 'Sisa 2' },
+                  { name: 'Paviliun VIP Balkon', time: 'Balkon Pribadi • 24 m²', tag: 'VIP - Premier', price: 'Rp 2.800.000', left: 'Sisa 1' },
+                  { name: 'Nyaman Standard AC', time: 'KM Luar • 12 m²', tag: 'Standard - B', price: 'Rp 1.650.000', left: 'Sisa 4' },
+                ].map((room, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-2xl neu-card flex items-center justify-between gap-2 border border-white/80 dark:border-white/10 hover:translate-y-[-2px] transition-all shadow-sm"
+                  >
+                    <div className="space-y-1">
+                      <div className="text-[11px] font-black text-slate-900 dark:text-white leading-none">{room.name}</div>
+                      <div className="text-[9px] text-slate-400">{room.time}</div>
+                      <span className="px-1.5 py-0.2 rounded neu-inset text-amber-600 dark:text-amber-400 text-[8px] font-extrabold uppercase">
+                        {room.tag}
+                      </span>
+                    </div>
+
+                    <div className="text-right flex flex-col items-end gap-1">
+                      <span className="text-xs font-black text-slate-900 dark:text-white font-mono leading-none">{room.price}</span>
+                      <span className="text-[8px] font-bold text-rose-500">{room.left}</span>
+                      <button type="button" className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-[9px] shadow-sm cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                        <i className="fa-solid fa-arrow-right" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Floating Filter Button */}
+              <div className="pt-1 flex justify-center">
+                <button
+                  type="button"
+                  className="px-6 py-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-lg shadow-orange-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <i className="fa-solid fa-sliders text-[10px]" />
+                  <span>FILTER UNIT</span>
+                </button>
+              </div>
+
             </div>
 
           </div>
+
+          {/* Floating Tips Pill Overlay at the bottom (Neumorphic Badges) */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <div className="px-4 py-2.5 rounded-2xl neu-card border border-white/90 dark:border-white/10 shadow-lg text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <span className="px-1.5 py-0.5 rounded neu-inset text-sky-600 dark:text-sky-400 text-[9px] font-black uppercase">Tips</span>
+              <span>Smart Keyless Lock aktif otomatis 24 jam via smartphone</span>
+            </div>
+            <div className="px-4 py-2.5 rounded-2xl neu-card border border-white/90 dark:border-white/10 shadow-lg text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <span className="px-1.5 py-0.5 rounded neu-inset text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase">Update</span>
+              <span>Tagihan QRIS instan terverifikasi otomatis tanpa admin</span>
+            </div>
+          </div>
+
         </div>
 
       </div>

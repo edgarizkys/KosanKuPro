@@ -488,31 +488,50 @@ export default function RoomsSection({
             ═══════════════════════════════════════════════════════════ */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           
-          {/* TAMPILKAN MODE: [Gedung Properti] [Tipe Kamar & Unit] */}
-          <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">TAMPILKAN:</span>
-            <div className="p-1 neu-inset rounded-2xl flex items-center gap-1">
+          {/* TAMPILKAN MODE: Modern Segmented Control with Brand Accent */}
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500 hidden sm:inline">
+              Tampilan:
+            </span>
+            <div className="inline-flex p-1 bg-slate-200/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-slate-300/40 dark:border-white/5 shadow-inner">
               <button
+                type="button"
                 onClick={() => setViewMode('GEDUNG')}
-                className={`px-3.5 py-1.5 rounded-xl transition-all font-black text-xs flex items-center gap-1.5 ${
+                className={`relative px-4 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                   viewMode === 'GEDUNG'
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm scale-105'
+                    ? 'bg-white dark:bg-slate-900 text-[#047857] dark:text-emerald-400 shadow-md border border-slate-200/80 dark:border-white/10'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <i className="fa-solid fa-building text-[10px]" />
+                <i className={`fa-solid fa-building text-xs ${viewMode === 'GEDUNG' ? 'text-[#047857] dark:text-emerald-400' : 'text-slate-400'}`} />
                 <span>Gedung Properti</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
+                  viewMode === 'GEDUNG'
+                    ? 'bg-emerald-500/15 text-[#047857] dark:text-emerald-400'
+                    : 'bg-slate-300/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-400'
+                }`}>
+                  {filteredBuildings.length}
+                </span>
               </button>
+
               <button
+                type="button"
                 onClick={() => setViewMode('TIPE_KAMAR')}
-                className={`px-3.5 py-1.5 rounded-xl transition-all font-black text-xs flex items-center gap-1.5 ${
+                className={`relative px-4 py-2 rounded-xl text-xs font-black transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                   viewMode === 'TIPE_KAMAR'
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm scale-105'
+                    ? 'bg-white dark:bg-slate-900 text-[#047857] dark:text-emerald-400 shadow-md border border-slate-200/80 dark:border-white/10'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <i className="fa-solid fa-door-open text-[10px]" />
+                <i className={`fa-solid fa-door-open text-xs ${viewMode === 'TIPE_KAMAR' ? 'text-[#047857] dark:text-emerald-400' : 'text-slate-400'}`} />
                 <span>Tipe Kamar &amp; Unit</span>
+                <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
+                  viewMode === 'TIPE_KAMAR'
+                    ? 'bg-emerald-500/15 text-[#047857] dark:text-emerald-400'
+                    : 'bg-slate-300/60 dark:bg-slate-700/60 text-slate-600 dark:text-slate-400'
+                }`}>
+                  {filteredRooms.length}
+                </span>
               </button>
             </div>
           </div>

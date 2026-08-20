@@ -182,23 +182,23 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
             </div>
           </div>
 
-          {/* MOBILE LAYER 1: Luxury Stacked Editorial Typography */}
-          <div className="block sm:hidden hero-parallax-text absolute top-10 left-5 right-5 z-10 pointer-events-none select-none will-change-transform">
+          {/* MOBILE LAYER 1: Clean Editorial Typography */}
+          <div className="block sm:hidden hero-parallax-text absolute top-5 left-5 right-5 z-10 pointer-events-none select-none will-change-transform">
             <div className="flex flex-col items-start space-y-0">
-              <h1 suppressHydrationWarning className="text-[2.3rem] xs:text-[2.6rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.95]">
+              <h1 suppressHydrationWarning className="text-[2.2rem] xs:text-[2.5rem] font-black tracking-tight text-slate-900 dark:text-white leading-[0.95]">
                 {property.heroHeadline}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <div className="w-6 h-1 bg-amber-500 rounded-full" />
-                <span suppressHydrationWarning className="text-[1.7rem] xs:text-[1.9rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
+                <span suppressHydrationWarning className="text-[1.65rem] xs:text-[1.85rem] font-serif italic font-light tracking-tight text-amber-600 dark:text-amber-400 leading-none">
                   {property.heroSubheadline}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* LAYER 2: Modern 3-Story Kosan Villa Cutout */}
-          <div className="hero-parallax-house relative z-20 w-full max-w-4xl sm:max-w-5xl lg:max-w-6xl mx-auto -mb-1 sm:-mb-3 lg:-mb-4 scale-100 sm:scale-105 lg:scale-110 origin-bottom pointer-events-none will-change-transform">
+          {/* LAYER 2: Modern 3-Story Kosan Villa Cutout (FULL & Bold on Mobile) */}
+          <div className="hero-parallax-house relative z-20 w-full max-w-4xl sm:max-w-5xl lg:max-w-6xl mx-auto -mb-1 sm:-mb-3 lg:-mb-4 scale-[1.38] xs:scale-[1.32] sm:scale-105 lg:scale-110 origin-bottom pointer-events-none will-change-transform">
             <img
               src="/images/modern_kosan_cutout.png"
               alt="KosanKu Pro Luxury Executive Villa"
@@ -238,8 +238,7 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
 
         </div>
 
-        {/* LAYER 4: 100% NEUMORPHIC FLOATING WIDGET CARDS */}
-
+        {/* LAYER 4: 100% NEUMORPHIC FLOATING WIDGET CARDS (DESKTOP ONLY) */}
 
         {/* Bottom Left Card: +500 Penghuni & Rating (Compact subtle card) */}
         <div className="absolute bottom-3 sm:bottom-4 left-6 sm:left-10 lg:left-14 z-30 max-w-[200px] sm:max-w-[220px] p-3.5 neu-card-sm rounded-2xl border border-white/80 dark:border-white/10 shadow-lg text-slate-900 dark:text-white hidden lg:block hover:translate-y-[-2px] transition-all">
@@ -342,6 +341,3 @@ export default function HeroSection({ onLogin, theme = 'light', onToggleTheme }:
     </section>
   );
 }
-
-
-
