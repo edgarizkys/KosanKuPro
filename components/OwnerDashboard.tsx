@@ -1628,10 +1628,33 @@ export default function OwnerDashboard({
                   <p className="text-xs text-slate-600 dark:text-slate-300 italic">&quot;{c.description}&quot;</p>
                   <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between text-[11px]">
                     <span className="text-slate-400">Tenant: <strong className="text-slate-800 dark:text-slate-200">{c.tenantName || c.user?.name || 'Penghuni Kos (WhatsApp)'}</strong></span>
-                    <button onClick={() => showToast(`Tiket keluhan #${c.id} (Kamar ${c.roomNumber || 'EKS-01'}) telah ditugaskan ke Teknisi`)} className="px-3 py-1 bg-[#047857] hover:bg-[#035e44] text-white font-bold rounded-lg text-[10px] transition-all cursor-pointer">
-                      <i className="fa-solid fa-screwdriver-wrench mr-1" />
-                      Tugaskan Teknisi
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          showToast(`✅ Tiket keluhan #${c.id} telah di-plotting & diteruskan ke Bambang (Staf Lapangan)`);
+                          await fetch('/api/complaints', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              id: c.id,
+                              status: 'IN_PROGRESS',
+                              assignedStaff: 'Bambang (Staf Lapangan)',
+                            }),
+                          }).catch(() => {});
+                          setComplaints((prev) =>
+                            prev.map((item) =>
+                              item.id === c.id
+                                ? { ...item, status: 'IN_PROGRESS', assignedStaff: 'Bambang (Staf Lapangan)' }
+                                : item
+                            )
+                          );
+                        }}
+                        className="px-3 py-1.5 bg-[#047857] hover:bg-[#035e44] text-white font-bold rounded-xl text-[10px] transition-all cursor-pointer shadow-xs active:scale-95 flex items-center gap-1.5"
+                      >
+                        <i className="fa-solid fa-screwdriver-wrench text-[10px]" />
+                        Plot ke Bambang (Staf)
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

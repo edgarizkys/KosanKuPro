@@ -173,7 +173,10 @@ export default function OwnerReportMagicPortal() {
           <div className="pt-2 border-t border-slate-200/50 dark:border-white/5 flex items-center gap-2">
             <button
               type="button"
-              onClick={() => alert('Laporan PDF Keuangan sedang diunduh...')}
+              onClick={() => {
+                const pdfUrl = `/api/reports/financial/pdf?property=${encodeURIComponent(propertyName)}&period=${encodeURIComponent(period)}&autoprint=true`;
+                window.open(pdfUrl, '_blank');
+              }}
               className="flex-1 py-3 px-3 rounded-2xl neu-btn text-slate-700 dark:text-slate-200 hover:text-[#047857] dark:hover:text-emerald-400 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
             >
               <i className="fa-solid fa-file-pdf text-xs text-rose-500" />

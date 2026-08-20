@@ -292,3 +292,52 @@ model OperationalReserve {
 
   @@unique([propertyId, month, year])
 }
+
+model StaffSchedule {
+  id         String   @id @default(uuid())
+  staffName  String
+  staffPhone String?
+  propertyId String?
+  dayOfWeek  Int      // 0=Sun 1=Mon ... 6=Sat
+  weekDate   DateTime // Start date of the specific week
+  shift      String   @default("PAGI") // PAGI, SORE, PIKET, LIBUR
+  startTime  String   @default("07:00")
+  endTime    String   @default("15:00")
+  tasks      String[] // Array of task descriptions
+  status     String   @default("RENCANA") // RENCANA, PROSES, SELESAI, LIBUR
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([staffPhone, weekDate])
+  @@index([propertyId, weekDate])
+}
+
+model Payroll {
+  id            String   @id @default(uuid())
+  staffName     String
+  staffPhone    String?
+  propertyId    String?
+  month         Int      // 1-12
+  year          Int
+  baseGaji      Float    @default(2500000)
+  tunjangan     Float    @default(350000)
+  uangMakan     Float    @default(600000)
+  bonus         Float    @default(0)
+  bonusNote     String?
+  potongan      Float    @default(125000) // BPJS etc
+  potonganNote  String?
+  totalBruto    Float
+  totalNeto     Float
+  bankName      String?
+  bankAccount   String?
+  paymentDate   DateTime?
+  isPaid        Boolean  @default(false)
+  payslipNotes  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([staffPhone, month, year])
+  @@index([propertyId, month, year])
+}
+

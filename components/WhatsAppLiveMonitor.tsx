@@ -16,6 +16,181 @@ interface WaLogEntry {
   property?: string;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Magic Link Directory — sub-component (SuperAdmin / kosankupro.cloud only)
+// ─────────────────────────────────────────────────────────────
+function MagicLinkDirectory() {
+  const [open, setOpen] = React.useState(false);
+  const [filterRole, setFilterRole] = React.useState('SEMUA');
+  const [search, setSearch] = React.useState('');
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+
+  const BASE = typeof window !== 'undefined' ? window.location.origin : 'https://kosankupro.cloud';
+
+  const links = [
+    // OWNER
+    { id: 'owner-report',   role: 'OWNER',  icon: 'fa-chart-bar',             color: 'text-emerald-600', label: 'Laporan Keuangan Eksekutif',     url: `${BASE}/portal/owner-report?property=Juragan+Kost+Pasteur` },
+    { id: 'owner-compare',  role: 'OWNER',  icon: 'fa-chart-bar',             color: 'text-emerald-600', label: 'Perbandingan Multi-Properti',     url: `${BASE}/portal/owner-compare` },
+    { id: 'approve',        role: 'OWNER',  icon: 'fa-stamp',                 color: 'text-emerald-600', label: 'Otorisasi Pengajuan Dana',        url: `${BASE}/portal/approve?id=APP-001&amount=240000&staff=Bambang` },
+    { id: 'announcement',   role: 'OWNER',  icon: 'fa-bullhorn',              color: 'text-emerald-600', label: 'Broadcast Pengumuman',            url: `${BASE}/portal/announcement?property=Juragan+Kost+Pasteur` },
+    { id: 'sign-contract',  role: 'OWNER',  icon: 'fa-file-signature',        color: 'text-emerald-600', label: 'Kontrak Sewa Digital',            url: `${BASE}/portal/sign-contract?tenant=dr.+Ahmad&room=EKS-01&price=1500000&duration=12` },
+    // TENANT
+    { id: 'invoice',        role: 'TENANT', icon: 'fa-file-invoice-dollar',   color: 'text-blue-600',    label: 'Invoice & Bayar QRIS',            url: `${BASE}/portal/invoice?invoice=INV-20260801-0001` },
+    { id: 'smartlock',      role: 'TENANT', icon: 'fa-key',                   color: 'text-blue-600',    label: 'Smart Lock IoT',                 url: `${BASE}/portal/smartlock?room=EKS-01&tenant=dr.+Rizky` },
+    { id: 'complaint',      role: 'TENANT', icon: 'fa-screwdriver-wrench',    color: 'text-blue-600',    label: 'Form Komplain Kerusakan',         url: `${BASE}/portal/complaint?room=EKS-01&tenant=dr.+Rizky` },
+    { id: 'payment-history',role: 'TENANT', icon: 'fa-receipt',               color: 'text-blue-600',    label: 'Riwayat Tagihan PDF',             url: `${BASE}/portal/payment-history?tenant=dr.+Rizky&room=EKS-01` },
+    { id: 'rate',           role: 'TENANT', icon: 'fa-star',                  color: 'text-blue-600',    label: 'Rating Layanan Staf',             url: `${BASE}/portal/rate?task=CMP-101&staff=Bambang&tenant=dr.+Rizky` },
+    { id: 'renew',          role: 'TENANT', icon: 'fa-rotate',                color: 'text-blue-600',    label: 'Perpanjang Kontrak',              url: `${BASE}/portal/renew?tenant=dr.+Rizky&room=EKS-01&price=1500000` },
+    { id: 'tenant-statement',role:'TENANT', icon: 'fa-chart-pie',             color: 'text-blue-600',    label: 'Rekap Pengeluaran Bulanan',       url: `${BASE}/portal/tenant-statement?tenant=dr.+Rizky&room=EKS-01` },
+    // LEAD
+    { id: 'booking',        role: 'LEAD',   icon: 'fa-house-chimney',         color: 'text-purple-600',  label: 'Virtual Showroom & Booking',      url: `${BASE}/portal/booking` },
+    { id: 'lead',           role: 'LEAD',   icon: 'fa-user-plus',             color: 'text-purple-600',  label: 'Registrasi Penghuni Baru',        url: `${BASE}/portal/lead?room=EKS-01&property=Juragan+Kost+Pasteur` },
+    { id: 'survey-schedule',role: 'LEAD',   icon: 'fa-calendar-plus',         color: 'text-purple-600',  label: 'Jadwal Survei Kosan',             url: `${BASE}/portal/survey-schedule?property=Juragan+Kost+Pasteur` },
+    { id: 'cost-simulator', role: 'LEAD',   icon: 'fa-calculator',            color: 'text-purple-600',  label: 'Simulasi Biaya Kos',              url: `${BASE}/portal/cost-simulator?property=Juragan+Kost+Pasteur` },
+    // VENDOR
+    { id: 'dispatch',       role: 'VENDOR', icon: 'fa-truck-fast',            color: 'text-orange-500',  label: 'Lembar Pengantaran Vendor',       url: `${BASE}/portal/dispatch?id=REQ-001&vendor=Depot+Air&item=Galon&room=EKS-01` },
+    { id: 'vendor-settlement',role:'VENDOR',icon: 'fa-money-bill-transfer',   color: 'text-orange-500',  label: 'Rekap Pencairan Dana',            url: `${BASE}/portal/vendor-settlement?vendor=Depot+Air&balance=480000` },
+    { id: 'vendor-catalog', role: 'VENDOR', icon: 'fa-store',                 color: 'text-orange-500',  label: 'Katalog Produk Vendor',           url: `${BASE}/portal/vendor-catalog?vendor=Depot+Air&room=EKS-01` },
+    { id: 'vendor-stats',   role: 'VENDOR', icon: 'fa-chart-line',            color: 'text-orange-500',  label: 'Statistik Penjualan Vendor',      url: `${BASE}/portal/vendor-stats?vendor=Depot+Air&month=2026-08` },
+    // STAFF
+    { id: 'form',           role: 'STAFF',  icon: 'fa-person-digging',        color: 'text-amber-500',   label: 'Form Lapangan (SO/Cek/Dana)',     url: `${BASE}/portal/form?staff=Bambang` },
+    { id: 'staff-task',     role: 'STAFF',  icon: 'fa-clipboard-list',        color: 'text-amber-500',   label: 'Work Order / Lembar Kerja',       url: `${BASE}/portal/staff-task?id=CMP-101&staff=Bambang&title=Servis+AC&room=EKS-01` },
+    { id: 'inspection',     role: 'STAFF',  icon: 'fa-clipboard-check',       color: 'text-amber-500',   label: 'Inspeksi Kamar Check-in/out',     url: `${BASE}/portal/inspection?room=EKS-01&tenant=dr.+Rizky&type=CHECK_IN` },
+    { id: 'track',          role: 'STAFF',  icon: 'fa-location-arrow',        color: 'text-amber-500',   label: 'Live Tracking Pengantaran',       url: `${BASE}/portal/track?id=REQ-001&item=Galon&room=EKS-01` },
+    { id: 'schedule',       role: 'STAFF',  icon: 'fa-calendar-week',         color: 'text-amber-500',   label: 'Jadwal Shift Mingguan',           url: `${BASE}/portal/schedule?staff=Bambang` },
+    { id: 'payslip',        role: 'STAFF',  icon: 'fa-money-check-dollar',    color: 'text-amber-500',   label: 'Slip Gaji Digital',               url: `${BASE}/portal/payslip?staff=Bambang&month=2026-08` },
+    { id: 'proof-upload',   role: 'STAFF',  icon: 'fa-camera',                color: 'text-amber-500',   label: 'Upload Foto Bukti Kerja',          url: `${BASE}/portal/proof-upload?task=CMP-101&staff=Bambang&room=EKS-01` },
+  ];
+
+  const roles = ['SEMUA', 'OWNER', 'TENANT', 'LEAD', 'VENDOR', 'STAFF'];
+  const roleBg: Record<string, string> = {
+    OWNER:  'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+    TENANT: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400',
+    LEAD:   'bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400',
+    VENDOR: 'bg-orange-500/10 border-orange-500/20 text-orange-500',
+    STAFF:  'bg-amber-500/10 border-amber-500/20 text-amber-500',
+  };
+
+  const filtered = links.filter(l => {
+    const matchRole = filterRole === 'SEMUA' || l.role === filterRole;
+    const matchSearch = !search || l.label.toLowerCase().includes(search.toLowerCase()) || l.id.includes(search.toLowerCase());
+    return matchRole && matchSearch;
+  });
+
+  const copyLink = (id: string, url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  return (
+    <div className="neu-card rounded-3xl overflow-hidden">
+      {/* Header — toggle collapse */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#047857]/15 text-[#047857] dark:text-emerald-400 flex items-center justify-center text-sm">
+            <i className="fa-solid fa-link" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+              🔗 Direktori Magic Link Portal
+              <span className="px-2 py-0.5 rounded-full bg-[#047857]/15 text-[#047857] dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20">
+                {links.length} Portal
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">Semua portal yang bisa dikirim via WA per role — klik untuk expand</p>
+          </div>
+        </div>
+        <i className={`fa-solid fa-chevron-down text-slate-400 text-sm transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="px-4 sm:px-5 pb-5 space-y-4 border-t border-slate-200/50 dark:border-white/5 pt-4">
+          {/* Search */}
+          <div className="flex gap-2">
+            <div className="flex-1 flex items-center gap-2 neu-inset rounded-xl px-3 py-2">
+              <i className="fa-solid fa-search text-slate-400 text-xs" />
+              <input
+                type="text"
+                placeholder="Cari nama portal..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="flex-1 text-xs text-slate-800 dark:text-white bg-transparent outline-none placeholder-slate-400 font-semibold"
+              />
+            </div>
+          </div>
+
+          {/* Role Filter */}
+          <div className="flex flex-wrap gap-1.5">
+            {roles.map(r => (
+              <button
+                key={r}
+                onClick={() => setFilterRole(r)}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-black cursor-pointer transition-all ${
+                  filterRole === r
+                    ? 'neu-card text-[#047857] dark:text-emerald-400 border border-emerald-500/25'
+                    : 'neu-inset text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                }`}
+              >
+                {r} {r !== 'SEMUA' && `(${links.filter(l => l.role === r).length})`}
+              </button>
+            ))}
+          </div>
+
+          {/* Link Grid */}
+          <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+            {filtered.map(link => (
+              <div key={link.id} className="flex items-center gap-3 p-3 rounded-xl neu-inset">
+                {/* Icon */}
+                <div className={`w-8 h-8 rounded-lg bg-white/60 dark:bg-white/5 flex-shrink-0 flex items-center justify-center ${link.color}`}>
+                  <i className={`fa-solid ${link.icon} text-xs`} />
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-black text-slate-800 dark:text-white">{link.label}</span>
+                    <span className={`px-1.5 py-0.5 rounded-md text-[9px] font-black border ${roleBg[link.role]}`}>{link.role}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-mono truncate mt-0.5">/portal/{link.id}</p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => copyLink(link.id, link.url)}
+                    className="w-7 h-7 rounded-lg neu-btn flex items-center justify-center cursor-pointer transition-all"
+                    title="Salin link lengkap"
+                  >
+                    <i className={`fa-solid ${copiedId === link.id ? 'fa-check text-[#047857]' : 'fa-copy text-slate-400'} text-[10px]`} />
+                  </button>
+                  <button
+                    onClick={() => window.open(link.url, '_blank')}
+                    className="w-7 h-7 rounded-lg neu-btn flex items-center justify-center cursor-pointer"
+                    title="Buka portal"
+                  >
+                    <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="text-center py-6 text-slate-400">
+                <i className="fa-solid fa-search text-xl mb-2 block" />
+                <p className="text-xs font-bold">Tidak ada portal yang cocok</p>
+              </div>
+            )}
+          </div>
+          <p className="text-[10px] text-center text-slate-400">{filtered.length} dari {links.length} magic link ditampilkan</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function WhatsAppLiveMonitor() {
   const { property } = useProperty();
   const [logs, setLogs] = useState<WaLogEntry[]>([]);
@@ -343,6 +518,9 @@ export default function WhatsAppLiveMonitor() {
           </div>
         </div>
       </div>
+
+      {/* ─── Magic Link Directory ─── */}
+      <MagicLinkDirectory />
 
       {/* Role Switcher Toolbar (Quick Copy for Owner Testing) */}
       <div className="neu-card rounded-3xl p-4 sm:p-5 space-y-3">

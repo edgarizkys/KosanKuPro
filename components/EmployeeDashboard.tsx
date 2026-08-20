@@ -10,12 +10,15 @@ interface StaffTask {
   id: string;
   title: string;
   room: string;
-  category: 'CLEANING' | 'MAINTENANCE' | 'UTILITY_METER' | 'OWNER_PLOTTED';
+  tenantName?: string;
+  category: string;
   assignedTo: string;
   dueTime: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
   completed: boolean;
   ownerInstruction?: string;
   connectedVendor?: string;
+  source?: 'complaint' | 'order';
 }
 
 interface InventoryChecklist {
@@ -229,12 +232,6 @@ export default function EmployeeDashboard({
     showToast('📸 Foto bukti fisik SO berhasil ditangkap dengan Watermark GPS & Waktu');
   };
 
-  const toggleTask = (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-    );
-  };
-
   const updatePhysicalCount = (id: string, delta: number) => {
     setSoItems((prev) =>
       prev.map((item) =>
@@ -366,42 +363,119 @@ export default function EmployeeDashboard({
   };
 
   const [activeBranch, setActiveBranch] = useState('all');
+  const [taskNotes, setTaskNotes] = useState<Record<string, string>>({});
   const completedCount = tasks.filter((t) => t.completed).length;
+
+  const updateTaskStatus = async (taskId: string, newStatus: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED', notes?: string) => {
+    // 1. Optimistic UI update
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              status: newStatus,
+              completed: newStatus === 'RESOLVED',
+              ownerInstruction: notes ? `${t.ownerInstruction || ''} (Catatan: ${notes})` : t.ownerInstruction,
+            }
+          : t
+      )
+    );
+
+    const statusLabel = newStatus === 'RESOLVED' ? 'SELESAI (RESOLVED) & TERSINKRONISASI KE OWNER' : 'SEDANG DIKERJAKAN (IN PROGRESS)';
+    showToast(`✅ Tugas #${taskId} diperbarui: ${statusLabel}`);
+
+    // 2. Push mutation to API
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (targetTask?.source === 'order') {
+      await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: taskId,
+          status: newStatus === 'RESOLVED' ? 'DELIVERED' : 'PROCESSING',
+        }),
+      }).catch(() => {});
+    } else {
+      await fetch('/api/complaints', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: taskId,
+          status: newStatus,
+          resolutionNotes: notes,
+        }),
+      }).catch(() => {});
+    }
+  };
+
+  const toggleTask = (taskId: string) => {
+    const t = tasks.find((item) => item.id === taskId);
+    if (!t) return;
+    const nextStatus = t.status === 'RESOLVED' ? 'OPEN' : 'RESOLVED';
+    updateTaskStatus(taskId, nextStatus);
+  };
 
   useEffect(() => {
     const fetchEmployeeTasks = async () => {
       try {
-        const res = await fetch('/api/orders');
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.data?.length) {
-            const plottedOrders = json.data.map((item: any) => ({
-              id: item.id,
-              title: `Plotting dari Owner: ${item.item}`,
-              room: `Kamar ${item.roomNumber || 'A-101'} (${item.tenantName})`,
-              category: 'OWNER_PLOTTED' as const,
-              assignedTo: 'Bambang (Staf Maintenance)',
-              dueTime: 'Segera',
-              completed: item.status === 'COMPLETED' || item.status === 'DELIVERED',
-              ownerInstruction: item.notes || 'Segera proses pesanan ini.',
-              connectedVendor: 'Vendor Terkait',
-            }));
+        const [complaintsRes, ordersRes] = await Promise.all([
+          fetch('/api/complaints'),
+          fetch('/api/orders')
+        ]);
 
-            setTasks((prev) => {
-              const existingIds = new Set(prev.map((t) => t.id));
-              const newItems = plottedOrders.filter((t: any) => !existingIds.has(t.id));
-              if (newItems.length > 0) {
-                showToast(`🔔 ${newItems.length} TUGAS BARU DITUGASKAN UNTUK KARYAWAN!`);
-              }
-              return [...newItems, ...prev];
+        const combined: StaffTask[] = [];
+
+        if (complaintsRes.ok) {
+          const cJson = await complaintsRes.json();
+          if (cJson?.data && Array.isArray(cJson.data)) {
+            cJson.data.forEach((c: any) => {
+              combined.push({
+                id: c.id,
+                title: c.title || 'Perbaikan / Keluhan Kamar',
+                room: `Kamar ${c.roomNumber || 'EKS-01'}`,
+                tenantName: c.tenantName,
+                category: c.category || 'MAINTENANCE',
+                assignedTo: c.assignedStaff || 'Bambang Prasetyo (Staf Lapangan)',
+                dueTime: 'Hari Ini',
+                status: c.status === 'RESOLVED' ? 'RESOLVED' : c.status === 'IN_PROGRESS' ? 'IN_PROGRESS' : 'OPEN',
+                completed: c.status === 'RESOLVED',
+                ownerInstruction: c.description || 'Segera tangani keluhan di kamar ini.',
+                source: 'complaint',
+              });
             });
           }
+        }
+
+        if (ordersRes.ok) {
+          const oJson = await ordersRes.json();
+          if (oJson?.data && Array.isArray(oJson.data)) {
+            oJson.data.forEach((o: any) => {
+              combined.push({
+                id: o.id,
+                title: `Plotting Pengantaran: ${o.item}`,
+                room: `Kamar ${o.roomNumber || 'EKS-01'}`,
+                tenantName: o.tenantName,
+                category: 'LOGISTICS',
+                assignedTo: 'Bambang (Staf)',
+                dueTime: 'Segera',
+                status: o.status === 'DELIVERED' || o.status === 'COMPLETED' ? 'RESOLVED' : o.status === 'PROCESSING' ? 'IN_PROGRESS' : 'OPEN',
+                completed: o.status === 'DELIVERED' || o.status === 'COMPLETED',
+                ownerInstruction: o.notes || 'Bantu verifikasi penerimaan barang ke kamar.',
+                connectedVendor: o.vendorName,
+                source: 'order',
+              });
+            });
+          }
+        }
+
+        if (combined.length > 0) {
+          setTasks(combined);
         }
       } catch (err) {}
     };
 
     fetchEmployeeTasks();
-    const interval = setInterval(fetchEmployeeTasks, 2500);
+    const interval = setInterval(fetchEmployeeTasks, 3000);
 
     const handleSwitchTab = (e: any) => {
       if (e.detail?.tab) {
@@ -618,61 +692,150 @@ export default function EmployeeDashboard({
             </div>
           </div>
 
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                onClick={() => toggleTask(task.id)}
-                className={`p-5 rounded-2xl transition-all cursor-pointer flex items-start gap-4 ${
-                  task.category === 'OWNER_PLOTTED'
-                    ? 'neu-card-sm border-amber-300 dark:border-amber-500/30'
-                    : task.completed
-                    ? 'neu-inset opacity-65'
-                    : 'neu-card-sm hover:scale-[1.01]'
-                }`}
-              >
+          <div className="space-y-4">
+            {tasks.map((task) => {
+              const isResolved = task.status === 'RESOLVED' || task.completed;
+              const isInProgress = task.status === 'IN_PROGRESS';
+              const isOpen = task.status === 'OPEN' && !task.completed;
+
+              return (
                 <div
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs mt-0.5 transition-all shrink-0 ${
-                    task.completed
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'neu-inset text-transparent'
+                  key={task.id}
+                  className={`p-5 rounded-2xl transition-all space-y-3.5 ${
+                    isResolved
+                      ? 'neu-inset opacity-80'
+                      : isInProgress
+                      ? 'neu-card-sm border-2 border-amber-500/50 bg-amber-500/5'
+                      : 'neu-card-sm border border-slate-200/60 dark:border-white/10 hover:scale-[1.005]'
                   }`}
                 >
-                  <i className="fa-solid fa-check" />
-                </div>
+                  {/* Header Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-lg neu-inset font-mono text-[10px] font-black text-slate-700 dark:text-slate-200">
+                        #{task.id}
+                      </span>
+                      <span className="text-sm font-black text-slate-900 dark:text-white">
+                        {task.title}
+                      </span>
+                    </div>
 
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <span className={`text-sm font-bold ${task.completed ? 'line-through text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>
-                      {task.title}
-                    </span>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 w-fit">
-                      {task.room} • {task.dueTime}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 w-fit">
+                        {task.room}
+                      </span>
+                      <span
+                        className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                          isResolved
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
+                            : isInProgress
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 animate-pulse'
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300'
+                        }`}
+                      >
+                        {isResolved
+                          ? '✅ SELESAI'
+                          : isInProgress
+                          ? '🟡 SEDANG DIKERJAKAN'
+                          : '⏳ MENUNGGU PENANGANAN'}
+                      </span>
+                    </div>
                   </div>
 
+                  {/* Instruction / Details Box */}
                   {task.ownerInstruction && (
-                    <div className="p-2.5 neu-inset rounded-xl text-xs text-amber-900 dark:text-amber-300 font-medium">
-                      📌 <strong>Instruksi Owner:</strong> {task.ownerInstruction}
+                    <div className="p-3 neu-inset rounded-xl text-xs space-y-1 text-slate-700 dark:text-slate-300 font-medium">
+                      <div>
+                        📌 <strong>Instruksi &amp; Uraian:</strong> {task.ownerInstruction}
+                      </div>
                       {task.connectedVendor && (
-                        <span className="block mt-0.5 font-bold text-emerald-700 dark:text-emerald-400">
-                          Vendor Mitra: {task.connectedVendor}
-                        </span>
+                        <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                          Mitra Vendor: {task.connectedVendor}
+                        </div>
                       )}
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
-                    <span>Petugas Penanggung Jawab: <strong className="text-slate-700 dark:text-slate-300">{task.assignedTo}</strong></span>
-                    {task.completed ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[11px]"><i className="fa-solid fa-circle-check mr-1" /> Dilaporkan Selesai ke Owner</span>
-                    ) : (
-                      <span className="text-blue-600 dark:text-blue-400 font-semibold text-[10px]">Klik untuk tandai selesai</span>
-                    )}
+                  {/* Note Input for Progress / Resolution */}
+                  {!isResolved && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={taskNotes[task.id] || ''}
+                        onChange={(e) =>
+                          setTaskNotes((prev) => ({ ...prev, [task.id]: e.target.value }))
+                        }
+                        placeholder="Catatan pengerjaan lapangan / bukti servis (opsional)..."
+                        className="flex-1 p-2.5 neu-input rounded-xl text-xs outline-none text-slate-900 dark:text-white"
+                      />
+                    </div>
+                  )}
+
+                  {/* Footer & Action Stepper Buttons */}
+                  <div className="pt-2 border-t border-slate-200/60 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <span className="text-slate-400 text-[11px]">
+                      Petugas: <strong className="text-slate-700 dark:text-slate-300">{task.assignedTo}</strong>
+                    </span>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* 1-Click Magic Link Sheet */}
+                      <a
+                        href={`/portal/staff-task?id=${task.id}&staff=${encodeURIComponent(task.assignedTo)}&room=${encodeURIComponent(task.room)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="py-1.5 px-3 rounded-xl neu-btn text-slate-600 dark:text-slate-300 hover:text-[#047857] text-[11px] font-bold flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <i className="fa-solid fa-arrow-up-right-from-square text-[10px]" />
+                        <span>Magic Link</span>
+                      </a>
+
+                      {/* Button: Mulai Kerjakan (if OPEN) */}
+                      {isOpen && (
+                        <button
+                          type="button"
+                          onClick={() => updateTaskStatus(task.id, 'IN_PROGRESS', taskNotes[task.id])}
+                          className="py-1.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-xs"
+                        >
+                          <i className="fa-solid fa-play text-[10px]" />
+                          <span>Mulai Kerjakan</span>
+                        </button>
+                      )}
+
+                      {/* Button: Tandai Selesai (if OPEN or IN_PROGRESS) */}
+                      {!isResolved && (
+                        <button
+                          type="button"
+                          onClick={() => updateTaskStatus(task.id, 'RESOLVED', taskNotes[task.id])}
+                          className="py-1.5 px-3 rounded-xl bg-[#047857] hover:bg-[#065f46] text-white font-bold text-[11px] flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-xs"
+                        >
+                          <i className="fa-solid fa-circle-check text-[10px]" />
+                          <span>Tandai Selesai &amp; Lapor ke Owner</span>
+                        </button>
+                      )}
+
+                      {/* Button: Buka Kembali (if RESOLVED) */}
+                      {isResolved && (
+                        <button
+                          type="button"
+                          onClick={() => updateTaskStatus(task.id, 'OPEN')}
+                          className="py-1.5 px-3 rounded-xl neu-btn text-slate-500 hover:text-slate-800 dark:hover:text-white font-bold text-[11px] cursor-pointer"
+                        >
+                          <i className="fa-solid fa-rotate-left text-[10px] mr-1" />
+                          Buka Kembali
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+              );
+            })}
+
+            {tasks.length === 0 && (
+              <div className="text-center py-10 text-slate-400 text-xs neu-inset rounded-2xl">
+                <i className="fa-solid fa-list-check text-2xl text-emerald-500 mb-2 block" />
+                Belum ada tugas atau keluhan aktif yang perlu dikerjakan hari ini.
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}
