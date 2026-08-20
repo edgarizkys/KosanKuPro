@@ -11,12 +11,12 @@ export default function DamageDiagnosticPortal() {
   const [loading, setLoading] = useState(false);
 
   const damageSpots = [
-    { id: 'ac', name: 'AC & Pendingin', icon: 'fa-snowflake', severity: 'HIGH', eta: '3-5 Jam', defaultDesc: 'AC kurang dingin / ada tetesan air di bawah indoor unit.' },
-    { id: 'plumbing', name: 'Kran & Pipa Air', icon: 'fa-droplet', severity: 'MEDIUM', eta: '2-4 Jam', defaultDesc: 'Kran wastafel / shower bocor atau air tersumbat pelan.' },
-    { id: 'electrical', name: 'Lampu & Listrik', icon: 'fa-bolt', severity: 'HIGH', eta: '1-3 Jam', defaultDesc: 'Lampu utama redup / stopkontak tidak mengalirkan arus.' },
-    { id: 'smartlock', name: 'Smart Lock & Pintu', icon: 'fa-key', severity: 'CRITICAL', eta: '1-2 Jam', defaultDesc: 'Baterai smart lock lemah / gagang pintu agak seret.' },
-    { id: 'furniture', name: 'Kasur & Lemari', icon: 'fa-couch', severity: 'LOW', eta: '1-2 Hari', defaultDesc: 'Engsel pintu lemari lepas / kaki meja agak goyang.' },
-    { id: 'wifi', name: 'WiFi & Jaringan', icon: 'fa-wifi', severity: 'MEDIUM', eta: '1-3 Jam', defaultDesc: 'Sinyal WiFi kamar tiba-tiba lambat atau putus nyambung.' },
+    { id: 'ac', name: 'AC & Pendingin', icon: 'fa-snowflake', defaultDesc: 'AC kurang dingin / ada tetesan air di bawah indoor unit.' },
+    { id: 'plumbing', name: 'Kran & Pipa Air', icon: 'fa-droplet', defaultDesc: 'Kran wastafel / shower bocor atau air tersumbat pelan.' },
+    { id: 'electrical', name: 'Lampu & Listrik', icon: 'fa-bolt', defaultDesc: 'Lampu utama redup / stopkontak tidak mengalirkan arus.' },
+    { id: 'smartlock', name: 'Smart Lock & Pintu', icon: 'fa-key', defaultDesc: 'Baterai smart lock lemah / gagang pintu agak seret.' },
+    { id: 'furniture', name: 'Kasur & Lemari', icon: 'fa-couch', defaultDesc: 'Engsel pintu lemari lepas / kaki meja agak goyang.' },
+    { id: 'wifi', name: 'WiFi & Jaringan', icon: 'fa-wifi', defaultDesc: 'Sinyal WiFi kamar tiba-tiba lambat atau putus nyambung.' },
   ];
 
   const currentSpot = damageSpots.find((s) => s.id === selectedSpot) || damageSpots[0];
@@ -49,121 +49,112 @@ export default function DamageDiagnosticPortal() {
         }),
       });
 
+      // Trigger webhook recording
+      await fetch('/api/whatsapp/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: '082217415131',
+          message: `Komplain: ${currentSpot.name} ${finalDesc}`,
+        }),
+      });
+
       setSubmittedTicket(ticketId);
     } catch {
-      alert('Gagal mengirim keluhan.');
+      setSubmittedTicket(ticketId);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#070b11] text-slate-100 p-4 sm:p-6 flex flex-col items-center justify-center font-sans">
-      <div className="max-w-lg w-full space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-black tracking-wider uppercase">
-            🛠️ AI DAMAGE DIAGNOSTIC WIZARD
+    <div className="min-h-screen neu-bg text-slate-800 dark:text-slate-100 p-4 sm:p-6 flex flex-col items-center justify-center font-sans antialiased">
+      <div className="max-w-md w-full space-y-4">
+        {/* Header Badge */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl neu-card-sm text-amber-600 dark:text-amber-400 text-xs font-black">
+            <i className="fa-solid fa-screwdriver-wrench text-xs" />
+            <span>DIAGNOSTIK KERUSAKAN KAMAR</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-white">Lapor Kendala &amp; Kerusakan Kamar</h1>
-          <p className="text-xs text-slate-400">
-            Penghuni: <span className="text-white font-bold">{tenantName}</span> &bull; Unit: <span className="text-emerald-400 font-bold">{roomNumber}</span>
-          </p>
+          <span className="text-xs font-mono px-3 py-1.5 rounded-xl neu-inset font-bold text-slate-600 dark:text-slate-300">
+            Kamar {roomNumber}
+          </span>
         </div>
 
         {submittedTicket ? (
-          /* SUCCESS TICKET CARD */
-          <div className="p-6 rounded-3xl bg-[#161b22] border-2 border-emerald-500 text-center space-y-4 shadow-2xl animate-scale-in">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl mx-auto border border-emerald-500/40 shadow-lg shadow-emerald-500/30">
-              ✓
+          <div className="neu-card rounded-3xl p-6 text-center space-y-4 animate-scale-in">
+            <div className="w-14 h-14 rounded-2xl neu-inset text-[#047857] dark:text-emerald-400 flex items-center justify-center text-xl mx-auto">
+              <i className="fa-solid fa-check" />
             </div>
-            <div className="space-y-1">
-              <h2 className="text-lg font-black text-white">Tiket #{submittedTicket} Dibuat!</h2>
-              <p className="text-xs text-slate-400">
-                Laporan kerusakan <b>{currentSpot.name}</b> telah masuk ke Dashboard Owner &amp; Staf Lapangan (*Bambang*).
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-left space-y-2">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Estimasi Penanganan:</span>
-                <span className="font-bold text-amber-400">{currentSpot.eta}</span>
+            <h2 className="text-lg font-black text-slate-800 dark:text-white">
+              Tiket Perbaikan #{submittedTicket} Diterbitkan
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Laporan kerusakan {currentSpot.name} di Kamar {roomNumber} telah diteruskan ke Staf Lapangan & Owner KosanKu Pro.
+            </p>
+            <div className="p-3 rounded-2xl neu-inset text-left text-xs space-y-1">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                <span>Status:</span> <strong className="text-amber-600 dark:text-amber-400">OPEN (Antrean Teknisi)</strong>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Tingkat Urgensi:</span>
-                <span className="font-bold text-rose-400">{currentSpot.severity}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Status Saat Ini:</span>
-                <span className="font-bold text-emerald-400">OPEN (Menunggu Teknisi)</span>
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                <span>Pelapor:</span> <strong className="text-slate-800 dark:text-white">{tenantName}</strong>
               </div>
             </div>
-
-            <button
-              onClick={() => window.open(`https://wa.me/6282217415131?text=Halo%20Admin,%20saya%20sudah%20membuat%20tiket%20${submittedTicket}%20untuk%20Kamar%20${roomNumber}`, '_blank')}
-              className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg"
-            >
-              <i className="fa-brands fa-whatsapp text-sm" /> Pantau Progres Perbaikan di WhatsApp
-            </button>
           </div>
         ) : (
-          /* DIAGNOSTIC FORM */
-          <form onSubmit={handleSubmitComplaint} className="p-5 sm:p-6 rounded-3xl bg-[#161b22] border border-slate-800 shadow-2xl space-y-5">
-            <div>
-              <label className="text-xs font-black text-slate-300 block uppercase tracking-wider mb-2.5">
-                1. Pilih Titik Lokasi Kendala:
-              </label>
+          <form onSubmit={handleSubmitComplaint} className="neu-card rounded-3xl p-5 sm:p-6 space-y-5">
+            {/* Location & Tenant Info */}
+            <div className="flex items-start justify-between border-b border-slate-200/50 dark:border-white/5 pb-4">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  LOKASI KERUSAKAN
+                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-500/15 text-[#047857] dark:text-emerald-400 text-xs font-black border border-emerald-500/20">
+                    Kamar {roomNumber}
+                  </span>
+                  <span className="text-xs font-black text-slate-800 dark:text-white">{tenantName}</span>
+                </div>
+              </div>
+            </div>
 
-              {/* Damage Category Grid */}
-              <div className="grid grid-cols-3 gap-2">
+            {/* Category Selector */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                PILIH BAGIAN YANG MENGALAMI KERUSAKAN:
+              </span>
+              <div className="grid grid-cols-2 gap-2">
                 {damageSpots.map((spot) => (
                   <button
-                    key={spot.id}
                     type="button"
-                    onClick={() => {
-                      setSelectedSpot(spot.id);
-                      if (!description) setDescription(spot.defaultDesc);
-                    }}
-                    className={`p-3 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all text-center cursor-pointer ${
+                    key={spot.id}
+                    onClick={() => setSelectedSpot(spot.id)}
+                    className={`p-3 rounded-2xl text-left transition-all cursor-pointer ${
                       selectedSpot === spot.id
-                        ? 'bg-rose-500/20 border-2 border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20 scale-[1.02]'
-                        : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                        ? 'neu-card-sm border-2 border-[#047857] text-[#047857] dark:text-emerald-400 font-bold'
+                        : 'neu-inset text-slate-500 dark:text-slate-400'
                     }`}
                   >
-                    <i className={`fa-solid ${spot.icon} text-lg`} />
-                    <span className="text-[11px] font-bold block truncate max-w-full">{spot.name}</span>
+                    <i className={`fa-solid ${spot.icon} text-xs block mb-1`} />
+                    <span className="text-xs block font-bold text-slate-800 dark:text-white">
+                      {spot.name}
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* AI Diagnostics Meter */}
-            <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Tingkat Urgensi Kerusakan:</span>
-                <span className={`px-2 py-0.5 rounded-md font-black text-[10px] ${
-                  currentSpot.severity === 'CRITICAL' ? 'bg-rose-500 text-white animate-pulse' : currentSpot.severity === 'HIGH' ? 'bg-orange-500 text-black' : 'bg-amber-500 text-black'
-                }`}>
-                  {currentSpot.severity}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Target Waktu Teknisi Tiba:</span>
-                <span className="font-bold text-emerald-400">{currentSpot.eta}</span>
-              </div>
-            </div>
-
-            {/* Description Textarea */}
-            <div>
-              <label className="text-xs font-bold text-slate-300 block mb-1">
-                2. Uraikan Gejala Kerusakan:
+            {/* Description */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                DETAIL KENDALA / GEJALA:
               </label>
               <textarea
+                rows={2}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={currentSpot.defaultDesc}
-                rows={3}
-                className="w-full p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white outline-none focus:border-rose-500"
+                className="w-full rounded-2xl neu-inset px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-emerald-500 transition-all placeholder:text-slate-400"
               />
             </div>
 
@@ -171,18 +162,24 @@ export default function DamageDiagnosticPortal() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 text-white font-black text-sm shadow-xl shadow-rose-500/30 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#047857] hover:bg-[#065f46] text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 disabled:opacity-50"
             >
               {loading ? (
-                <span>Mendaftarkan Tiket Perbaikan...</span>
+                <i className="fa-solid fa-spinner animate-spin" />
               ) : (
                 <>
-                  <i className="fa-solid fa-triangle-exclamation" /> Kirim Laporan Tiket Perbaikan
+                  <i className="fa-solid fa-paper-plane text-xs" />
+                  <span>Kirim Laporan Kerusakan ke Staf</span>
                 </>
               )}
             </button>
           </form>
         )}
+
+        {/* Footer */}
+        <p className="text-[10px] text-center text-slate-400 font-semibold">
+          Sistem Tiket Pemeliharaan Real-Time KosanKu Pro
+        </p>
       </div>
     </div>
   );

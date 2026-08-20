@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, safeDbQuery } from '@/lib/prisma';
 import { chatCompletion } from '@/lib/openai';
 import { sendWhatsApp } from '@/lib/fonnte';
-import { pushActivityNotification, pushWaLiveLog, pushSupplyOrder } from '@/lib/activityEvents';
+import { pushActivityNotification, pushWaLiveLog, pushSupplyOrder, inMemoryOrders } from '@/lib/activityEvents';
 import type OpenAI from 'openai';
 
 export const dynamic = 'force-dynamic';
@@ -401,8 +401,9 @@ export async function POST(req: NextRequest) {
 
         const liveNetProfit = liveIncome - liveExpense;
         const occRate = totalRoomsCount > 0 ? Math.round((occupiedRoomsCount / totalRoomsCount) * 100) : 38;
+        const magicOwnerReportUrl = `https://kosankupro.cloud/portal/owner-report?property=${encodeURIComponent(userProperty)}`;
 
-        replyText = `📊 *Laporan Keuangan & Kas Real-Time (Live DB)*\n🏠 Properti: *${userProperty}*\n\n💰 *Pemasukan Sewa Terverifikasi:* ${formatIDR(liveIncome)} (Okupansi: ${occRate}%)\n🛍️ *Pendapatan Add-on & Vendor:* Rp 1.450.000\n🔻 *Pengeluaran Operasional:* ${formatIDR(liveExpense)}\n───────────────────────\n💵 *Laba Bersih Kas Saat Ini:* *${formatIDR(liveNetProfit)}*`;
+        replyText = `📊 *Laporan Keuangan & Kas Real-Time (Live DB)*\n🏠 Properti: *${userProperty}*\n\n💰 *Pemasukan Sewa Terverifikasi:* ${formatIDR(liveIncome)} (Okupansi: ${occRate}%)\n🛍️ *Pendapatan Add-on & Vendor:* Rp 1.450.000\n🔻 *Pengeluaran Operasional:* ${formatIDR(liveExpense)}\n───────────────────────\n💵 *Laba Bersih Kas Saat Ini:* *${formatIDR(liveNetProfit)}*\n\n👉 *Buka Laporan Eksekutif P&L & Grafik Okupansi (1-Klik):*\n${magicOwnerReportUrl}`;
         replyButtons = [
           { id: 'acc_galon', text: '✅ ACC 12 Galon' },
           { id: 'acc_servis', text: '✅ ACC Servis AC' },
@@ -468,7 +469,9 @@ export async function POST(req: NextRequest) {
           badgeColor: 'bg-blue-100 text-blue-800',
         });
 
-        replyText = `👨‍🔧 *Tugas Berhasil Di-Plotting!*\n• Pekerjaan: *${taskPart}*\n• Ditugaskan ke: *${staffTarget}*\n\nNotifikasi penugasan telah diteruskan ke WhatsApp staf terkait dan tercatat di tab Complaints Web Dashboard.`;
+        const magicStaffTaskUrl = `https://kosankupro.cloud/portal/staff-task?id=${taskPart.replace(/[^a-zA-Z0-9-]/g, '') || 'CMP-101'}&staff=${encodeURIComponent(staffTarget)}&title=${encodeURIComponent(taskPart)}&room=EKS-01`;
+
+        replyText = `👨‍🔧 *Tugas Berhasil Di-Plotting!*\n• Pekerjaan: *${taskPart}*\n• Ditugaskan ke: *${staffTarget}*\n\n👉 *Buka Lembar Kerja Staf (1-Klik Magic Link):*\n${magicStaffTaskUrl}`;
         actionSummary = `PLOT_TASK_${taskPart}`;
       } else {
         replyText = `👑 *Menu Pengelola KosanKu (Owner)*\nHalo *${userName}*,\nSilakan sentuh menu di bawah untuk mengelola kosan:\n\n` +
@@ -577,9 +580,18 @@ export async function POST(req: NextRequest) {
 
         // 3. Auto WhatsApp dispatch to Vendor & Owner
         const vendorPhone = orderCat === 'WARUNG' ? '081298765432' : orderCat === 'LAUNDRY' ? '081387654321' : '085712345678';
+        const magicDispatchUrl = `https://kosankupro.cloud/portal/dispatch?id=${newOrderId}&vendor=${encodeURIComponent(targetVendor)}&item=${encodeURIComponent(orderItem)}&room=${encodeURIComponent(userRoom || 'EKS-01')}&tenant=${encodeURIComponent(userName)}&notes=${encodeURIComponent(`Order WhatsApp dari ${userName}`)}`;
+        const magicTrackingUrl = `https://kosankupro.cloud/portal/track?id=${newOrderId}&item=${encodeURIComponent(orderItem)}&room=${encodeURIComponent(userRoom || 'EKS-01')}&tenant=${encodeURIComponent(userName)}&vendor=${encodeURIComponent(targetVendor)}`;
+
         sendWhatsApp(
           vendorPhone,
-          `🍽️ *PESANAN BARU DARI PENGHUNI KOSANKU PRO*\n• Order ID: *#${newOrderId}*\n• Lokasi: *Juragan Kost Pasteur RSHS (Kamar ${userRoom || 'EKS-01'})*\n• Penghuni: *${userName}*\n• Item: *${orderItem}*\n\nMohon segera disiapkan & diantar. Ketik *Diantar ${newOrderId}* jika kurir berangkat.`
+          `🍽️ *PESANAN BARU DARI PENGHUNI KOSANKU PRO*\n` +
+          `• Order ID: *#${newOrderId}*\n` +
+          `• Lokasi: *Juragan Kost Pasteur RSHS (Kamar ${userRoom || 'EKS-01'})*\n` +
+          `• Penghuni: *${userName}*\n` +
+          `• Item: *${orderItem}*\n\n` +
+          `👉 *Buka Portal Pengantaran & Update Status (1-Klik Magic Link):*\n${magicDispatchUrl}\n\n` +
+          `_(Atau balas WA ini dengan ketik: *Diantar ${newOrderId}*)_`
         ).catch(() => {});
 
         pushWaLiveLog({
@@ -587,12 +599,12 @@ export async function POST(req: NextRequest) {
           senderName: targetVendor,
           detectedRole: `VENDOR_${orderCat}`,
           inboundText: `[AUTO-DISPATCH SISTEM]: Teruskan Pesanan #${newOrderId}`,
-          replyText: `🍽️ Pesanan #${newOrderId} berhasil diteruskan ke ${targetVendor} (Kamar ${userRoom || 'EKS-01'}: ${orderItem}). Mitra siap mengantar.`,
+          replyText: `🍽️ Pesanan #${newOrderId} diteruskan ke ${targetVendor} (Kamar ${userRoom || 'EKS-01'}: ${orderItem}). Link Portal: ${magicDispatchUrl}`,
           actionTaken: `DISPATCH_TO_VENDOR_${orderCat}`,
           property: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
         });
 
-        replyText = `🛒 *Pemesanan Layanan Kos (Kamar ${userRoom || 'EKS-01'})*\nPesanan *#${newOrderId}* telah tercatat di Database:\n• Item: *${orderItem}*\n• Mitra Vendor: *${targetVendor}*\n• Status: *Sedang Diproses & Siap Diantar*\n\nNotifikasi otomatis telah diteruskan ke ${targetVendor} dan Owner. Anda akan menerima pemberitahuan saat kurir mengantar barang.`;
+        replyText = `🛒 *Pemesanan Layanan Kos (Kamar ${userRoom || 'EKS-01'})*\nPesanan *#${newOrderId}* telah tercatat di Database:\n• Item: *${orderItem}*\n• Mitra Vendor: *${targetVendor}*\n• Status: *Sedang Diproses & Siap Diantar*\n\n👉 *Pantau Radar Pelacakan Kurir Live (1-Klik Magic Link):*\n${magicTrackingUrl}`;
         replyButtons = [
           { id: 'pesanan_saya', text: '📦 Cek Pesanan' },
           { id: 'menu_tenant', text: '🏠 Menu Utama' },
@@ -755,7 +767,9 @@ export async function POST(req: NextRequest) {
           badgeColor: 'bg-indigo-100 text-indigo-800',
         });
 
-        replyText = `✅ *Laporan Stock Opname #${soId} BERHASIL Tersimpan!*\nPetugas: *${userName}*\n🏢 Properti: *${userProperty}*\n\n📊 *Hasil Audit Fisik:*\n• Galon Air: *${galonCount} unit* (Sistem: 12)\n• Tabung Gas: *${gasCount} unit* (Sistem: 2)\n• Sprei Linen: *${spreiCount} set* (Sistem: 6)\n\nData telah tercatat di Database dan otomatis memicu Pop-Up notifikasi di Dashboard Owner. 👏`;
+        const magicSoUrl = `https://kosankupro.cloud/portal/stock-opname?id=${soId}&staff=${encodeURIComponent(userName)}&property=${encodeURIComponent(userProperty)}`;
+
+        replyText = `✅ *Laporan Stock Opname #${soId} BERHASIL Tersimpan!*\nPetugas: *${userName}*\n🏢 Properti: *${userProperty}*\n\n📊 *Hasil Audit Fisik:*\n• Galon Air: *${galonCount} unit* (Sistem: 12)\n• Tabung Gas: *${gasCount} unit* (Sistem: 2)\n• Sprei Linen: *${spreiCount} set* (Sistem: 6)\n\n👉 *Buka Lembar Audit SO Fisik (1-Klik Magic Link):*\n${magicSoUrl}`;
         replyButtons = [
           { id: 'tugas_hari_ini', text: '🗓️ Tugas & Jadwal' },
           { id: 'menu_staf', text: '👷 Menu Staf' },
@@ -806,7 +820,9 @@ export async function POST(req: NextRequest) {
           badgeColor: isCheckIn ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800',
         });
 
-        replyText = `📋 *Laporan Inspeksi ${typeLabel} #${inspId} Terkirim!*\nPetugas: *${userName}*\nCatatan: _"${cleanInsp}"_\n\nLaporan telah masuk ke Dashboard Owner di tab Check-in & Check-out Reports.`;
+        const magicInspectionUrl = `https://kosankupro.cloud/portal/inspection?id=${inspId}&room=EKS-01&tenant=dr.+Rizky+Pratama&staff=${encodeURIComponent(userName)}&type=${inspType}`;
+
+        replyText = `📋 *Laporan Inspeksi ${typeLabel} #${inspId} Terkirim!*\nPetugas: *${userName}*\nCatatan: _"${cleanInsp}"_\n\n👉 *Buka Lembar Checklist Berita Acara (1-Klik Magic Link):*\n${magicInspectionUrl}`;
         actionSummary = `INSPECTION_${inspType}_${inspId}`;
       }
 
@@ -829,7 +845,9 @@ export async function POST(req: NextRequest) {
 
       // 5. Default Staff Tasks
       else {
-        replyText = `👷 *Menu Operasional Staf KosanKu Pro*\nHalo *${userName}*,\nFormat perintah cepat WhatsApp:\n\n• *SO 12 2 6* ➔ Input cepat hitungan galon, gas & sprei.\n• *Dana: Beli Sapu 50000* ➔ Ajukan anggaran ke Owner.\n• *Cek-in: EKS-01 dr. Rizky Kunci OK* ➔ Lapor kamar masuk.\n• *Selesai CMP-101* ➔ Konfirmasi perbaikan selesai.`;
+        const magicSoUrl = `https://kosankupro.cloud/portal/stock-opname?staff=${encodeURIComponent(userName)}&property=${encodeURIComponent(userProperty)}`;
+
+        replyText = `👷 *Menu Operasional Staf KosanKu Pro*\nHalo *${userName}*,\nFormat perintah cepat WhatsApp:\n\n• *SO 12 2 6* ➔ Input cepat hitungan galon, gas & sprei.\n• *Dana: Beli Sapu 50000* ➔ Ajukan anggaran ke Owner.\n• *Cek-in: EKS-01 dr. Rizky Kunci OK* ➔ Lapor kamar masuk.\n• *Selesai CMP-101* ➔ Konfirmasi perbaikan selesai.\n\n👉 *Buka Portal Stock Opname (1-Klik Magic Link):*\n${magicSoUrl}`;
         replyButtons = [
           { id: 'so_cepat', text: '📦 Input SO Cepat' },
           { id: 'tugas_hari_ini', text: '🗓️ Tugas Hari Ini' },
@@ -873,28 +891,59 @@ export async function POST(req: NextRequest) {
         actionSummary = `VENDOR_VIEW_ORDERS_${vendorCategory}`;
       }
 
-      // 2. Status Update -> Automatically notifies the specific Tenant
+      // 2. Status Update -> Automatically updates DB and dispatches WA to the specific Tenant
       else if (msgLower.startsWith('diantar') || msgLower.startsWith('kirim') || msgLower.startsWith('proses') || msgLower.startsWith('ready') || msgLower.startsWith('selesai')) {
         const isDelivered = msgLower.startsWith('diantar') || msgLower.startsWith('kirim');
         const isCompleted = msgLower.startsWith('selesai');
-        const statusText = isCompleted ? 'SUDAH TIBA DI DEPAN KAMAR ✅' : isDelivered ? 'SEDANG DIANTAR KE KAMAR 🛵' : 'SEDANG DISIAPKAN DI DEPOT 🍳';
+        const statusText = isCompleted ? 'SUDAH TIBA DI DEPAN PINTU KAMAR ✅' : isDelivered ? 'SEDANG DIANTAR KURIR MENUJU KAMAR 🛵' : 'SEDANG DISIAPKAN DI DEPOT / WARUNG 🍳';
         const targetOrder = msg.replace(/^(diantar|kirim|proses|ready|selesai)[:\s]*/i, '').trim() || 'REQ-9901';
 
-        // Push real-time toast to Owner & Tenant
+        // 1. Update live in-memory and DB order status
+        const currentOrder = inMemoryOrders.find((o: any) => o.id === targetOrder) || {
+          id: targetOrder,
+          tenantName: 'dr. Rizky Pratama, Sp.A',
+          roomNumber: 'EKS-01',
+          item: 'Refill Air Galon Aqua 19L (1x)',
+          phone: '082217415131',
+        };
+        const updatedStatus = isCompleted ? 'DELIVERED' : isDelivered ? 'PROCESSING' : 'PENDING_DISPATCH';
+        pushSupplyOrder({ id: targetOrder, status: updatedStatus });
+        safeDbQuery(() => prisma.supplyOrder.update({ where: { id: targetOrder }, data: { status: updatedStatus } }), null, 500).catch(() => {});
+
+        // 2. Push real-time toast to Owner & Tenant dashboard
         pushActivityNotification('default', {
           id: `vendor_stat_${Date.now()}`,
           title: `🛵 Update Pengantaran dari ${userName}`,
-          message: `Pesanan #${targetOrder}: ${statusText}.`,
+          message: `Pesanan #${targetOrder} (${currentOrder.item}): ${statusText}.`,
           targetRole: ['owner', 'tenant'],
           targetTab: 'tenant_requests',
-          badgeColor: 'bg-blue-100 text-blue-800',
+          badgeColor: isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800',
+        });
+
+        // 3. Dispatch Automated WhatsApp to Tenant
+        const tenantTargetPhone = currentOrder.phone || '082217415131';
+        sendWhatsApp(
+          tenantTargetPhone,
+          `🛵 *UPDATE PENGANTARAN PESANAN KOSANKU PRO*\n\nHalo Kak *${currentOrder.tenantName}* (Kamar ${currentOrder.roomNumber}),\n` +
+          `Pesanan *#${targetOrder}* (*${currentOrder.item}*) dari *${userName}* statusnya saat ini:\n👉 *${statusText}*\n\n` +
+          `📍 *Pantau Radar Pelacakan Kurir Live:*\nhttps://kosankupro.cloud/portal/track?id=${targetOrder}&vendor=${encodeURIComponent(userName)}&status=${isCompleted ? 'completed' : 'delivering'}`
+        ).catch(() => {});
+
+        pushWaLiveLog({
+          phone: tenantTargetPhone,
+          senderName: 'Sistem KosanKu Pro',
+          detectedRole: 'TENANT',
+          inboundText: `[NOTIFIKASI PENGANTARAN KE TENANT]`,
+          replyText: `🛵 Halo Kak ${currentOrder.tenantName}, pesanan #${targetOrder} (${currentOrder.item}) saat ini ${statusText} oleh ${userName}.`,
+          actionTaken: isCompleted ? 'TENANT_NOTIFIED_DELIVERED' : 'TENANT_NOTIFIED_DISPATCHED',
+          property: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
         });
 
         const progressBar = isCompleted ? '[██████████████] 100% SELESAI' : isDelivered ? '[██████████░░░░] 75% SEDANG DIANTAR' : '[█████░░░░░░░░░] 35% DISIAPKAN';
 
         replyText = `🛵 *Status Pesanan #${targetOrder} DIPERBARUI!*\nStatus: *${statusText}*\n\n` +
           `${progressBar}\n\n` +
-          `✨ Notifikasi WhatsApp otomatis telah dikirim ke nomor Penghuni pemesan beserta link Radar Pelacakan Live:\n` +
+          `✨ Notifikasi WhatsApp otomatis telah dikirim ke nomor Kak *${currentOrder.tenantName}* (Kamar ${currentOrder.roomNumber}) beserta link Radar Pelacakan Live:\n` +
           `https://kosankupro.cloud/portal/track?id=${targetOrder}&vendor=${encodeURIComponent(userName)}&status=${isCompleted ? 'completed' : isDelivered ? 'delivering' : 'processing'}`;
 
         replyButtons = [
@@ -906,7 +955,9 @@ export async function POST(req: NextRequest) {
 
       // 3. Vendor Revenue Recap
       else if (msgLower.includes('rekap') || msgLower.includes('tagihan') || msgLower.includes('pencairan')) {
-        replyText = `📑 *Rekap Tagihan Mitra: ${userName.toUpperCase()}*\nProperti: *${userProperty}*\n\n• Total Pesanan Selesai: *18 Transaksi*\n• Total Tagihan Add-on: *Rp 480.000*\n• Status: *Siap Dicairkan pada Jadwal Pembayaran 2-Mingguan*\n\nSemua pencairan dana ditransfer langsung ke rekening terdaftar Anda.`;
+        const magicSettlementUrl = `https://kosankupro.cloud/portal/vendor-settlement?vendor=${encodeURIComponent(userName)}&category=${encodeURIComponent(vendorCategory)}&balance=480000`;
+
+        replyText = `📑 *Rekap Tagihan Mitra: ${userName.toUpperCase()}*\nProperti: *${userProperty}*\n\n• Total Pesanan Selesai: *18 Transaksi*\n• Total Tagihan Add-on: *Rp 480.000*\n• Status: *Siap Dicairkan pada Jadwal Pembayaran 2-Mingguan*\n\n👉 *Buka Portal Pencairan Dana Mitra (1-Klik Magic Link):*\n${magicSettlementUrl}`;
         replyButtons = [
           { id: 'order_vendor', text: '📦 Pesanan Masuk' },
         ];
