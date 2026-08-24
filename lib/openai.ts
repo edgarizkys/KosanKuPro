@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { incrementSaaSUsage } from '@/lib/saasUsageMeter';
 
 // Lazy initialization — env vars only available at runtime, not build time
 let _openai: OpenAI | null = null;
@@ -18,15 +19,13 @@ export function getOpenAI(): OpenAI {
 }
 
 const MODELS = [
-  'google/gemma-4-31b-it:free',
-  'google/gemma-4-26b-a4b-it:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'nvidia/nemotron-nano-9b-v2:free',
-  'nvidia/nemotron-nano-12b-v2-vl:free',
-  'openai/gpt-oss-20b:free',
+  'anthropic/claude-3.5-sonnet',
+  'anthropic/claude-3.5-haiku',
+  'anthropic/claude-3-haiku',
+  'openai/gpt-4o-mini',
 ];
-const FALLBACK_MODEL = 'google/gemma-4-26b-a4b-it:free';
-const VISION_MODEL = 'nvidia/nemotron-nano-12b-v2-vl:free';
+const FALLBACK_MODEL = 'anthropic/claude-3.5-haiku';
+const VISION_MODEL = 'anthropic/claude-3.5-sonnet';
 
 // Retry with exponential backoff for 429 rate limits
 async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
@@ -82,6 +81,8 @@ export async function chatCompletion(
 
     try {
       const result = await withRetry(() => getOpenAI().chat.completions.create(params), 1);
+      const usedTokens = result?.usage?.total_tokens || 500;
+      incrementSaaSUsage('AI', usedTokens);
       return result;
     } catch (err: any) {
       console.log(`[AI] Model ${model} failed (status: ${err?.status}), trying next...`);

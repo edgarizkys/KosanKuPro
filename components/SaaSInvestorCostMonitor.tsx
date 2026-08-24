@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export type ViewMode = 'INVESTOR_PORTAL' | 'DEVELOPER_INTERNAL';
 
@@ -59,6 +59,20 @@ export default function SaaSInvestorCostMonitor() {
   const [pgCogsRate, setPgCogsRate] = useState<number>(10500);      // Modal PG QRIS Fee (0.7% x 1.5jt)
   const [pgBilledRate, setPgBilledRate] = useState<number>(15000);  // Tagihan Investor per PG Tx
 
+  // Fetch Live Meter Counts on Mount
+  useEffect(() => {
+    fetch('/api/saas-cost-monitor/live-meter')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setWaCount(res.data.waMessages || 0);
+          setAiTokens(res.data.aiTokens || 0);
+          setPgTxCount(res.data.pgSettlements || 0);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Dynamic Variable Calculations
   const waRealCogs = waCount * waCogsRate;
   const waBilled = waCount * waBilledRate;
@@ -86,7 +100,19 @@ export default function SaaSInvestorCostMonitor() {
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
 
   const handleOpenPdfTab = () => {
-    window.open('/portal/pdf-statement', '_blank');
+    const query = new URLSearchParams({
+      mode: viewMode,
+      wa: waCount.toString(),
+      ai: aiTokens.toString(),
+      pg: pgTxCount.toString(),
+      waCogs: waCogsRate.toString(),
+      waBilled: waBilledRate.toString(),
+      aiCogs: aiCogsRate1k.toString(),
+      aiBilled: aiBilledRate1k.toString(),
+      pgCogs: pgCogsRate.toString(),
+      pgBilled: pgBilledRate.toString(),
+    }).toString();
+    window.open(`/portal/pdf-statement?${query}`, '_blank');
   };
 
   const handleVerifyDevPin = (e: React.FormEvent) => {

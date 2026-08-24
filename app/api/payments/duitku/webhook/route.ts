@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendWhatsApp, formatBookingConfirmation, formatPaymentReceipt } from '@/lib/fonnte';
+import { incrementSaaSUsage } from '@/lib/saasUsageMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
     // Result code "00" indicates successful payment in Duitku
     if (resultCode === '00') {
       const parsedAmount = parseFloat(amount || '0');
+
+      // Record Real-Time Payment Gateway Settlement Meter
+      incrementSaaSUsage('PG', 1);
 
       // ── 1. Handle DP Booking Payment ──────────────────────────────────────
       if (merchantOrderId.startsWith('DP-') || merchantOrderId.includes('BKG')) {

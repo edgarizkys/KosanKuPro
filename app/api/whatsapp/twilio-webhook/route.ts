@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pushWaLiveLog } from '@/lib/activityEvents';
 import { sendTwilioWhatsApp } from '@/lib/twilio';
+import { incrementSaaSUsage } from '@/lib/saasUsageMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +56,9 @@ export async function POST(req: NextRequest) {
 
     // Send response back via Twilio
     await sendTwilioWhatsApp(cleanPhone, replyText);
+
+    // Increment Real-Time WA Meter
+    incrementSaaSUsage('WA', 1);
 
     // Twilio TwiML Response
     return new NextResponse('<Response></Response>', {

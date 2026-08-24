@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendWhatsApp, sendWhatsAppWithImage, broadcastWithAntiBanQueue } from '@/lib/fonnte';
 import { sendTwilioWhatsApp, sendTwilioWhatsAppWithMedia } from '@/lib/twilio';
 import { pushWaLiveLog } from '@/lib/activityEvents';
+import { incrementSaaSUsage } from '@/lib/saasUsageMeter';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +87,9 @@ export async function POST(req: NextRequest) {
       actionTaken: message.includes('PENGUMUMAN') ? 'BROADCAST_SENT' : 'DIRECT_REPLY_SENT',
       property: 'Juragan Kost Pasteur (Depan RSHS Bandung)',
     });
+
+    // Increment Real-Time SaaS WA Meter
+    incrementSaaSUsage('WA', 1);
 
     return NextResponse.json({
       success: true,
