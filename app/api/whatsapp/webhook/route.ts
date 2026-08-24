@@ -61,12 +61,11 @@ export async function POST(req: NextRequest) {
     if (contentType.includes('application/json')) {
       body = await req.json().catch(() => ({}));
     } else if (contentType.includes('form') || contentType.includes('urlencoded')) {
-      const formData = await req.formData().catch(() => null);
-      if (formData) {
-        formData.forEach((value, key) => {
-          body[key] = value.toString();
-        });
-      }
+      const text = await req.text().catch(() => '');
+      const params = new URLSearchParams(text);
+      params.forEach((value, key) => {
+        body[key] = value;
+      });
     } else {
       try {
         body = await req.json();

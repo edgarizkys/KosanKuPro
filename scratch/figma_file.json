@@ -1,0 +1,50 @@
+﻿{
+    "document":  {
+                     "id":  "0:0",
+                     "name":  "Document",
+                     "type":  "DOCUMENT",
+                     "scrollBehavior":  "SCROLLS",
+                     "children":  [
+                                      {
+                                          "id":  "0:1",
+                                          "name":  "Page 1",
+                                          "type":  "CANVAS",
+                                          "scrollBehavior":  "SCROLLS",
+                                          "children":  [
+
+                                                       ],
+                                          "backgroundColor":  {
+                                                                  "r":  0.11764705926179886,
+                                                                  "g":  0.11764705926179886,
+                                                                  "b":  0.11764705926179886,
+                                                                  "a":  1.0
+                                                              },
+                                          "prototypeStartNodeID":  null,
+                                          "flowStartingPoints":  [
+
+                                                                 ],
+                                          "prototypeDevice":  {
+                                                                  "type":  "NONE",
+                                                                  "rotation":  "NONE"
+                                                              }
+                                      }
+                                  ]
+                 },
+    "components":  {
+
+                   },
+    "componentSets":  {
+
+                      },
+    "schemaVersion":  0,
+    "styles":  {
+
+               },
+    "name":  "Untitled",
+    "lastModified":  "2026-08-22T17:34:39Z",
+    "thumbnailUrl":  "https://s3-alpha.figma.com/thumbnails/dffc3924-af53-4362-a64d-649efc7e4bbe?X-Amz-Algorithm=AWS4-HMAC-SHA256\u0026X-Amz-Credential=AKIAQ4GOSFWC2FGOZM5C%2F20260820%2Fus-west-2%2Fs3%2Faws4_request\u0026X-Amz-Date=20260820T000000Z\u0026X-Amz-Expires=604800\u0026X-Amz-SignedHeaders=host\u0026X-Amz-Signature=26adb5a787497c406d0699a034740a65060b5a929b675b8e2cadac803d5c560c",
+    "version":  "2390611336164443375",
+    "role":  "owner",
+    "editorType":  "figma",
+    "linkAccess":  "inherit"
+}

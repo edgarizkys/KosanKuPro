@@ -11,16 +11,17 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
+    const rawText = await req.text();
+    const params = new URLSearchParams(rawText);
     
-    // Duitku sends parameters as form-data
-    const merchantCode = formData.get('merchantCode') as string;
-    const amount = formData.get('amount') as string;
-    const merchantOrderId = formData.get('merchantOrderId') as string;
-    const productDetail = formData.get('productDetail') as string;
-    const resultCode = formData.get('resultCode') as string;
-    const reference = formData.get('reference') as string;
-    const signature = formData.get('signature') as string;
+    // Duitku sends parameters as form-data / urlencoded
+    const merchantCode = params.get('merchantCode') || '';
+    const amount = params.get('amount') || '';
+    const merchantOrderId = params.get('merchantOrderId') || '';
+    const productDetail = params.get('productDetail') || '';
+    const resultCode = params.get('resultCode') || '';
+    const reference = params.get('reference') || '';
+    const signature = params.get('signature') || '';
 
     console.log(`[Duitku Webhook Received] Order: ${merchantOrderId} | Result: ${resultCode} | Ref: ${reference}`);
 

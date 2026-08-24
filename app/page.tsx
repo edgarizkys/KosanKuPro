@@ -23,6 +23,7 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import BookingView from '@/components/BookingView';
 import SaaSLeadModal from '@/components/SaaSLeadModal';
 import SuperadminDashboard from '@/components/SuperadminDashboard';
+import SequenceSaaSLayout from '@/components/SequenceSaaSLayout';
 import { RoomForBooking } from '@/components/BookingModal';
 import { useAppEffects } from '@/lib/useAppEffects';
 
@@ -280,7 +281,18 @@ export default function Home() {
           />
         )}
         {view === 'superadmin' && (
-          <SuperadminDashboard onLogout={handleLogout} />
+          <SequenceSaaSLayout
+            role="superadmin"
+            activeBranch="all"
+            onBranchChange={() => {}}
+            onSwitchRole={(r) => {
+              setRole(r);
+              setView(r);
+            }}
+            onLogout={handleLogout}
+          >
+            <SuperadminDashboard onLogout={handleLogout} />
+          </SequenceSaaSLayout>
         )}
         {view === 'admin' && (
           <AdminDashboard

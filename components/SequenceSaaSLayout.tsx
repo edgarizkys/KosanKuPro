@@ -6,6 +6,7 @@ import { getStoredUserProfiles, saveStoredUserProfiles, type UserProfile } from 
 import UserProfileModal from './UserProfileModal';
 import UserManagementView from './UserManagementView';
 import ToastNotification from './ToastNotification';
+import SaaSInvestorCostMonitor from './SaaSInvestorCostMonitor';
 import { useProperty } from '@/lib/PropertyContext';
 
 interface SequenceSaaSLayoutProps {
@@ -617,6 +618,12 @@ export default function SequenceSaaSLayout({
     if (role === 'superadmin' || role === 'admin') {
       return [
         {
+          title: '💎 Developer & Investor Mode',
+          items: [
+            { id: 'saas_cost_monitor', label: 'SaaS Cost & Investor Ledger', icon: 'fa-solid fa-chart-pie', highlight: true, badgeColor: 'bg-emerald-600 text-white' },
+          ],
+        },
+        {
           title: '📋 Operasional Harian',
           items: [
             { id: 'overview', label: 'Dashboard Utama', icon: 'fa-solid fa-gauge-high', highlight: true },
@@ -1184,6 +1191,18 @@ export default function SequenceSaaSLayout({
               <i className={`fa-solid ${theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'}`} />
             </button>
 
+            {/* Developer & Investor SaaS Cost & Ledger Quick Nav Button */}
+            {(role === 'superadmin' || role === 'admin') && (
+              <button
+                onClick={() => onTabChange?.('saas_cost_monitor')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold hover:scale-105 transition-all cursor-pointer text-xs shadow-md"
+                title="Buka SaaS Cost & Investor Ledger Monitor"
+              >
+                <i className="fa-solid fa-chart-pie text-sm" />
+                <span className="hidden xl:inline">SaaS Cost &amp; Ledger</span>
+              </button>
+            )}
+
             {/* Live WhatsApp Stream Monitor Trigger Button (Only for KosanKu Pro Master Owner / Superadmin) */}
             {!isCustomOrNewKos && (
               <button
@@ -1229,6 +1248,8 @@ export default function SequenceSaaSLayout({
             </button>
           </div>
         </header>
+
+        {activeTab === 'saas_cost_monitor' && <SaaSInvestorCostMonitor />}
 
         {/* Conditional Layout: Overview Dashboard per Role if activeTab is overview, else render module view directly at top */}
         {(activeTab === 'financial' || activeTab === 'overview' || activeTab === 'tasks' || activeTab === 'orders' || activeTab === 'my_room') ? (

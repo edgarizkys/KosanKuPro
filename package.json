@@ -9,7 +9,9 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "mobile": "npm --prefix mobile start",
+    "mobile:android": "npm --prefix mobile run android"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -28,6 +30,7 @@
     "react-dom": "^18.3.0",
     "swiper": "^11.0.0",
     "three": "^0.185.1",
+    "twilio": "^6.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

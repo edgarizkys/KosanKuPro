@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import SaaSInvestorCostMonitor from '@/components/SaaSInvestorCostMonitor';
 
 export interface LeadProspect {
   id: string;
@@ -37,8 +38,10 @@ const INITIAL_PROSPECTS: LeadProspect[] = [
 ];
 
 export default function SuperadminDashboard({ onLogout }: { onLogout?: () => void }) {
+  const [activeTab, setActiveTab] = useState<'provisioning' | 'cost_monitor'>('cost_monitor');
   const [prospects, setProspects] = useState<LeadProspect[]>(INITIAL_PROSPECTS);
   const [toast, setToast] = useState<string | null>(null);
+
 
   // New Property Provisioning Form
   const [showProvisionModal, setShowProvisionModal] = useState(false);
@@ -109,7 +112,37 @@ export default function SuperadminDashboard({ onLogout }: { onLogout?: () => voi
         </div>
       </div>
 
+      {/* Superadmin Sub-Tab Controls */}
+      <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/10 pb-3">
+        <button
+          onClick={() => setActiveTab('cost_monitor')}
+          className={`px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'cost_monitor'
+              ? 'bg-emerald-600 text-white shadow-lg'
+              : 'neu-btn text-slate-600 dark:text-slate-300'
+          }`}
+        >
+          <i className="fa-solid fa-chart-pie" />
+          <span>SaaS Operational Cost &amp; Investor Ledger</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('provisioning')}
+          className={`px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'provisioning'
+              ? 'bg-emerald-600 text-white shadow-lg'
+              : 'neu-btn text-slate-600 dark:text-slate-300'
+          }`}
+        >
+          <i className="fa-solid fa-handshake" />
+          <span>Provisioning Workspace Kosan ({prospects.filter((p) => p.status === 'PENDING').length})</span>
+        </button>
+      </div>
+
+      {activeTab === 'cost_monitor' && <SaaSInvestorCostMonitor />}
+
       {/* Prospect Lead Requests Table */}
+      {activeTab === 'provisioning' && (
       <div className="neu-card rounded-3xl p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
           <div>
@@ -176,6 +209,7 @@ export default function SuperadminDashboard({ onLogout }: { onLogout?: () => voi
           </table>
         </div>
       </div>
+      )}
 
       {/* Provisioning Modal */}
       {showProvisionModal && selectedLead && (
