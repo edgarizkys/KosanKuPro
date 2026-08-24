@@ -5,6 +5,19 @@ import { sendTwilioWhatsApp } from '@/lib/twilio';
 export const dynamic = 'force-dynamic';
 
 /**
+ * GET /api/whatsapp/twilio-webhook
+ * Friendly Status Health Check for Browser Testing
+ */
+export async function GET() {
+  return NextResponse.json({
+    status: 'ok',
+    service: 'KosanKu Pro Twilio WhatsApp Webhook Gateway',
+    message: 'Webhook endpoint is active and ready to receive POST events from Twilio.',
+    timestamp: new Date().toISOString(),
+  });
+}
+
+/**
  * POST /api/whatsapp/twilio-webhook
  * Inbound Webhook Handler for Twilio WhatsApp Messages
  */
