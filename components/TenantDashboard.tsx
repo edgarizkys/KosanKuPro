@@ -324,6 +324,16 @@ export default function TenantDashboard({
       }
 
       const snapToken = json.token;
+      const redirectUrl = json.redirectUrl;
+
+      // Ensure snap.js script is loaded if not already in window
+      if (typeof window !== 'undefined' && !(window as any).snap) {
+        const snapScript = document.createElement('script');
+        snapScript.src = 'https://app.midtrans.com/snap/snap.js';
+        snapScript.setAttribute('data-client-key', json.clientKey || 'Mid-client-8f3eXqGDNIR_WoDE');
+        document.body.appendChild(snapScript);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
 
       if (typeof window !== 'undefined' && (window as any).snap) {
         (window as any).snap.pay(snapToken, {
@@ -346,8 +356,10 @@ export default function TenantDashboard({
             setPaying(false);
           },
         });
+      } else if (redirectUrl) {
+        window.location.href = redirectUrl;
       } else {
-        alert(`Midtrans Snap Sandbox Token: ${snapToken}\n\n(Silakan gunakan metode QRIS/BCA VA di environment Snap produksi)`);
+        alert(`Token Midtrans: ${snapToken}\nSilakan selesaikan pembayaran via Snap.`);
         setPaying(false);
       }
     } catch (err: any) {
