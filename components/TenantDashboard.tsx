@@ -331,15 +331,18 @@ export default function TenantDashboard({
       // Ensure snap.js script matching token environment is loaded in window
       if (typeof window !== 'undefined') {
         const existingScript = document.getElementById('midtrans-snap-script') as HTMLScriptElement | null;
-        if (!existingScript || existingScript.src !== targetSnapScriptUrl) {
+        if (!existingScript || existingScript.src !== targetSnapScriptUrl || !(window as any).snap) {
           if (existingScript) existingScript.remove();
           delete (window as any).snap;
-          const snapScript = document.createElement('script');
-          snapScript.id = 'midtrans-snap-script';
-          snapScript.src = targetSnapScriptUrl;
-          snapScript.setAttribute('data-client-key', json.clientKey || 'Mid-client-8f3eXqGDNIR_WoDE');
-          document.body.appendChild(snapScript);
-          await new Promise((resolve) => setTimeout(resolve, 600));
+          await new Promise<void>((resolve) => {
+            const snapScript = document.createElement('script');
+            snapScript.id = 'midtrans-snap-script';
+            snapScript.src = targetSnapScriptUrl;
+            snapScript.setAttribute('data-client-key', json.clientKey || 'Mid-client-8f3eXqGDNIR_WoDE');
+            snapScript.onload = () => resolve();
+            snapScript.onerror = () => resolve();
+            document.body.appendChild(snapScript);
+          });
         }
       }
 

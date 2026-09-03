@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
         provider: 'midtrans',
         token: snap.token,
         redirectUrl: snap.redirectUrl,
+        snapScriptUrl: snap.snapScriptUrl,
         orderId,
         baseAmount,
         adminFee,
