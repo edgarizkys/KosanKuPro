@@ -7,6 +7,8 @@ const PUBLIC_PATHS = [
   '/portal',
   '/api/auth/login',
   '/api/auth/register-owner',
+  '/api/payments/create',     // Midtrans / Duitku payment creation
+  '/api/midtrans/token',      // Midtrans Snap token generation
   '/api/payments/webhook',    // Midtrans webhook must be open
   '/api/payments/duitku/webhook',
   '/api/whatsapp/webhook',    // Fonnte webhook must be open
