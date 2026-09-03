@@ -29,6 +29,8 @@ services:
     restart: always
     ports:
       - "4000:3000"
+    env_file:
+      - .env
     environment:
       DATABASE_URL: "postgresql://kosanku_admin:KosanKuPro2026SecurePass!@kosanku-db:5432/kosanku_pro_db?schema=public"
       NODE_ENV: "production"

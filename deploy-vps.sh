@@ -18,6 +18,12 @@ DATABASE_URL="postgresql://kosanku_admin:KosanKuPro2026SecurePass!@localhost:543
 JWT_SECRET="KosanKuPro_Super_Secret_Key_2026_Jwt_Secure"
 PORT=4000
 NODE_ENV=production
+MIDTRANS_MERCHANT_ID="M194753553"
+MIDTRANS_CLIENT_KEY="Mid-client-8f3eXqGDNIR_WoDE"
+NEXT_PUBLIC_MIDTRANS_CLIENT_KEY="Mid-client-8f3eXqGDNIR_WoDE"
+MIDTRANS_SERVER_KEY="Mid-server-G_ycf13XRX5SW8Jinw3N-nm5"
+MIDTRANS_IS_PRODUCTION="true"
+PAYMENT_PROVIDER="midtrans"
 EOT
 fi
 

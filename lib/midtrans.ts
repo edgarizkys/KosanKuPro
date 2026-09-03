@@ -1,13 +1,20 @@
 import crypto from 'crypto';
 
-const isProduction = process.env.NODE_ENV === 'production';
+export const MIDTRANS_MERCHANT_ID = process.env.MIDTRANS_MERCHANT_ID || 'M194753553';
+export const MIDTRANS_CLIENT_KEY = process.env.MIDTRANS_CLIENT_KEY || process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'Mid-client-8f3eXqGDNIR_WoDE';
+export const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || 'Mid-server-G_ycf13XRX5SW8Jinw3N-nm5';
 
-const MIDTRANS_BASE_URL = isProduction
+export const isMidtransProduction =
+  process.env.MIDTRANS_IS_PRODUCTION === 'true' ||
+  (process.env.MIDTRANS_IS_PRODUCTION !== 'false' && MIDTRANS_SERVER_KEY.startsWith('Mid-server-')) ||
+  process.env.NODE_ENV === 'production';
+
+export const MIDTRANS_BASE_URL = isMidtransProduction
   ? 'https://app.midtrans.com'
   : 'https://app.sandbox.midtrans.com';
 
 function getAuthHeader() {
-  const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
+  const serverKey = MIDTRANS_SERVER_KEY;
   return `Basic ${Buffer.from(`${serverKey}:`).toString('base64')}`;
 }
 
@@ -70,7 +77,7 @@ export function verifySignature(
   grossAmount: string,
   signatureKey: string
 ): boolean {
-  const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
+  const serverKey = MIDTRANS_SERVER_KEY;
   const expected = crypto
     .createHash('sha512')
     .update(`${orderId}${statusCode}${grossAmount}${serverKey}`)

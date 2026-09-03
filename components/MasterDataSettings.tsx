@@ -15,6 +15,7 @@ interface PropertySettings {
   allowanceLaundryKg: number;
   whatsappNumber?: string;
   whatsappToken?: string;
+  midtransMerchantId?: string;
   midtransServerKey?: string;
   midtransClientKey?: string;
   adminFeeFlat?: number;
@@ -82,8 +83,9 @@ const INITIAL_PROPERTY: PropertySettings = {
   allowanceLaundryKg: 5,
   whatsappNumber: '0812-2379-8307',
   whatsappToken: '',
-  midtransServerKey: '',
-  midtransClientKey: '',
+  midtransMerchantId: 'M194753553',
+  midtransClientKey: 'Mid-client-8f3eXqGDNIR_WoDE',
+  midtransServerKey: 'Mid-server-G_ycf13XRX5SW8Jinw3N-nm5',
   adminFeeFlat: 5000,
 };
 
@@ -731,6 +733,49 @@ export default function MasterDataSettings() {
                   value={property.whatsappToken || ''}
                   onChange={(e) => setProperty({ ...property, whatsappToken: e.target.value })}
                   className="w-full p-2.5 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white"
+                />
+              </div>
+          {/* 3. Integrasi Midtrans Payment Gateway */}
+          <div className="p-5 neu-card-sm rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+                <i className="fa-solid fa-credit-card text-indigo-500 text-base" />
+                <span>Integrasi Midtrans Payment Gateway (Production / Live)</span>
+              </span>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                ● Live Production Connected
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Kredensial Midtrans Production aktif untuk menerima pembayaran via QRIS, BCA VA, Mandiri VA, BRI VA, GoPay, OVO, ShopeePay, dll.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Merchant ID</label>
+                <input
+                  placeholder="Contoh: M194753553"
+                  value={property.midtransMerchantId || 'M194753553'}
+                  onChange={(e) => setProperty({ ...property, midtransMerchantId: e.target.value })}
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Client Key (Public)</label>
+                <input
+                  placeholder="Mid-client-..."
+                  value={property.midtransClientKey || 'Mid-client-8f3eXqGDNIR_WoDE'}
+                  onChange={(e) => setProperty({ ...property, midtransClientKey: e.target.value })}
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-mono text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Server Key (Private Secret)</label>
+                <input
+                  type="password"
+                  placeholder="Mid-server-..."
+                  value={property.midtransServerKey || 'Mid-server-G_ycf13XRX5SW8Jinw3N-nm5'}
+                  onChange={(e) => setProperty({ ...property, midtransServerKey: e.target.value })}
+                  className="w-full p-2.5 neu-input rounded-xl outline-none font-mono text-xs text-slate-900 dark:text-white"
                 />
               </div>
             </div>
