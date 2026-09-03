@@ -735,6 +735,9 @@ export default function MasterDataSettings() {
                   className="w-full p-2.5 neu-input rounded-xl outline-none font-mono text-slate-900 dark:text-white"
                 />
               </div>
+            </div>
+          </div>
+
           {/* 3. Integrasi Midtrans Payment Gateway */}
           <div className="p-5 neu-card-sm rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
