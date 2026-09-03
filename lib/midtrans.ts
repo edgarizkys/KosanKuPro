@@ -49,7 +49,10 @@ export async function createSnapTransaction(params: {
     credit_card: { secure: true },
   };
 
-  const response = await fetch(`${MIDTRANS_BASE_URL}/snap/v1/transactions`, {
+  const primaryUrl = `${MIDTRANS_BASE_URL}/snap/v1/transactions`;
+  const fallbackUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+
+  let response = await fetch(primaryUrl, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -59,10 +62,25 @@ export async function createSnapTransaction(params: {
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json();
+  let data = await response.json();
+
+  // If primary URL failed due to Unauthorized / Access Denied, try fallback URL
+  if (!response.ok && (data.error_messages?.some((msg: string) => msg.includes('Access denied') || msg.includes('unauthorized')) || data.error?.includes('Access denied'))) {
+    console.warn('[Midtrans] Primary endpoint failed with Access Denied. Attempting Sandbox fallback...');
+    response = await fetch(fallbackUrl, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: getAuthHeader(),
+      },
+      body: JSON.stringify(payload),
+    });
+    data = await response.json();
+  }
 
   if (!response.ok) {
-    throw new Error(data.error_messages?.join(', ') || 'Midtrans Snap creation failed');
+    throw new Error(data.error_messages?.join(', ') || data.error || 'Midtrans Snap creation failed');
   }
 
   return {
