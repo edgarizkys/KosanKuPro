@@ -85,7 +85,7 @@ const INITIAL_PROPERTY: PropertySettings = {
   whatsappToken: '',
   midtransMerchantId: 'M194753553',
   midtransClientKey: 'Mid-client-8f3eXqGDNIR_WoDE',
-  midtransServerKey: 'Mid-server-G_ycf13XRX5SW8Jinw3N-nm5',
+  midtransServerKey: '',
   adminFeeFlat: 5000,
 };
 
@@ -776,7 +776,7 @@ export default function MasterDataSettings() {
                 <input
                   type="password"
                   placeholder="Mid-server-..."
-                  value={property.midtransServerKey || 'Mid-server-G_ycf13XRX5SW8Jinw3N-nm5'}
+                  value={property.midtransServerKey || ''}
                   onChange={(e) => setProperty({ ...property, midtransServerKey: e.target.value })}
                   className="w-full p-2.5 neu-input rounded-xl outline-none font-mono text-xs text-slate-900 dark:text-white"
                 />

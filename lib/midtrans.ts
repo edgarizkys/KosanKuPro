@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 
-export const MIDTRANS_MERCHANT_ID = process.env.MIDTRANS_MERCHANT_ID || 'M194753553';
-export const MIDTRANS_CLIENT_KEY = process.env.MIDTRANS_CLIENT_KEY || process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'Mid-client-8f3eXqGDNIR_WoDE';
-export const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || 'Mid-server-G_ycf13XRX5SW8Jinw3N-nm5';
+export const MIDTRANS_MERCHANT_ID = process.env.MIDTRANS_MERCHANT_ID || '';
+export const MIDTRANS_CLIENT_KEY = process.env.MIDTRANS_CLIENT_KEY || process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '';
+export const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || '';
 
 export const isMidtransProduction =
   process.env.MIDTRANS_IS_PRODUCTION === 'true' ||
