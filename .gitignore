@@ -43,3 +43,10 @@ graphify-out/
 *.html
 !app/**/*.html
 scripts/generate_*.js
+
+# agent skills & local temp files
+.agents/
+.expo/
+scratch/
+skills-lock.json
+
