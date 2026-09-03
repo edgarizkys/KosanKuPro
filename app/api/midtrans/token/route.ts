@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       token: snap.token,
       redirectUrl: snap.redirectUrl,
+      snapScriptUrl: snap.snapScriptUrl,
+      isSandbox: snap.isSandbox,
       orderId,
       clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || process.env.MIDTRANS_CLIENT_KEY || 'Mid-client-8f3eXqGDNIR_WoDE',
     });

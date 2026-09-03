@@ -326,13 +326,21 @@ export default function TenantDashboard({
       const snapToken = json.token;
       const redirectUrl = json.redirectUrl;
 
-      // Ensure snap.js script is loaded if not already in window
-      if (typeof window !== 'undefined' && !(window as any).snap) {
-        const snapScript = document.createElement('script');
-        snapScript.src = 'https://app.midtrans.com/snap/snap.js';
-        snapScript.setAttribute('data-client-key', json.clientKey || 'Mid-client-8f3eXqGDNIR_WoDE');
-        document.body.appendChild(snapScript);
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      const targetSnapScriptUrl = json.snapScriptUrl || (redirectUrl?.includes('sandbox') ? 'https://app.sandbox.midtrans.com/snap/snap.js' : 'https://app.midtrans.com/snap/snap.js');
+
+      // Ensure snap.js script matching token environment is loaded in window
+      if (typeof window !== 'undefined') {
+        const existingScript = document.getElementById('midtrans-snap-script') as HTMLScriptElement | null;
+        if (!existingScript || existingScript.src !== targetSnapScriptUrl) {
+          if (existingScript) existingScript.remove();
+          delete (window as any).snap;
+          const snapScript = document.createElement('script');
+          snapScript.id = 'midtrans-snap-script';
+          snapScript.src = targetSnapScriptUrl;
+          snapScript.setAttribute('data-client-key', json.clientKey || 'Mid-client-8f3eXqGDNIR_WoDE');
+          document.body.appendChild(snapScript);
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        }
       }
 
       if (typeof window !== 'undefined' && (window as any).snap) {

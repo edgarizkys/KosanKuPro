@@ -83,9 +83,17 @@ export async function createSnapTransaction(params: {
     throw new Error(data.error_messages?.join(', ') || data.error || 'Midtrans Snap creation failed');
   }
 
+  const redirectUrl = data.redirect_url as string;
+  const isSandbox = redirectUrl.includes('sandbox');
+  const snapScriptUrl = isSandbox
+    ? 'https://app.sandbox.midtrans.com/snap/snap.js'
+    : 'https://app.midtrans.com/snap/snap.js';
+
   return {
     token: data.token as string,
-    redirectUrl: data.redirect_url as string,
+    redirectUrl,
+    snapScriptUrl,
+    isSandbox,
   };
 }
 
